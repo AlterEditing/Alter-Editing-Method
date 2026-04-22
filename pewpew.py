@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 TIME_RE = re.compile(r"time=(\d+):(\d+):(\d+(?:\.\d+)?)")
-
+#1
 # Ручной сдвиг центрального блока (title + card + patch + footer)
 #  20  -> ниже
 # -20  -> выше
