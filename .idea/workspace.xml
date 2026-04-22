@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cf318778-d69e-4039-af82-3d29d80fd037" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/AlterE.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/AlterE.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pewpew.py" beforeDir="false" />
+    <list default="true" id="cf318778-d69e-4039-af82-3d29d80fd037" name="Changes" comment="Porno">
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -110,14 +108,27 @@
       <updated>1776814883789</updated>
       <workItem from="1776817634144" duration="1407000" />
       <workItem from="1776819585909" duration="183000" />
-      <workItem from="1776819782160" duration="339000" />
+      <workItem from="1776819782160" duration="493000" />
     </task>
+    <task id="LOCAL-00001" summary="Porno">
+      <option name="closed" value="true" />
+      <created>1776820174227</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1776820174227</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Porno" />
+    <option name="LAST_COMMIT_MESSAGE" value="Porno" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/AlterE$pewpew.coverage" NAME="pewpew Coverage Results" MODIFIED="1776819952714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/AlterE$pewpew.coverage" NAME="pewpew Coverage Results" MODIFIED="1776820241409" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
