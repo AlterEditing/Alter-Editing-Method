@@ -1021,7 +1021,7 @@ async function handleMissingAuthorization() {
   } catch (error) {
     state.auth.offlineGuest = false;
     state.auth.degradedReason = "server_unavailable";
-    state.auth.error = t("authServerUnavailable");
+    state.auth.error = "";
     log("warning", "Authorization blocked", "Auth server unavailable; sign-in is required for new users");
   } finally {
     state.auth.checking = false;
@@ -1178,8 +1178,12 @@ async function startTelegramAuthorization() {
   } catch (error) {
     state.auth.pending = false;
     const serverUnavailable = isAuthServerUnavailableError(error);
-    state.auth.error = serverUnavailable ? t("authServerUnavailable") : readableError(error) || t("authFailed");
-    log("error", "Telegram authorization failed", serverUnavailable ? `${state.auth.error} | ${readableError(error)}` : state.auth.error);
+    state.auth.error = serverUnavailable ? "" : readableError(error) || t("authFailed");
+    log(
+      serverUnavailable ? "warning" : "error",
+      "Telegram authorization failed",
+      serverUnavailable ? `Auth server unavailable | ${readableError(error)}` : state.auth.error
+    );
     if (serverUnavailable) {
       const fallbackBotUrl = normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true });
       if (fallbackBotUrl) {
@@ -1258,9 +1262,11 @@ function startAuthPolling(sessionId) {
         await exchangeAuthorization(sessionId);
       }
     } catch (error) {
-      state.auth.error = isAuthServerUnavailableError(error)
-        ? t("authServerUnavailable")
-        : readableError(error) || t("authFailed");
+      const serverUnavailable = isAuthServerUnavailableError(error);
+      state.auth.error = serverUnavailable ? "" : readableError(error) || t("authFailed");
+      if (serverUnavailable) {
+        log("warning", "Authorization polling", `Auth server unavailable | ${readableError(error)}`);
+      }
       render();
     }
   };
@@ -1314,9 +1320,9 @@ async function exchangeAuthorization(sessionId) {
     await clearAuthorization(true);
     state.auth.pending = false;
     const serverUnavailable = isAuthServerUnavailableError(error);
-    state.auth.error = serverUnavailable ? t("authServerUnavailable") : readableError(error) || t("authFailed");
+    state.auth.error = serverUnavailable ? "" : readableError(error) || t("authFailed");
     if (serverUnavailable) {
-      toast("error", t("authServerUnavailable"));
+      log("warning", "Authorization exchange", `Auth server unavailable | ${readableError(error)}`);
     } else {
       toast("error", t("authFailed"), state.auth.error);
     }
