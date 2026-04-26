@@ -43,6 +43,7 @@ const translations = {
     authWaiting: "Confirm the subscription in Telegram, then return here.",
     authFailed: "Authorization failed. Try again.",
     authNoInternet: "No internet connection. Please connect to sign in.",
+    authServerUnavailable: "Authorization server is unavailable. Please try again later.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
     retry: "RETRY",
@@ -114,6 +115,7 @@ const translations = {
     authWaiting: "Подтвердите подписку в Telegram и вернитесь сюда.",
     authFailed: "Ошибка авторизации. Попробуйте снова.",
     authNoInternet: "Нет интернета. Подключитесь к сети для входа.",
+    authServerUnavailable: "Сервер авторизации недоступен. Пожалуйста, попробуйте позже.",
     authSuccess: "Авторизация выполнена",
     subscriptionRequired: "Нужна подписка",
     retry: "ПОВТОРИТЬ",
@@ -185,6 +187,7 @@ const translations = {
     authWaiting: "Telegram aboneligini onaylayin ve buraya donun.",
     authFailed: "Yetkilendirme basarisiz. Tekrar deneyin.",
     authNoInternet: "Internet baglantisi yok. Giris icin baglanti kurun.",
+    authServerUnavailable: "Yetkilendirme sunucusu kullanilamiyor. Lutfen daha sonra tekrar deneyin.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
     retry: "RETRY",
@@ -1026,16 +1029,14 @@ async function handleMissingAuthorization() {
     state.auth.error = "";
   } catch (error) {
     const connectivity = await classifyConnectivityIssue(error);
-    const allowOfflineGuest = connectivity === "server_unavailable";
-    state.auth.offlineGuest = allowOfflineGuest;
+    state.auth.offlineGuest = false;
     state.auth.degradedReason = connectivity;
-    if (allowOfflineGuest) {
-      state.auth.error = "";
-      log("warning", "Authorization deferred", "Auth server unavailable; temporary local access allowed");
-      scheduleGuestAuthorizationCheck(AUTH_SUBSCRIPTION_RETRY_MS);
-    } else {
+    if (connectivity === "offline") {
       state.auth.error = t("authNoInternet");
       log("warning", "Authorization blocked", "No internet connection; sign-in is required for new users");
+    } else {
+      state.auth.error = t("authServerUnavailable");
+      log("warning", "Authorization blocked", "Auth server unavailable; sign-in is required for new users");
     }
   } finally {
     state.auth.checking = false;
