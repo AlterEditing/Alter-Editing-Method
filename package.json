@@ -11,7 +11,8 @@
     "dev": "electron .",
     "check": "node --check src/main/main.js && node --check src/main/services/elst-patcher.js && node --check src/main/services/ffmpeg.js && node --check src/main/services/settings-store.js && node --check src/main/services/update-service.js && node --check src/main/services/video-service.js && node --check src/preload/preload.js && node --check src/renderer/app.js",
     "dist:win": "electron-builder --win nsis --publish never",
-    "release:win": "electron-builder --win nsis --publish always"
+    "release:win": "electron-builder --win nsis --publish always",
+    "release:win:draft": "electron-builder --win nsis --publish always --config.publish.releaseType=draft"
   },
   "dependencies": {
     "electron-updater": "^6.6.2"
