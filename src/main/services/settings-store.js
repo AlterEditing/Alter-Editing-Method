@@ -3,7 +3,7 @@ const path = require("path");
 
 const DEFAULT_SETTINGS = {
   settingsVersion: 4,
-  language: "ru",
+  language: "en",
   theme: "dark",
   authRequired: true,
   authorized: false,
@@ -22,6 +22,7 @@ const SUPPORTED_THEMES = new Set(["dark", "light"]);
 
 class SettingsStore {
   constructor(electronApp) {
+    this.defaultSettings = createDefaultSettings(electronApp);
     this.filePath = path.join(electronApp.getPath("userData"), "settings.json");
     this.data = this.load();
   }
@@ -32,7 +33,7 @@ class SettingsStore {
 
   update(patch = {}) {
     const next = { ...this.data, ...patch };
-    this.data = normalizeSettings(next);
+    this.data = normalizeSettings(next, this.defaultSettings);
     this.save();
     return this.getAll();
   }
@@ -43,9 +44,9 @@ class SettingsStore {
         this.saveDefaults();
       }
       const raw = fs.readFileSync(this.filePath, "utf8");
-      return normalizeSettings(JSON.parse(raw));
+      return normalizeSettings(JSON.parse(raw), this.defaultSettings);
     } catch {
-      return { ...DEFAULT_SETTINGS };
+      return { ...this.defaultSettings };
     }
   }
 
@@ -56,34 +57,50 @@ class SettingsStore {
 
   saveDefaults() {
     fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
-    fs.writeFileSync(this.filePath, JSON.stringify(DEFAULT_SETTINGS, null, 2), "utf8");
+    fs.writeFileSync(this.filePath, JSON.stringify(this.defaultSettings, null, 2), "utf8");
   }
 }
 
-function normalizeSettings(raw = {}) {
+function createDefaultSettings(electronApp) {
+  const locale = typeof electronApp?.getLocale === "function" ? electronApp.getLocale() : "";
+  return {
+    ...DEFAULT_SETTINGS,
+    language: normalizeLanguageCode(locale) || DEFAULT_SETTINGS.language,
+  };
+}
+
+function normalizeLanguageCode(locale) {
+  const code = String(locale || "").toLowerCase();
+  if (code.startsWith("ru")) return "ru";
+  if (code.startsWith("tr")) return "tr";
+  if (code.startsWith("en")) return "en";
+  return "";
+}
+
+function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
   const language = SUPPORTED_LANGUAGES.has(String(raw.language || "").toLowerCase())
     ? String(raw.language).toLowerCase()
-    : DEFAULT_SETTINGS.language;
+    : defaults.language;
   const theme = SUPPORTED_THEMES.has(String(raw.theme || "").toLowerCase())
     ? String(raw.theme).toLowerCase()
-    : DEFAULT_SETTINGS.theme;
+    : defaults.theme;
   const authRequired = true;
   const authToken = typeof raw.authToken === "string" ? raw.authToken : "";
   const telegramId = normalizeTelegramId(raw.telegramId);
   const authorized = Boolean(authToken && telegramId);
   const dismissedMandatoryVersion =
     typeof raw.dismissedMandatoryVersion === "string" ? raw.dismissedMandatoryVersion.trim() : "";
-  const authApiBase = normalizeHttpUrl(raw.authApiBase, { allowHttp: true, allowHttps: true }) || DEFAULT_SETTINGS.authApiBase;
+  const authApiBase = normalizeHttpUrl(raw.authApiBase, { allowHttp: true, allowHttps: true }) || defaults.authApiBase;
   const authApiFallbacks = normalizeFallbackUrls(raw.authApiFallbacks);
   const telegramChannelUrl =
-    normalizeHttpUrl(raw.telegramChannelUrl, { allowHttp: false, allowHttps: true }) || DEFAULT_SETTINGS.telegramChannelUrl;
+    normalizeHttpUrl(raw.telegramChannelUrl, { allowHttp: false, allowHttps: true }) || defaults.telegramChannelUrl;
   const telegramBotUrl = normalizeHttpUrl(raw.telegramBotUrl, { allowHttp: false, allowHttps: true });
   const authConfigUpdatedAt = Number.isFinite(Number(raw.authConfigUpdatedAt))
     ? Math.max(0, Math.trunc(Number(raw.authConfigUpdatedAt)))
     : 0;
 
   return {
-    settingsVersion: DEFAULT_SETTINGS.settingsVersion,
+    settingsVersion: defaults.settingsVersion,
     language,
     theme,
     authRequired,

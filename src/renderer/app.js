@@ -250,7 +250,7 @@ const AUTH_SERVER_CONFIG_PATH = "/client-config";
 const state = {
   settings: {
     settingsVersion: 4,
-    language: "ru",
+    language: "en",
     theme: "dark",
     authRequired: true,
     authorized: false,
@@ -610,7 +610,7 @@ async function init() {
   } catch {
     state.settings = {
       settingsVersion: 4,
-      language: "ru",
+      language: "en",
       theme: "dark",
       authRequired: true,
       authorized: false,
@@ -1161,7 +1161,13 @@ async function startTelegramAuthorization() {
   render();
 
   try {
-    const data = await authFetch("/auth/request", { method: "POST" });
+    const data = await authFetch("/auth/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        language: normalizeLanguageCode(state.settings.language),
+      }),
+    });
     applyAuthServerMeta(data || {});
     state.auth.sessionId = String(data.sessionId || "");
     const botUrl = normalizeHttpUrl(data?.botUrl || currentBotUrl, {
@@ -1493,6 +1499,14 @@ function normalizeHttpUrl(value, { allowHttp = true, allowHttps = true } = {}) {
   } catch {
     return "";
   }
+}
+
+function normalizeLanguageCode(value) {
+  const code = String(value || "").toLowerCase();
+  if (code === "ru" || code === "tr" || code === "en") {
+    return code;
+  }
+  return "en";
 }
 
 function normalizeTelegramId(value) {
