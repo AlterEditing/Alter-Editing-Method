@@ -3,6 +3,7 @@ dist/
 *.log
 *.tmp
 *.zip
+release-draft.bat
 
 # Keep local FFmpeg binaries out of git history.
 vendor/ffmpeg/*.exe

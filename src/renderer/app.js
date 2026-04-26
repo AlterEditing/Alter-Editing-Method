@@ -232,12 +232,17 @@ const translations = {
 };
 
 const languageOrder = ["ru", "en", "tr"];
-const DEFAULT_AUTH_API_BASE = "https://auth.alterediting.com";
+const DEFAULT_AUTH_API_BASE = "http://132.243.30.159:3000";
+const DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/alterediting";
 let authApiBase = DEFAULT_AUTH_API_BASE;
+let authApiFallbacks = [];
+let telegramChannelUrl = DEFAULT_TELEGRAM_CHANNEL_URL;
+let currentBotUrl = "";
 const AUTH_POLL_INTERVAL_MS = 2000;
 const AUTH_POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const AUTH_SUBSCRIPTION_RETRY_MS = 30 * 1000;
 const AUTH_FETCH_TIMEOUT_MS = 7000;
+const AUTH_SERVER_CONFIG_PATH = "/client-config";
 
 const state = {
   settings: {
@@ -260,6 +265,7 @@ const state = {
     subscriptionCheckInFlight: false,
     subscriptionRetryTimer: null,
     offlineGuest: false,
+    degradedReason: "",
     guestCheckInFlight: false,
     guestRetryTimer: null,
   },
@@ -416,7 +422,74 @@ function initIcons() {
   setIcon(elements.minimizeButton, "minus");
   setIcon(elements.closeButton, "close");
   elements.uploadIcon.innerHTML = icons.upload;
-  elements.telegramLink.innerHTML = `${icons.send}<span>t.me/alterediting</span>`;
+  renderTelegramLink();
+}
+
+function applyRuntimeConfig(runtimeConfig = {}) {
+  const runtimeAuthBase = normalizeHttpUrl(runtimeConfig?.authApiBase, {
+    allowHttp: true,
+    allowHttps: true,
+  });
+  if (runtimeAuthBase) {
+    authApiBase = runtimeAuthBase;
+  }
+
+  const runtimeFallbacks = Array.isArray(runtimeConfig?.authApiFallbacks)
+    ? runtimeConfig.authApiFallbacks
+    : [];
+  authApiFallbacks = runtimeFallbacks
+    .map((item) => normalizeHttpUrl(item, { allowHttp: true, allowHttps: true }))
+    .filter(Boolean);
+
+  const runtimeChannel = normalizeHttpUrl(runtimeConfig?.telegramChannelUrl, {
+    allowHttp: false,
+    allowHttps: true,
+  });
+  if (runtimeChannel) {
+    telegramChannelUrl = runtimeChannel;
+  }
+  renderTelegramLink();
+}
+
+function applyAuthServerMeta(meta = {}) {
+  const nextAuthBase = normalizeHttpUrl(meta?.authApiBase, {
+    allowHttp: true,
+    allowHttps: true,
+  });
+  if (nextAuthBase) {
+    authApiBase = nextAuthBase;
+  }
+
+  const nextChannel = normalizeHttpUrl(meta?.channelUrl, {
+    allowHttp: false,
+    allowHttps: true,
+  });
+  if (nextChannel) {
+    telegramChannelUrl = nextChannel;
+    renderTelegramLink();
+  }
+
+  const nextBotUrl = normalizeHttpUrl(meta?.botUrl, {
+    allowHttp: false,
+    allowHttps: true,
+  });
+  if (nextBotUrl) {
+    currentBotUrl = nextBotUrl;
+  }
+}
+
+async function refreshAuthServerConfig() {
+  try {
+    const data = await authFetch(AUTH_SERVER_CONFIG_PATH, { method: "GET" }, { fallbackOnHttpErrors: false });
+    applyAuthServerMeta(data || {});
+  } catch {
+    // Keep runtime defaults when optional config endpoint is unavailable.
+  }
+}
+
+function renderTelegramLink() {
+  const displayValue = String(telegramChannelUrl || DEFAULT_TELEGRAM_CHANNEL_URL).replace(/^https?:\/\//i, "");
+  elements.telegramLink.innerHTML = `${icons.send}<span>${escapeHtml(displayValue)}</span>`;
 }
 
 async function init() {
@@ -424,13 +497,11 @@ async function init() {
   bindEvents();
   try {
     const runtimeConfig = await window.alterE.app.getRuntimeConfig();
-    const runtimeAuthBase = String(runtimeConfig?.authApiBase || "").trim();
-    if (runtimeAuthBase) {
-      authApiBase = runtimeAuthBase;
-    }
+    applyRuntimeConfig(runtimeConfig);
   } catch {
     authApiBase = DEFAULT_AUTH_API_BASE;
   }
+  await refreshAuthServerConfig();
 
   window.alterE.video.onProgress((progress) => {
     state.progress = clamp(Number(progress || 0), 0, 100);
@@ -606,7 +677,7 @@ function bindEvents() {
   elements.themeButton.addEventListener("click", toggleTheme);
   elements.authButton.addEventListener("click", startTelegramAuthorization);
   window.alterE.auth?.onDeepLink?.(handleAuthDeepLink);
-  elements.telegramLink.addEventListener("click", () => window.alterE.shell.openExternal("https://t.me/alterediting"));
+  elements.telegramLink.addEventListener("click", () => window.alterE.shell.openExternal(telegramChannelUrl));
   elements.copyLogsButton.addEventListener("click", copyLogs);
   elements.exportLogsButton.addEventListener("click", exportLogs);
   elements.mandatoryUpdateDownloadButton.addEventListener("click", handleUpdateAction);
@@ -828,10 +899,17 @@ async function handleMissingAuthorization() {
   try {
     await authFetch("/health");
     state.auth.offlineGuest = false;
+    state.auth.degradedReason = "";
   } catch (error) {
+    const connectivity = classifyConnectivityIssue(error);
     state.auth.offlineGuest = true;
+    state.auth.degradedReason = connectivity;
     state.auth.error = "";
-    log("warning", "Authorization deferred", "Auth server unavailable; temporary offline access allowed");
+    if (connectivity === "offline") {
+      log("warning", "Authorization deferred", "No internet connection; temporary local access allowed");
+    } else {
+      log("warning", "Authorization deferred", "Auth server unavailable; temporary local access allowed");
+    }
     scheduleGuestAuthorizationCheck(AUTH_SUBSCRIPTION_RETRY_MS);
   } finally {
     state.auth.checking = false;
@@ -868,9 +946,11 @@ async function checkGuestAuthorizationServer() {
   try {
     await authFetch("/health");
     state.auth.offlineGuest = false;
+    state.auth.degradedReason = "";
     state.auth.error = "";
     log("system", "Auth server available", "Login is required");
   } catch (error) {
+    state.auth.degradedReason = classifyConnectivityIssue(error);
     scheduleGuestAuthorizationCheck(AUTH_SUBSCRIPTION_RETRY_MS);
   } finally {
     state.auth.guestCheckInFlight = false;
@@ -970,13 +1050,18 @@ async function startTelegramAuthorization() {
 
   try {
     const data = await authFetch("/auth/request", { method: "POST" });
+    applyAuthServerMeta(data || {});
     state.auth.sessionId = String(data.sessionId || "");
-    if (!state.auth.sessionId || !data.botUrl) {
+    const botUrl = normalizeHttpUrl(data?.botUrl || currentBotUrl, {
+      allowHttp: false,
+      allowHttps: true,
+    });
+    if (!state.auth.sessionId || !botUrl) {
       throw new Error("Invalid auth response");
     }
 
     log("system", "Telegram authorization started", state.auth.sessionId);
-    await window.alterE.shell.openExternal(data.botUrl);
+    await window.alterE.shell.openExternal(botUrl);
     startAuthPolling(state.auth.sessionId);
   } catch (error) {
     state.auth.pending = false;
@@ -992,6 +1077,22 @@ function handleAuthDeepLink(rawUrl) {
   try {
     const url = new URL(String(rawUrl || ""));
     sessionId = url.searchParams.get("session") || "";
+    const deepLinkServer = normalizeHttpUrl(url.searchParams.get("server"), {
+      allowHttp: true,
+      allowHttps: true,
+    });
+    if (deepLinkServer) {
+      authApiBase = deepLinkServer;
+    }
+
+    const deepLinkChannel = normalizeHttpUrl(url.searchParams.get("channel"), {
+      allowHttp: false,
+      allowHttps: true,
+    });
+    if (deepLinkChannel) {
+      telegramChannelUrl = deepLinkChannel;
+      renderTelegramLink();
+    }
   } catch {
     return;
   }
@@ -1104,6 +1205,7 @@ async function clearAuthorization(showLog) {
   state.auth.subscriptionCheckInFlight = false;
   state.auth.guestCheckInFlight = false;
   state.auth.offlineGuest = false;
+  state.auth.degradedReason = "";
   state.settings = await window.alterE.settings.update({
     authorized: false,
     telegramId: null,
@@ -1118,11 +1220,69 @@ function isAuthorizationRejection(error) {
   return [401, 403].includes(Number(error?.status || 0));
 }
 
-async function authFetch(endpoint, options = {}) {
+function buildAuthServerCandidates() {
+  const normalized = [authApiBase, ...authApiFallbacks]
+    .map((item) => normalizeHttpUrl(item, { allowHttp: true, allowHttps: true }))
+    .filter(Boolean);
+
+  return Array.from(new Set(normalized));
+}
+
+function isNetworkFailureError(error) {
+  if (!error) {
+    return false;
+  }
+
+  if (error.name === "AbortError") {
+    return true;
+  }
+
+  if (Number(error.status || 0) > 0) {
+    return false;
+  }
+
+  const message = String(error.message || error || "").toLowerCase();
+  return (
+    message.includes("timeout") ||
+    message.includes("failed to fetch") ||
+    message.includes("networkerror") ||
+    message.includes("network request failed")
+  );
+}
+
+async function authFetch(endpoint, options = {}, runtimeOptions = {}) {
+  const candidates = buildAuthServerCandidates();
+  const fallbackOnHttpErrors = runtimeOptions.fallbackOnHttpErrors === true;
+  let lastError = null;
+
+  for (const candidate of candidates) {
+    try {
+      const data = await authFetchAgainstBase(candidate, endpoint, options);
+      if (authApiBase !== candidate) {
+        log("system", "Auth server switched", candidate);
+      }
+      authApiBase = candidate;
+      return data;
+    } catch (error) {
+      lastError = error;
+      const status = Number(error?.status || 0);
+      if (status > 0 && !fallbackOnHttpErrors) {
+        throw error;
+      }
+      if (status === 0 && !isNetworkFailureError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError || new Error("Auth server unavailable");
+}
+
+async function authFetchAgainstBase(baseUrl, endpoint, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AUTH_FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(`${authApiBase}${endpoint}`, {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       cache: "no-store",
       ...options,
       signal: options.signal || controller.signal,
@@ -1137,16 +1297,55 @@ async function authFetch(endpoint, options = {}) {
       const error = new Error(data?.error || `HTTP ${response.status}`);
       error.status = response.status;
       error.data = data;
+      error.baseUrl = baseUrl;
       throw error;
     }
     return data || {};
   } catch (error) {
     if (error?.name === "AbortError") {
-      throw new Error("Auth server timeout");
+      const timeoutError = new Error("Auth server timeout");
+      timeoutError.baseUrl = baseUrl;
+      throw timeoutError;
     }
+    error.baseUrl = baseUrl;
     throw error;
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+function classifyConnectivityIssue(error) {
+  if (typeof navigator !== "undefined" && navigator && navigator.onLine === false) {
+    return "offline";
+  }
+
+  if (isNetworkFailureError(error)) {
+    return "server_unavailable";
+  }
+
+  return "server_unavailable";
+}
+
+function normalizeHttpUrl(value, { allowHttp = true, allowHttps = true } = {}) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol === "http:" && !allowHttp) {
+      return "";
+    }
+    if (parsed.protocol === "https:" && !allowHttps) {
+      return "";
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return "";
   }
 }
 

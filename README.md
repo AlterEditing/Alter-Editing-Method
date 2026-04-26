@@ -47,10 +47,14 @@ Expected artifacts:
 You can configure auth API base URL via environment variable:
 
 - `ALTERE_AUTH_API_BASE` (example: `https://auth.example.com`)
+- `ALTERE_AUTH_API_FALLBACKS` (comma-separated backup URLs)
+- `ALTERE_TELEGRAM_CHANNEL_URL` (footer channel link)
 
 If not set, default is:
 
-- `https://auth.alterediting.com`
+- `http://132.243.30.159:3000`
+
+The client can also refresh server-side links from `/client-config` and switch to a responsive fallback backend automatically.
 
 ## FFmpeg Note
 

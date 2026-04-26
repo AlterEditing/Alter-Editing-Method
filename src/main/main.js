@@ -214,10 +214,17 @@ function flushPendingDeepLink() {
 
 function registerWindowIpc() {
   ipcMain.handle("app:get-runtime-config", () => {
-    const fallbackBase = "https://auth.alterediting.com";
+    const fallbackBase = "http://132.243.30.159:3000";
     const configuredBase = String(process.env.ALTERE_AUTH_API_BASE || "").trim();
+    const configuredFallbacks = String(process.env.ALTERE_AUTH_API_FALLBACKS || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const telegramChannelUrl = String(process.env.ALTERE_TELEGRAM_CHANNEL_URL || "https://t.me/alterediting").trim();
     return {
       authApiBase: configuredBase || fallbackBase,
+      authApiFallbacks: configuredFallbacks,
+      telegramChannelUrl,
     };
   });
 
