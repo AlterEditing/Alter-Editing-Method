@@ -45,6 +45,7 @@ Expected artifacts:
 ## Code Signing And Certificate Readiness
 
 For trusted Windows installers (and SmartScreen reputation), use a valid code-signing certificate and sign release artifacts in CI.
+Code signing for this project is provided by the SignPath Foundation.
 
 Environment variables for Windows code-signing:
 
