@@ -42,7 +42,6 @@ const translations = {
     authChecking: "Checking authorization...",
     authWaiting: "Confirm the subscription in Telegram, then return here.",
     authFailed: "Authorization failed. Try again.",
-    authNoInternet: "No internet connection. Please connect to sign in.",
     authServerUnavailable: "Authorization server is unavailable. Please try again later.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
@@ -114,7 +113,6 @@ const translations = {
     authChecking: "Проверяем авторизацию...",
     authWaiting: "Подтвердите подписку в Telegram и вернитесь сюда.",
     authFailed: "Ошибка авторизации. Попробуйте снова.",
-    authNoInternet: "Нет интернета. Подключитесь к сети для входа.",
     authServerUnavailable: "Сервер авторизации недоступен. Пожалуйста, попробуйте позже.",
     authSuccess: "Авторизация выполнена",
     subscriptionRequired: "Нужна подписка",
@@ -186,7 +184,6 @@ const translations = {
     authChecking: "Yetki kontrol ediliyor...",
     authWaiting: "Telegram aboneligini onaylayin ve buraya donun.",
     authFailed: "Yetkilendirme basarisiz. Tekrar deneyin.",
-    authNoInternet: "Internet baglantisi yok. Giris icin baglanti kurun.",
     authServerUnavailable: "Yetkilendirme sunucusu kullanilamiyor. Lutfen daha sonra tekrar deneyin.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
@@ -249,12 +246,6 @@ const AUTH_POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const AUTH_SUBSCRIPTION_RETRY_MS = 30 * 1000;
 const AUTH_FETCH_TIMEOUT_MS = 7000;
 const AUTH_SERVER_CONFIG_PATH = "/client-config";
-const CONNECTIVITY_CHECK_TIMEOUT_MS = 2500;
-const CONNECTIVITY_CHECK_URLS = [
-  "https://www.gstatic.com/generate_204",
-  "https://1.1.1.1/cdn-cgi/trace",
-  "https://connectivitycheck.gstatic.com/generate_204",
-];
 
 const state = {
   settings: {
@@ -1028,16 +1019,10 @@ async function handleMissingAuthorization() {
     state.auth.degradedReason = "";
     state.auth.error = "";
   } catch (error) {
-    const connectivity = await classifyConnectivityIssue(error);
     state.auth.offlineGuest = false;
-    state.auth.degradedReason = connectivity;
-    if (connectivity === "offline") {
-      state.auth.error = t("authNoInternet");
-      log("warning", "Authorization blocked", "No internet connection; sign-in is required for new users");
-    } else {
-      state.auth.error = t("authServerUnavailable");
-      log("warning", "Authorization blocked", "Auth server unavailable; sign-in is required for new users");
-    }
+    state.auth.degradedReason = "server_unavailable";
+    state.auth.error = t("authServerUnavailable");
+    log("warning", "Authorization blocked", "Auth server unavailable; sign-in is required for new users");
   } finally {
     state.auth.checking = false;
     render();
@@ -1077,7 +1062,7 @@ async function checkGuestAuthorizationServer() {
     state.auth.error = "";
     log("system", "Auth server available", "Login is required");
   } catch (error) {
-    state.auth.degradedReason = await classifyConnectivityIssue(error);
+    state.auth.degradedReason = "server_unavailable";
     scheduleGuestAuthorizationCheck(AUTH_SUBSCRIPTION_RETRY_MS);
   } finally {
     state.auth.guestCheckInFlight = false;
@@ -1165,14 +1150,6 @@ async function checkStoredSubscriptionOnce(reason = "auto") {
 
 async function startTelegramAuthorization() {
   if (state.auth.pending || state.auth.checking) {
-    return;
-  }
-
-  const hasInternet = await detectInternetConnectivity();
-  if (!hasInternet) {
-    state.auth.error = t("authNoInternet");
-    toast("warning", t("authFailed"), state.auth.error);
-    render();
     return;
   }
 
@@ -1450,50 +1427,6 @@ async function authFetchAgainstBase(baseUrl, endpoint, options = {}) {
   } finally {
     clearTimeout(timeout);
   }
-}
-
-async function classifyConnectivityIssue(error) {
-  if (typeof navigator !== "undefined" && navigator && navigator.onLine === false) {
-    return "offline";
-  }
-
-  if (isNetworkFailureError(error)) {
-    const hasInternet = await detectInternetConnectivity();
-    return hasInternet ? "server_unavailable" : "offline";
-  }
-
-  return "server_unavailable";
-}
-
-async function detectInternetConnectivity() {
-  if (typeof navigator !== "undefined" && navigator && navigator.onLine === false) {
-    return false;
-  }
-
-  for (const target of CONNECTIVITY_CHECK_URLS) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), CONNECTIVITY_CHECK_TIMEOUT_MS);
-    try {
-      const probeUrl = `${target}${target.includes("?") ? "&" : "?"}rand=${Date.now()}_${Math.random()
-        .toString(16)
-        .slice(2)}`;
-      await fetch(probeUrl, {
-        method: "HEAD",
-        mode: "no-cors",
-        cache: "reload",
-        credentials: "omit",
-        redirect: "error",
-        referrerPolicy: "no-referrer",
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      return true;
-    } catch {
-      clearTimeout(timeout);
-    }
-  }
-
-  return false;
 }
 
 function normalizeHttpUrl(value, { allowHttp = true, allowHttps = true } = {}) {
