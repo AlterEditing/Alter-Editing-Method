@@ -36,7 +36,7 @@ const translations = {
     themeDark: "Dark theme",
     themeLight: "Light theme",
     language: "Language",
-    authorize: "Confirm",
+    authorize: "Authorization",
     authTitle: "ALTER EDITING METHOD",
     authText: "Confirm your subscription in Telegram to sign in.",
     authChecking: "Checking authorization...",
@@ -107,7 +107,7 @@ const translations = {
     themeDark: "Темная тема",
     themeLight: "Светлая тема",
     language: "Язык",
-    authorize: "Подтвердить",
+    authorize: "Авторизация",
     authTitle: "ALTER EDITING METHOD",
     authText: "Подтвердите подписку в Telegram чтобы войти.",
     authChecking: "Проверяем авторизацию...",
@@ -178,7 +178,7 @@ const translations = {
     themeDark: "Koyu tema",
     themeLight: "Acik tema",
     language: "Dil",
-    authorize: "Onayla",
+    authorize: "Yetkilendirme",
     authTitle: "ALTER EDITING METHOD",
     authText: "Giris yapmak icin Telegram aboneligini onaylayin.",
     authChecking: "Yetki kontrol ediliyor...",
@@ -1177,9 +1177,21 @@ async function startTelegramAuthorization() {
     startAuthPolling(state.auth.sessionId);
   } catch (error) {
     state.auth.pending = false;
-    state.auth.error = readableError(error) || t("authFailed");
-    log("error", "Telegram authorization failed", state.auth.error);
-    toast("error", t("authFailed"), state.auth.error);
+    const serverUnavailable = isAuthServerUnavailableError(error);
+    state.auth.error = serverUnavailable ? t("authServerUnavailable") : readableError(error) || t("authFailed");
+    log("error", "Telegram authorization failed", serverUnavailable ? `${state.auth.error} | ${readableError(error)}` : state.auth.error);
+    if (serverUnavailable) {
+      const fallbackBotUrl = normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true });
+      if (fallbackBotUrl) {
+        try {
+          await window.alterE.shell.openExternal(fallbackBotUrl);
+        } catch {
+          // Keep auth overlay error text only when fallback bot link cannot be opened.
+        }
+      }
+    } else {
+      toast("error", t("authFailed"), state.auth.error);
+    }
     render();
   }
 }
@@ -1246,7 +1258,9 @@ function startAuthPolling(sessionId) {
         await exchangeAuthorization(sessionId);
       }
     } catch (error) {
-      state.auth.error = readableError(error);
+      state.auth.error = isAuthServerUnavailableError(error)
+        ? t("authServerUnavailable")
+        : readableError(error) || t("authFailed");
       render();
     }
   };
@@ -1299,8 +1313,13 @@ async function exchangeAuthorization(sessionId) {
   } catch (error) {
     await clearAuthorization(true);
     state.auth.pending = false;
-    state.auth.error = readableError(error) || t("authFailed");
-    toast("error", t("authFailed"), state.auth.error);
+    const serverUnavailable = isAuthServerUnavailableError(error);
+    state.auth.error = serverUnavailable ? t("authServerUnavailable") : readableError(error) || t("authFailed");
+    if (serverUnavailable) {
+      toast("error", t("authServerUnavailable"));
+    } else {
+      toast("error", t("authFailed"), state.auth.error);
+    }
   } finally {
     render();
   }
@@ -1358,6 +1377,24 @@ function isNetworkFailureError(error) {
   const message = String(error.message || error || "").toLowerCase();
   return (
     message.includes("timeout") ||
+    message.includes("failed to fetch") ||
+    message.includes("networkerror") ||
+    message.includes("network request failed")
+  );
+}
+
+function isAuthServerUnavailableError(error) {
+  const status = Number(error?.status || 0);
+  if (status >= 500) {
+    return true;
+  }
+  if (status === 0 && isNetworkFailureError(error)) {
+    return true;
+  }
+
+  const message = String(error?.message || error || "").toLowerCase();
+  return (
+    message.includes("auth server timeout") ||
     message.includes("failed to fetch") ||
     message.includes("networkerror") ||
     message.includes("network request failed")
