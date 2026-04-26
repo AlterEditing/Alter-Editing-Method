@@ -1,0 +1,36 @@
+﻿appId: com.alterediting.method
+productName: AlterEditingMethod
+artifactName: ${productName}-Setup-${version}.${ext}
+directories:
+  output: dist
+  buildResources: assets
+files:
+  - "src/**/*"
+  - "assets/**/*"
+  - "package.json"
+  - "!vendor/**/*"
+extraResources:
+  - from: vendor/ffmpeg
+    to: vendor/ffmpeg
+    filter:
+      - "**/*"
+win:
+  icon: assets/logo.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  executableName: AlterEditingMethod
+publish:
+  - provider: github
+    owner: AlterEditing
+    repo: Alter-Editing-Method
+    releaseType: release
+nsis:
+  oneClick: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  deleteAppDataOnUninstall: false
+  artifactName: ${productName}-Setup-${version}.${ext}
+  include: build/installer.nsh

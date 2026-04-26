@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' file:; connect-src 'self' http://132.243.30.159:3000 http://localhost:3000; img-src 'self' file: data:; style-src 'self'; script-src 'self';"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alter Editing Method</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="is-booting">
+    <section class="boot-screen" id="bootScreen" aria-hidden="true">
+      <div class="boot-screen-inner">
+        <canvas class="boot-logo" id="bootLogo" width="132" height="132" aria-hidden="true"></canvas>
+        <strong class="boot-title">Alter Editing Method</strong>
+        <span class="boot-loader" aria-hidden="true"></span>
+      </div>
+    </section>
+    <canvas id="particles" aria-hidden="true"></canvas>
+    <div class="app-shell">
+      <header class="title-bar">
+        <div class="brand">
+          <canvas class="brand-logo" id="brandLogo" width="56" height="56" aria-hidden="true"></canvas>
+          <span>Alter Editing Method</span>
+        </div>
+        <div class="title-actions">
+          <button class="icon-button" id="logsButton" type="button" title="Logs" aria-label="Logs"></button>
+          <button
+            class="icon-button badge-host"
+            id="notificationsButton"
+            type="button"
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <span class="badge" id="notificationBadge" hidden>0</span>
+          </button>
+          <button
+            class="icon-button update-button"
+            id="updateButton"
+            type="button"
+            title="Updates"
+            aria-label="Updates"
+            hidden
+          ></button>
+          <button class="icon-button" id="settingsButton" type="button" title="Settings" aria-label="Settings"></button>
+          <span class="title-separator"></span>
+          <button class="window-button" id="minimizeButton" type="button" aria-label="Minimize"></button>
+          <button class="window-button" id="closeButton" type="button" aria-label="Close"></button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+
+        <section class="content-stack" aria-label="Video patcher">
+          <div class="divider" aria-hidden="true"><span></span><i></i><span></span></div>
+
+          <button class="drop-zone" id="dropZone" type="button">
+            <span class="drop-glow"></span>
+            <video class="video-preview" id="videoPreview" muted playsinline preload="auto" tabindex="-1" hidden></video>
+            <span class="upload-icon" id="uploadIcon"></span>
+            <span class="file-title" id="fileTitle"></span>
+            <span class="file-meta" id="fileMeta"></span>
+            <span class="file-stream" id="fileStream"></span>
+            <span class="select-pill" id="selectPill">Select video</span>
+            <span class="drop-progress" id="dropProgress"></span>
+          </button>
+
+          <section class="output-panel" aria-label="Output settings">
+            <div class="output-row">
+              <div class="output-size-group">
+                <span id="outputSizeLabel">Output size</span>
+                <strong id="outputSizeValue">-</strong>
+              </div>
+            </div>
+            <div class="bitrate-row">
+              <input
+                class="bitrate-slider"
+                id="bitrateSlider"
+                type="range"
+                min="200"
+                max="1000000"
+                value="10000"
+                step="1"
+                aria-label="Output bitrate"
+              />
+              <div class="bitrate-entry">
+                <input id="bitrateInput" type="number" min="0.2" max="1000" step="0.001" value="10.00" />
+                <span id="bitrateUnit">mb/s</span>
+              </div>
+            </div>
+            <div class="preset-row" role="group" aria-label="Bitrate presets">
+              <button class="preset-button" data-mode="low" type="button">Low</button>
+              <button class="preset-button is-active" data-mode="balanced" type="button">Balanced</button>
+              <button class="preset-button" data-mode="source" type="button">Source</button>
+            </div>
+          </section>
+
+          <button class="patch-button" id="patchButton" type="button">
+            <span id="patchButtonLabel">PATCH</span>
+            <span class="patch-progress" id="patchProgress"></span>
+          </button>
+
+          <div class="divider" aria-hidden="true"><span></span><i></i><span></span></div>
+        </section>
+
+        <button class="telegram-link" id="telegramLink" type="button"></button>
+      </main>
+
+      <section class="floating-panel settings-panel" id="settingsPanel" hidden>
+        <div class="panel-heading">
+          <strong id="settingsTitle">Settings</strong>
+        </div>
+        <button class="panel-action" id="languageButton" type="button"></button>
+        <button class="panel-action" id="themeButton" type="button"></button>
+      </section>
+
+      <section class="floating-panel activity-panel" id="notificationsPanel" hidden>
+        <div class="panel-heading">
+          <strong id="notificationsTitle">Notifications</strong>
+        </div>
+        <div class="activity-list" id="notificationsList"></div>
+      </section>
+
+      <section class="floating-panel activity-panel" id="logsPanel" hidden>
+        <div class="panel-heading">
+          <strong id="logsTitle">Logs</strong>
+          <div class="panel-tools">
+            <button class="panel-tool-button" id="copyLogsButton" type="button">Copy</button>
+            <button class="panel-tool-button" id="exportLogsButton" type="button">Export</button>
+          </div>
+        </div>
+        <div class="log-console" id="logsList"></div>
+      </section>
+
+      <section class="auth-overlay" id="authOverlay" hidden>
+        <div class="auth-dialog">
+          <canvas class="auth-logo" id="authLogo" width="108" height="108" aria-hidden="true"></canvas>
+          <strong id="authTitle">ALTER EDITING METHOD</strong>
+          <span id="authText">Confirm Telegram subscription to sign in.</span>
+          <button class="auth-button" id="authButton" type="button">Confirm</button>
+        </div>
+      </section>
+
+      <section class="update-overlay" id="mandatoryUpdateOverlay" hidden>
+        <div class="update-dialog">
+          <button class="dialog-close-button" id="mandatoryUpdateCloseButton" type="button" aria-label="Close">×</button>
+          <strong id="mandatoryUpdateTitle">Mandatory update available</strong>
+          <span class="update-description" id="mandatoryUpdateText">A newer version is required to continue using all features.</span>
+          <div class="update-actions">
+            <button class="dialog-button primary" id="mandatoryUpdateDownloadButton" type="button">Download update</button>
+            <button class="dialog-button secondary" id="mandatoryUpdateLaterButton" type="button">Later</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="update-overlay" id="updateDetailsOverlay" hidden>
+        <div class="update-dialog update-details-dialog">
+          <button class="dialog-close-button" id="updateDetailsCloseButton" type="button" aria-label="Close">×</button>
+          <strong id="updateDetailsTitle">Update available</strong>
+          <span class="update-version" id="updateDetailsVersion"></span>
+          <span class="update-description" id="updateDetailsNotes"></span>
+          <span class="update-meta" id="updateDetailsSize"></span>
+          <div class="update-progress-block" id="updateDetailsProgressBlock" hidden>
+            <div class="update-progress-row">
+              <span id="updateDetailsProgressText">Downloading update</span>
+              <strong id="updateDetailsProgressValue">0%</strong>
+            </div>
+            <div class="update-progress-track" aria-hidden="true">
+              <span id="updateDetailsProgressBar"></span>
+            </div>
+          </div>
+          <div class="update-actions">
+            <button class="dialog-button primary" id="updateDetailsDownloadButton" type="button">Download and install</button>
+            <button class="dialog-button secondary" id="updateDetailsLaterButton" type="button">Later</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="confirm-overlay" id="closeConfirmOverlay" hidden>
+        <div class="confirm-dialog">
+          <strong id="closeConfirmTitle">Attention</strong>
+          <span id="closeConfirmText">Do you really want to interrupt video processing?</span>
+          <div class="confirm-actions">
+            <button class="panel-tool-button" id="closeConfirmStayButton" type="button">Stay</button>
+            <button class="auth-button" id="closeConfirmLeaveButton" type="button">Close</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="toast-host" id="toastHost" aria-live="polite"></div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

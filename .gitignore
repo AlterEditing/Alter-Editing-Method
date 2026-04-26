@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+*.tmp
+*.zip
+
+# Keep local FFmpeg binaries out of git history.
+vendor/ffmpeg/*.exe
+
+# Optional local updater file for development only.
+dev-app-update.yml
