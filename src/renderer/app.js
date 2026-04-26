@@ -250,6 +250,7 @@ const CONNECTIVITY_CHECK_TIMEOUT_MS = 2500;
 const CONNECTIVITY_CHECK_URLS = [
   "https://www.gstatic.com/generate_204",
   "https://1.1.1.1/cdn-cgi/trace",
+  "https://connectivitycheck.gstatic.com/generate_204",
 ];
 
 const state = {
@@ -1472,10 +1473,16 @@ async function detectInternetConnectivity() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), CONNECTIVITY_CHECK_TIMEOUT_MS);
     try {
-      await fetch(target, {
-        method: "GET",
+      const probeUrl = `${target}${target.includes("?") ? "&" : "?"}rand=${Date.now()}_${Math.random()
+        .toString(16)
+        .slice(2)}`;
+      await fetch(probeUrl, {
+        method: "HEAD",
         mode: "no-cors",
-        cache: "no-store",
+        cache: "reload",
+        credentials: "omit",
+        redirect: "error",
+        referrerPolicy: "no-referrer",
         signal: controller.signal,
       });
       clearTimeout(timeout);
