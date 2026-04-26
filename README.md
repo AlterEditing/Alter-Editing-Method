@@ -1,6 +1,6 @@
-# Alter Editing Method (Electron)
+# Alter Editing Method
 
-Desktop video patcher built with Electron.
+Desktop video patcher for MP4/MOV processing with Telegram-based authorization and auto-updates.
 
 ## License
 
@@ -22,7 +22,7 @@ npm install
 npm start
 ```
 
-## Build
+## Build Installer
 
 Local artifacts:
 
@@ -41,6 +41,17 @@ Expected artifacts:
 - `AlterEditingMethod-Setup-<version>.exe`
 - `AlterEditingMethod-Setup-<version>.exe.blockmap`
 - `latest.yml`
+
+## Code Signing And Certificate Readiness
+
+For trusted Windows installers (and SmartScreen reputation), use a valid code-signing certificate and sign release artifacts in CI.
+
+Environment variables for Windows code-signing:
+
+- `CSC_LINK` / `CSC_KEY_PASSWORD`
+- or Windows-specific `WIN_CSC_LINK` / `WIN_CSC_KEY_PASSWORD`
+
+Release hardening checklist is documented in `RELEASE_CHECKLIST.md`.
 
 ## Runtime Configuration
 
