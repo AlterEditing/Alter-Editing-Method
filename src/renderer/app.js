@@ -246,6 +246,11 @@ const AUTH_POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const AUTH_SUBSCRIPTION_RETRY_MS = 30 * 1000;
 const AUTH_FETCH_TIMEOUT_MS = 7000;
 const AUTH_SERVER_CONFIG_PATH = "/client-config";
+const CONNECTIVITY_CHECK_TIMEOUT_MS = 2500;
+const CONNECTIVITY_CHECK_URLS = [
+  "https://www.gstatic.com/generate_204",
+  "https://1.1.1.1/cdn-cgi/trace",
+];
 
 const state = {
   settings: {
@@ -1019,7 +1024,7 @@ async function handleMissingAuthorization() {
     state.auth.degradedReason = "";
     state.auth.error = "";
   } catch (error) {
-    const connectivity = classifyConnectivityIssue(error);
+    const connectivity = await classifyConnectivityIssue(error);
     const allowOfflineGuest = connectivity === "server_unavailable";
     state.auth.offlineGuest = allowOfflineGuest;
     state.auth.degradedReason = connectivity;
@@ -1070,7 +1075,7 @@ async function checkGuestAuthorizationServer() {
     state.auth.error = "";
     log("system", "Auth server available", "Login is required");
   } catch (error) {
-    state.auth.degradedReason = classifyConnectivityIssue(error);
+    state.auth.degradedReason = await classifyConnectivityIssue(error);
     scheduleGuestAuthorizationCheck(AUTH_SUBSCRIPTION_RETRY_MS);
   } finally {
     state.auth.guestCheckInFlight = false;
@@ -1161,7 +1166,8 @@ async function startTelegramAuthorization() {
     return;
   }
 
-  if (typeof navigator !== "undefined" && navigator && navigator.onLine === false) {
+  const hasInternet = await detectInternetConnectivity();
+  if (!hasInternet) {
     state.auth.error = t("authNoInternet");
     toast("warning", t("authFailed"), state.auth.error);
     render();
@@ -1444,16 +1450,42 @@ async function authFetchAgainstBase(baseUrl, endpoint, options = {}) {
   }
 }
 
-function classifyConnectivityIssue(error) {
+async function classifyConnectivityIssue(error) {
   if (typeof navigator !== "undefined" && navigator && navigator.onLine === false) {
     return "offline";
   }
 
   if (isNetworkFailureError(error)) {
-    return "server_unavailable";
+    const hasInternet = await detectInternetConnectivity();
+    return hasInternet ? "server_unavailable" : "offline";
   }
 
   return "server_unavailable";
+}
+
+async function detectInternetConnectivity() {
+  if (typeof navigator !== "undefined" && navigator && navigator.onLine === false) {
+    return false;
+  }
+
+  for (const target of CONNECTIVITY_CHECK_URLS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), CONNECTIVITY_CHECK_TIMEOUT_MS);
+    try {
+      await fetch(target, {
+        method: "GET",
+        mode: "no-cors",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return true;
+    } catch {
+      clearTimeout(timeout);
+    }
+  }
+
+  return false;
 }
 
 function normalizeHttpUrl(value, { allowHttp = true, allowHttps = true } = {}) {
