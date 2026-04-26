@@ -2,13 +2,18 @@ const fs = require("fs");
 const path = require("path");
 
 const DEFAULT_SETTINGS = {
-  settingsVersion: 3,
+  settingsVersion: 4,
   language: "ru",
   theme: "dark",
   authRequired: true,
   authorized: false,
   telegramId: null,
   authToken: "",
+  authApiBase: "http://132.243.30.159:3000",
+  authApiFallbacks: [],
+  telegramChannelUrl: "https://t.me/alterediting",
+  telegramBotUrl: "",
+  authConfigUpdatedAt: 0,
   dismissedMandatoryVersion: "",
 };
 
@@ -68,6 +73,14 @@ function normalizeSettings(raw = {}) {
   const authorized = Boolean(authToken && telegramId);
   const dismissedMandatoryVersion =
     typeof raw.dismissedMandatoryVersion === "string" ? raw.dismissedMandatoryVersion.trim() : "";
+  const authApiBase = normalizeHttpUrl(raw.authApiBase, { allowHttp: true, allowHttps: true }) || DEFAULT_SETTINGS.authApiBase;
+  const authApiFallbacks = normalizeFallbackUrls(raw.authApiFallbacks);
+  const telegramChannelUrl =
+    normalizeHttpUrl(raw.telegramChannelUrl, { allowHttp: false, allowHttps: true }) || DEFAULT_SETTINGS.telegramChannelUrl;
+  const telegramBotUrl = normalizeHttpUrl(raw.telegramBotUrl, { allowHttp: false, allowHttps: true });
+  const authConfigUpdatedAt = Number.isFinite(Number(raw.authConfigUpdatedAt))
+    ? Math.max(0, Math.trunc(Number(raw.authConfigUpdatedAt)))
+    : 0;
 
   return {
     settingsVersion: DEFAULT_SETTINGS.settingsVersion,
@@ -77,8 +90,47 @@ function normalizeSettings(raw = {}) {
     authorized,
     telegramId,
     authToken,
+    authApiBase,
+    authApiFallbacks,
+    telegramChannelUrl,
+    telegramBotUrl,
+    authConfigUpdatedAt,
     dismissedMandatoryVersion,
   };
+}
+
+function normalizeFallbackUrls(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const normalized = value
+    .map((entry) => normalizeHttpUrl(entry, { allowHttp: true, allowHttps: true }))
+    .filter(Boolean);
+  return Array.from(new Set(normalized));
+}
+
+function normalizeHttpUrl(value, { allowHttp = true, allowHttps = true } = {}) {
+  const raw = String(value || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol === "http:" && !allowHttp) {
+      return "";
+    }
+    if (parsed.protocol === "https:" && !allowHttps) {
+      return "";
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "";
+    }
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return "";
+  }
 }
 
 function normalizeTelegramId(value) {

@@ -42,6 +42,7 @@ const translations = {
     authChecking: "Checking authorization...",
     authWaiting: "Confirm the subscription in Telegram, then return here.",
     authFailed: "Authorization failed. Try again.",
+    authNoInternet: "No internet connection. Please connect to sign in.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
     retry: "RETRY",
@@ -112,6 +113,7 @@ const translations = {
     authChecking: "Проверяем авторизацию...",
     authWaiting: "Подтвердите подписку в Telegram и вернитесь сюда.",
     authFailed: "Ошибка авторизации. Попробуйте снова.",
+    authNoInternet: "Нет интернета. Подключитесь к сети для входа.",
     authSuccess: "Авторизация выполнена",
     subscriptionRequired: "Нужна подписка",
     retry: "ПОВТОРИТЬ",
@@ -182,6 +184,7 @@ const translations = {
     authChecking: "Yetki kontrol ediliyor...",
     authWaiting: "Telegram aboneligini onaylayin ve buraya donun.",
     authFailed: "Yetkilendirme basarisiz. Tekrar deneyin.",
+    authNoInternet: "Internet baglantisi yok. Giris icin baglanti kurun.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
     retry: "RETRY",
@@ -246,13 +249,18 @@ const AUTH_SERVER_CONFIG_PATH = "/client-config";
 
 const state = {
   settings: {
-    settingsVersion: 3,
+    settingsVersion: 4,
     language: "ru",
     theme: "dark",
     authRequired: true,
     authorized: false,
     telegramId: null,
     authToken: "",
+    authApiBase: DEFAULT_AUTH_API_BASE,
+    authApiFallbacks: [],
+    telegramChannelUrl: DEFAULT_TELEGRAM_CHANNEL_URL,
+    telegramBotUrl: "",
+    authConfigUpdatedAt: 0,
   },
   auth: {
     checking: false,
@@ -302,6 +310,9 @@ const state = {
     installAfterDownload: false,
   },
 };
+
+let authConfigPersistInFlight = false;
+let authConfigPersistPending = false;
 
 const elements = {
   body: document.body,
@@ -449,6 +460,40 @@ function applyRuntimeConfig(runtimeConfig = {}) {
     telegramChannelUrl = runtimeChannel;
   }
   renderTelegramLink();
+  schedulePersistAuthConfigCache();
+}
+
+function applyCachedAuthConfigFromSettings(settings = {}) {
+  const cachedAuthBase = normalizeHttpUrl(settings?.authApiBase, {
+    allowHttp: true,
+    allowHttps: true,
+  });
+  if (cachedAuthBase) {
+    authApiBase = cachedAuthBase;
+  }
+
+  const cachedFallbacks = Array.isArray(settings?.authApiFallbacks) ? settings.authApiFallbacks : [];
+  authApiFallbacks = cachedFallbacks
+    .map((item) => normalizeHttpUrl(item, { allowHttp: true, allowHttps: true }))
+    .filter(Boolean);
+
+  const cachedChannel = normalizeHttpUrl(settings?.telegramChannelUrl, {
+    allowHttp: false,
+    allowHttps: true,
+  });
+  if (cachedChannel) {
+    telegramChannelUrl = cachedChannel;
+  }
+
+  const cachedBot = normalizeHttpUrl(settings?.telegramBotUrl, {
+    allowHttp: false,
+    allowHttps: true,
+  });
+  if (cachedBot) {
+    currentBotUrl = cachedBot;
+  }
+
+  renderTelegramLink();
 }
 
 function applyAuthServerMeta(meta = {}) {
@@ -476,6 +521,8 @@ function applyAuthServerMeta(meta = {}) {
   if (nextBotUrl) {
     currentBotUrl = nextBotUrl;
   }
+
+  schedulePersistAuthConfigCache();
 }
 
 async function refreshAuthServerConfig() {
@@ -492,9 +539,92 @@ function renderTelegramLink() {
   elements.telegramLink.innerHTML = `${icons.send}<span>${escapeHtml(displayValue)}</span>`;
 }
 
+function createAuthConfigPatch() {
+  return {
+    authApiBase: authApiBase || DEFAULT_AUTH_API_BASE,
+    authApiFallbacks: Array.from(new Set(authApiFallbacks)).filter(Boolean),
+    telegramChannelUrl: telegramChannelUrl || DEFAULT_TELEGRAM_CHANNEL_URL,
+    telegramBotUrl: currentBotUrl || "",
+    authConfigUpdatedAt: Date.now(),
+  };
+}
+
+function needsAuthConfigPersist(patch) {
+  const current = state.settings || {};
+  if (String(current.authApiBase || "") !== String(patch.authApiBase || "")) {
+    return true;
+  }
+  if (String(current.telegramChannelUrl || "") !== String(patch.telegramChannelUrl || "")) {
+    return true;
+  }
+  if (String(current.telegramBotUrl || "") !== String(patch.telegramBotUrl || "")) {
+    return true;
+  }
+
+  const currentFallbacks = Array.isArray(current.authApiFallbacks) ? current.authApiFallbacks : [];
+  if (JSON.stringify(currentFallbacks) !== JSON.stringify(patch.authApiFallbacks)) {
+    return true;
+  }
+
+  return false;
+}
+
+function schedulePersistAuthConfigCache() {
+  if (authConfigPersistInFlight) {
+    authConfigPersistPending = true;
+    return;
+  }
+  void persistAuthConfigCache();
+}
+
+async function persistAuthConfigCache() {
+  if (!window.alterE?.settings?.update || !state.settings) {
+    return;
+  }
+
+  const patch = createAuthConfigPatch();
+  if (!needsAuthConfigPersist(patch)) {
+    return;
+  }
+
+  authConfigPersistInFlight = true;
+  try {
+    state.settings = await window.alterE.settings.update(patch);
+  } catch {
+    // Cache persistence is best-effort and should not block auth flow.
+  } finally {
+    authConfigPersistInFlight = false;
+    if (authConfigPersistPending) {
+      authConfigPersistPending = false;
+      void persistAuthConfigCache();
+    }
+  }
+}
+
 async function init() {
   initIcons();
   bindEvents();
+
+  try {
+    state.settings = await window.alterE.settings.get();
+  } catch {
+    state.settings = {
+      settingsVersion: 4,
+      language: "ru",
+      theme: "dark",
+      authRequired: true,
+      authorized: false,
+      telegramId: null,
+      authToken: "",
+      authApiBase: DEFAULT_AUTH_API_BASE,
+      authApiFallbacks: [],
+      telegramChannelUrl: DEFAULT_TELEGRAM_CHANNEL_URL,
+      telegramBotUrl: "",
+      authConfigUpdatedAt: 0,
+    };
+  }
+  applyCachedAuthConfigFromSettings(state.settings);
+
   try {
     const runtimeConfig = await window.alterE.app.getRuntimeConfig();
     applyRuntimeConfig(runtimeConfig);
@@ -509,6 +639,7 @@ async function init() {
   });
   window.alterE.settings.onChanged((settings) => {
     state.settings = settings;
+    applyCachedAuthConfigFromSettings(settings);
     render();
   });
   window.alterE.update?.onState?.((next) => {
@@ -520,20 +651,6 @@ async function init() {
     }
     log(entry.level || "info", String(entry.title || ""), String(entry.message || ""));
   });
-
-  try {
-    state.settings = await window.alterE.settings.get();
-  } catch {
-    state.settings = {
-      settingsVersion: 3,
-      language: "ru",
-      theme: "dark",
-      authRequired: true,
-      authorized: false,
-      telegramId: null,
-      authToken: "",
-    };
-  }
 
   try {
     syncUpdateState(await window.alterE.update.getState());
@@ -900,17 +1017,20 @@ async function handleMissingAuthorization() {
     await authFetch("/health");
     state.auth.offlineGuest = false;
     state.auth.degradedReason = "";
+    state.auth.error = "";
   } catch (error) {
     const connectivity = classifyConnectivityIssue(error);
-    state.auth.offlineGuest = true;
+    const allowOfflineGuest = connectivity === "server_unavailable";
+    state.auth.offlineGuest = allowOfflineGuest;
     state.auth.degradedReason = connectivity;
-    state.auth.error = "";
-    if (connectivity === "offline") {
-      log("warning", "Authorization deferred", "No internet connection; temporary local access allowed");
-    } else {
+    if (allowOfflineGuest) {
+      state.auth.error = "";
       log("warning", "Authorization deferred", "Auth server unavailable; temporary local access allowed");
+      scheduleGuestAuthorizationCheck(AUTH_SUBSCRIPTION_RETRY_MS);
+    } else {
+      state.auth.error = t("authNoInternet");
+      log("warning", "Authorization blocked", "No internet connection; sign-in is required for new users");
     }
-    scheduleGuestAuthorizationCheck(AUTH_SUBSCRIPTION_RETRY_MS);
   } finally {
     state.auth.checking = false;
     render();
@@ -1041,6 +1161,13 @@ async function startTelegramAuthorization() {
     return;
   }
 
+  if (typeof navigator !== "undefined" && navigator && navigator.onLine === false) {
+    state.auth.error = t("authNoInternet");
+    toast("warning", t("authFailed"), state.auth.error);
+    render();
+    return;
+  }
+
   stopAuthPolling();
   state.auth.pending = true;
   state.auth.error = "";
@@ -1083,6 +1210,7 @@ function handleAuthDeepLink(rawUrl) {
     });
     if (deepLinkServer) {
       authApiBase = deepLinkServer;
+      schedulePersistAuthConfigCache();
     }
 
     const deepLinkChannel = normalizeHttpUrl(url.searchParams.get("channel"), {
@@ -1092,6 +1220,7 @@ function handleAuthDeepLink(rawUrl) {
     if (deepLinkChannel) {
       telegramChannelUrl = deepLinkChannel;
       renderTelegramLink();
+      schedulePersistAuthConfigCache();
     }
   } catch {
     return;
@@ -1262,6 +1391,7 @@ async function authFetch(endpoint, options = {}, runtimeOptions = {}) {
         log("system", "Auth server switched", candidate);
       }
       authApiBase = candidate;
+      schedulePersistAuthConfigCache();
       return data;
     } catch (error) {
       lastError = error;
