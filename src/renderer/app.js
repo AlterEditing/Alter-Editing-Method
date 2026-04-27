@@ -20,6 +20,8 @@ const icons = {
   logout: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
   debug:
     '<svg viewBox="0 0 24 24"><path d="M9 6V4"/><path d="M15 6V4"/><path d="M8 10h8"/><rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 14h.01"/><path d="M15 14h.01"/></svg>',
+  github:
+    '<svg viewBox="0 0 24 24"><path d="M12 2.7a9.3 9.3 0 0 0-2.94 18.12c.46.09.62-.2.62-.44v-1.55c-2.54.56-3.07-1.07-3.07-1.07-.42-1.05-1.02-1.33-1.02-1.33-.84-.57.06-.56.06-.56.93.06 1.42.94 1.42.94.82 1.42 2.17 1 2.7.77.08-.6.32-1 .58-1.22-2.03-.23-4.16-1.01-4.16-4.5 0-.99.35-1.79.94-2.42-.1-.22-.41-1.14.09-2.36 0 0 .76-.24 2.49.92a8.7 8.7 0 0 1 4.54 0c1.73-1.16 2.49-.92 2.49-.92.5 1.22.19 2.14.09 2.36.59.63.94 1.43.94 2.42 0 3.5-2.13 4.27-4.17 4.5.33.28.61.83.61 1.67v2.6c0 .24.16.53.63.44A9.3 9.3 0 0 0 12 2.7"/></svg>',
 };
 
 const translations = {
@@ -133,7 +135,7 @@ const translations = {
     updateRepoPrompt: "GitHub repo (owner/repo)",
     updateRepoInvalid: "Invalid repo format. Use owner/repo.",
     updatePrefsSaved: "Update source preferences saved.",
-    updateBetaToggle: "Enable beta updates",
+    updateBetaToggle: "Beta",
     updatePrefsOpenRepo: "Open repo",
     updatePrefsSave: "Save",
     updatePrefsClose: "Close",
@@ -428,6 +430,7 @@ const state = {
 let authConfigPersistInFlight = false;
 let authConfigPersistPending = false;
 let riskConfirmResolver = null;
+let versionPrefsSaveTimer = null;
 
 const elements = {
   body: document.body,
@@ -468,6 +471,7 @@ const elements = {
   logsPanel: document.getElementById("logsPanel"),
   debugPanel: document.getElementById("debugPanel"),
   settingsTitle: document.getElementById("settingsTitle"),
+  settingsUpdateWrap: document.getElementById("settingsUpdateWrap"),
   settingsVersionArea: document.getElementById("settingsVersionArea"),
   settingsVersionMenu: document.getElementById("settingsVersionMenu"),
   updateRepoInput: document.getElementById("updateRepoInput"),
@@ -475,8 +479,6 @@ const elements = {
   updateBetaToggle: document.getElementById("updateBetaToggle"),
   updateBetaToggleLabel: document.getElementById("updateBetaToggleLabel"),
   openRepoButton: document.getElementById("openRepoButton"),
-  saveVersionPrefsButton: document.getElementById("saveVersionPrefsButton"),
-  cancelVersionPrefsButton: document.getElementById("cancelVersionPrefsButton"),
   debugTitle: document.getElementById("debugTitle"),
   debugAuthBaseLabel: document.getElementById("debugAuthBaseLabel"),
   debugFallbacksLabel: document.getElementById("debugFallbacksLabel"),
@@ -609,6 +611,7 @@ function initIcons() {
   if (tutorialIcon) {
     tutorialIcon.innerHTML = icons.help;
   }
+  setIcon(elements.openRepoButton, "github");
   renderTelegramLink();
 }
 
@@ -1066,9 +1069,14 @@ function bindEvents() {
   elements.appVersionLabel?.addEventListener("contextmenu", openVersionPreferencesMenu);
   elements.settingsVersionArea?.addEventListener("click", openVersionPreferencesMenu);
   elements.appVersionLabel?.addEventListener("click", openVersionPreferencesMenu);
-  elements.saveVersionPrefsButton?.addEventListener("click", saveVersionPreferences);
-  elements.cancelVersionPrefsButton?.addEventListener("click", closeVersionPreferencesMenu);
   elements.openRepoButton?.addEventListener("click", openVersionRepoFromInput);
+  elements.updateRepoInput?.addEventListener("input", scheduleVersionPreferencesSave);
+  elements.updateRepoInput?.addEventListener("blur", () => {
+    void persistVersionPreferences({ showErrorToast: false, checkUpdates: false });
+  });
+  elements.updateBetaToggle?.addEventListener("change", () => {
+    void persistVersionPreferences({ showErrorToast: false, checkUpdates: true });
+  });
   elements.tutorialOverlay.addEventListener("pointerdown", (event) => {
     if (event.target === elements.tutorialOverlay) {
       closeTutorial();
@@ -2013,6 +2021,7 @@ function closePanelOnOutsidePointer(event) {
       const inVersionArea = elements.settingsVersionArea?.contains(event.target);
       const inVersionMenu = elements.settingsVersionMenu?.contains(event.target);
       if (!inVersionArea && !inVersionMenu) {
+        void persistVersionPreferences({ showErrorToast: false, checkUpdates: true });
         closeVersionPreferencesMenu();
       }
     }
@@ -2489,6 +2498,16 @@ async function openVersionPreferencesMenu(event) {
   if (event && typeof event.stopPropagation === "function") {
     event.stopPropagation();
   }
+  if (state.openPanel !== "settings") {
+    return;
+  }
+  if (state.versionMenuVisible) {
+    const saved = await persistVersionPreferences({ showErrorToast: true, checkUpdates: true });
+    if (saved) {
+      closeVersionPreferencesMenu();
+    }
+    return;
+  }
   const currentOwner = String(state.settings.updateRepoOwner || "AlterEditing").trim();
   const currentRepo = String(state.settings.updateRepoName || "Alter-Editing-Method").trim();
   if (elements.updateRepoInput) {
@@ -2505,6 +2524,10 @@ async function openVersionPreferencesMenu(event) {
 function closeVersionPreferencesMenu() {
   if (!state.versionMenuVisible) {
     return;
+  }
+  if (versionPrefsSaveTimer) {
+    clearTimeout(versionPrefsSaveTimer);
+    versionPrefsSaveTimer = null;
   }
   state.versionMenuVisible = false;
   renderVersionPreferencesMenu();
@@ -2532,25 +2555,51 @@ function parseRepoInput(rawValue) {
   return { owner: match[1], repo: match[2] };
 }
 
-async function saveVersionPreferences() {
-  const parsed = parseRepoInput(elements.updateRepoInput?.value);
-  if (!parsed) {
-    toast("error", t("updates"), t("updateRepoInvalid"));
+function scheduleVersionPreferencesSave() {
+  if (!state.versionMenuVisible) {
     return;
   }
+  if (versionPrefsSaveTimer) {
+    clearTimeout(versionPrefsSaveTimer);
+  }
+  versionPrefsSaveTimer = setTimeout(() => {
+    versionPrefsSaveTimer = null;
+    void persistVersionPreferences({ showErrorToast: false, checkUpdates: false });
+  }, 520);
+}
+
+async function persistVersionPreferences({ showErrorToast = false, checkUpdates = true } = {}) {
+  const parsed = parseRepoInput(elements.updateRepoInput?.value);
+  if (!parsed) {
+    if (showErrorToast) {
+      toast("error", t("updates"), t("updateRepoInvalid"));
+    }
+    return false;
+  }
   const updateAllowPrerelease = Boolean(elements.updateBetaToggle?.checked);
+  const sameRepo =
+    parsed.owner === state.settings.updateRepoOwner &&
+    parsed.repo === state.settings.updateRepoName &&
+    updateAllowPrerelease === Boolean(state.settings.updateAllowPrerelease);
+  if (sameRepo) {
+    return true;
+  }
   state.settings = await window.alterE.settings.update({
     updateRepoOwner: parsed.owner,
     updateRepoName: parsed.repo,
     updateAllowPrerelease,
   });
-  toast("success", t("updates"), t("updatePrefsSaved"));
-  closeVersionPreferencesMenu();
-  try {
-    await window.alterE.update.check();
-  } catch {
-    // ignore immediate check errors
+  if (showErrorToast) {
+    toast("success", t("updates"), t("updatePrefsSaved"));
   }
+  if (checkUpdates) {
+    try {
+      await window.alterE.update.check();
+    } catch {
+      // ignore immediate check errors
+    }
+  }
+  return true;
 }
 
 function openVersionRepoFromInput() {
@@ -2629,13 +2678,8 @@ function renderText() {
     elements.updateBetaToggleLabel.textContent = t("updateBetaToggle");
   }
   if (elements.openRepoButton) {
-    elements.openRepoButton.textContent = t("updatePrefsOpenRepo");
-  }
-  if (elements.saveVersionPrefsButton) {
-    elements.saveVersionPrefsButton.textContent = t("updatePrefsSave");
-  }
-  if (elements.cancelVersionPrefsButton) {
-    elements.cancelVersionPrefsButton.textContent = t("updatePrefsClose");
+    elements.openRepoButton.title = t("updatePrefsOpenRepo");
+    elements.openRepoButton.setAttribute("aria-label", t("updatePrefsOpenRepo"));
   }
 
   elements.logsButton.title = t("logs");
@@ -2861,6 +2905,9 @@ function renderUpdate() {
   const update = state.update;
   const hasUpdate = Boolean(update.supported && update.available);
   const progress = clamp(Math.round(Number(update.downloadProgress || 0)), 0, 100);
+  if (elements.settingsUpdateWrap) {
+    elements.settingsUpdateWrap.hidden = !hasUpdate;
+  }
   elements.updateButton.hidden = !hasUpdate;
   elements.updateButton.style.setProperty("--update-progress", `${progress}%`);
   elements.settingsButton.classList.toggle("has-update", hasUpdate);

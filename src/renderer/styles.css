@@ -1370,8 +1370,8 @@ body[data-theme="light"] .floating-panel {
 
 .settings-version {
   color: var(--muted);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 760;
   letter-spacing: 0.02em;
   padding: 0;
   cursor: pointer;
@@ -1388,11 +1388,18 @@ body[data-theme="light"] .floating-panel {
 
 .settings-version-menu {
   margin: 4px 10px 8px;
-  padding: 8px;
+  padding: 9px;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   background: color-mix(in srgb, var(--control-bg) 86%, transparent);
   display: grid;
+  gap: 9px;
+}
+
+.settings-version-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
@@ -1414,20 +1421,150 @@ body[data-theme="light"] .floating-panel {
 }
 
 .settings-version-menu-toggle {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--text);
   font-size: 11px;
+  user-select: none;
 }
 
-.settings-version-menu-actions {
-  display: flex;
-  gap: 6px;
+.settings-version-menu-beta-label {
+  font-size: 11px;
+  font-weight: 760;
+  color: var(--text);
 }
 
-.settings-version-menu-actions .panel-tool-button {
+.settings-version-menu-spacer {
   flex: 1;
+}
+
+.settings-version-menu-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.settings-version-switch {
+  width: 34px;
+  height: 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--control-bg) 90%, transparent);
+  display: inline-flex;
+  align-items: center;
+  padding: 1px;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.settings-version-switch-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--muted);
+  transform: translateX(0);
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.settings-version-menu-toggle input:checked + .settings-version-switch {
+  background: color-mix(in srgb, var(--signal) 26%, var(--control-bg));
+  border-color: color-mix(in srgb, var(--signal) 70%, var(--panel-border));
+}
+
+.settings-version-menu-toggle input:checked + .settings-version-switch .settings-version-switch-thumb {
+  transform: translateX(16px);
+  background: var(--signal);
+}
+
+.settings-version-repo-link {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.settings-version-repo-link:hover {
+  color: var(--text);
+  border-color: var(--panel-border);
+  background: var(--control-hover);
+}
+
+.settings-version-repo-link svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.settings-update-wrap {
+  margin: 10px 9px 2px;
+  padding-top: 10px;
+  border-top: 1px dashed color-mix(in srgb, var(--panel-border) 80%, transparent);
+}
+
+.settings-update-button {
+  width: 100%;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--signal) 36%, var(--panel-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--signal) 13%, var(--control-bg));
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 740;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.settings-update-button:hover {
+  background: color-mix(in srgb, var(--signal) 20%, var(--control-hover));
+  border-color: color-mix(in srgb, var(--signal) 58%, var(--panel-border));
+  transform: translateY(-1px);
+}
+
+.settings-update-button[data-level="mandatory"] {
+  border-color: color-mix(in srgb, var(--warning) 58%, var(--panel-border));
+  background: color-mix(in srgb, var(--warning) 20%, var(--control-bg));
+}
+
+.settings-update-button[data-state="downloading"] {
+  border-color: color-mix(in srgb, var(--success) 52%, var(--panel-border));
+  background: color-mix(in srgb, var(--success) 16%, var(--control-bg));
+}
+
+.settings-update-button[data-state="downloading"] svg {
+  animation: settings-update-spin 1s linear infinite;
+}
+
+.settings-update-button[data-state="downloaded"] {
+  border-color: color-mix(in srgb, var(--success) 60%, var(--panel-border));
+  background: color-mix(in srgb, var(--success) 22%, var(--control-bg));
+}
+
+.settings-update-button svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .activity-panel {
