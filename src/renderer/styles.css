@@ -232,6 +232,7 @@ body.is-booting .toast-host {
   align-items: center;
   gap: 6px;
   min-height: 16px;
+  justify-content: center;
 }
 
 .brand-version {
@@ -251,6 +252,14 @@ body.is-booting .toast-host {
   display: flex;
   align-items: center;
   gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.title-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   -webkit-app-region: no-drag;
 }
 
