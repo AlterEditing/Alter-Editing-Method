@@ -1,6 +1,5 @@
 node_modules/
 dist/
-.idea/
 *.log
 *.tmp
 *.zip
@@ -13,7 +12,3 @@ vendor/ffmpeg/*.exe
 
 # Optional local updater file for development only.
 dev-app-update.yml
-
-# Local-only debug configuration (do not commit secrets/tokens).
-.env.debug.local
-debug-bot.local.json
