@@ -89,7 +89,7 @@ function createUpdateService({ onStateChange, onLog }) {
       const releaseNotes = normalizeReleaseNotes(info?.releaseNotes);
       const apiNotes = releaseNotes || (await fetchReleaseBody(version));
       const mandatory = detectMandatoryUpdate(apiNotes);
-      const sizeBytes = resolveUpdateSizeBytes(info);
+      const estimatedSizeBytes = resolveUpdateSizeBytes(info);
 
       downloadedFilePath = "";
       updateState({
@@ -99,7 +99,8 @@ function createUpdateService({ onStateChange, onLog }) {
         downloading: false,
         downloadProgress: 0,
         transferredBytes: 0,
-        sizeBytes,
+        // Do not show guessed size before real download starts.
+        sizeBytes: 0,
         version,
         mandatory,
         releaseNotes: cleanReleaseNotes(apiNotes),
@@ -108,6 +109,9 @@ function createUpdateService({ onStateChange, onLog }) {
         checkedAt: Date.now(),
       });
 
+      if (estimatedSizeBytes > 0) {
+        onLog?.("info", `Update estimated package size: ${estimatedSizeBytes} bytes`);
+      }
       onLog?.("info", `Update available: ${version}${mandatory ? " (mandatory)" : ""}`);
     });
 
@@ -115,6 +119,10 @@ function createUpdateService({ onStateChange, onLog }) {
       const percent = Number(progress?.percent || 0);
       const transferredBytes = toPositiveNumber(progress?.transferred);
       const totalBytes = toPositiveNumber(progress?.total);
+      const previousTotalBytes = toPositiveNumber(state.sizeBytes);
+      if (previousTotalBytes > 0 && totalBytes > Math.max(previousTotalBytes * 1.4, previousTotalBytes + 20 * 1024 * 1024)) {
+        onLog?.("warning", "Update switched to full package download (differential package unavailable)");
+      }
       updateState({
         checking: false,
         downloading: true,
