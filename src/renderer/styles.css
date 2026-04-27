@@ -1393,37 +1393,14 @@ body[data-theme="light"] .floating-panel {
   border-radius: 8px;
   background: color-mix(in srgb, var(--control-bg) 86%, transparent);
   display: grid;
-  gap: 9px;
-}
-
-.settings-version-menu-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.settings-version-menu-label {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.settings-version-menu-input {
-  width: 100%;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--panel-border);
-  border-radius: 7px;
-  background: var(--control-bg);
-  color: var(--text);
-  font-size: 11px;
+  gap: 0;
 }
 
 .settings-version-menu-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   color: var(--text);
   font-size: 11px;
   user-select: none;
@@ -1433,10 +1410,6 @@ body[data-theme="light"] .floating-panel {
   font-size: 11px;
   font-weight: 760;
   color: var(--text);
-}
-
-.settings-version-menu-spacer {
-  flex: 1;
 }
 
 .settings-version-menu-toggle input {
@@ -1546,10 +1519,6 @@ body[data-theme="light"] .floating-panel {
 .settings-update-button[data-state="downloading"] {
   border-color: color-mix(in srgb, var(--success) 52%, var(--panel-border));
   background: color-mix(in srgb, var(--success) 16%, var(--control-bg));
-}
-
-.settings-update-button[data-state="downloading"] svg {
-  animation: settings-update-spin 1s linear infinite;
 }
 
 .settings-update-button[data-state="downloaded"] {
