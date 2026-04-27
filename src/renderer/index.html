@@ -132,6 +132,19 @@
         <div class="settings-footer" id="settingsVersionArea" title="Right click to configure update source">
           <span class="settings-version" id="appVersionLabel">v-</span>
         </div>
+        <div class="settings-version-menu" id="settingsVersionMenu" hidden>
+          <label class="settings-version-menu-label" id="updateRepoLabel" for="updateRepoInput">GitHub repo (owner/repo)</label>
+          <input class="settings-version-menu-input" id="updateRepoInput" type="text" placeholder="AlterEditing/Alter-Editing-Method" />
+          <label class="settings-version-menu-toggle">
+            <input id="updateBetaToggle" type="checkbox" />
+            <span id="updateBetaToggleLabel">Enable beta updates</span>
+          </label>
+          <div class="settings-version-menu-actions">
+            <button class="panel-tool-button" id="openRepoButton" type="button">Open repo</button>
+            <button class="panel-tool-button" id="saveVersionPrefsButton" type="button">Save</button>
+            <button class="panel-tool-button" id="cancelVersionPrefsButton" type="button">Close</button>
+          </div>
+        </div>
       </section>
 
       <section class="floating-panel activity-panel" id="notificationsPanel" hidden>

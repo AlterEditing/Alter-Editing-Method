@@ -1373,20 +1373,61 @@ body[data-theme="light"] .floating-panel {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  border-radius: 5px;
-  padding: 1px 4px;
+  padding: 0;
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease, box-shadow 140ms ease, transform 120ms ease;
+  transition: color 140ms ease, text-shadow 140ms ease;
 }
 
 .settings-version:hover {
   color: var(--text);
-  background: color-mix(in srgb, var(--control-hover) 70%, transparent);
-  box-shadow: inset 0 0 0 1px var(--panel-border);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  text-underline-offset: 2px;
 }
 
-.settings-version:active {
-  transform: translateY(1px);
+.settings-version-menu {
+  margin: 4px 10px 8px;
+  padding: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--control-bg) 86%, transparent);
+  display: grid;
+  gap: 8px;
+}
+
+.settings-version-menu-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.settings-version-menu-input {
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  background: var(--control-bg);
+  color: var(--text);
+  font-size: 11px;
+}
+
+.settings-version-menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: 11px;
+}
+
+.settings-version-menu-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-version-menu-actions .panel-tool-button {
+  flex: 1;
 }
 
 .activity-panel {
