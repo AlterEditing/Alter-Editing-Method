@@ -131,20 +131,15 @@
         <div class="settings-update-wrap" id="settingsUpdateWrap" hidden>
           <button class="settings-update-button" id="updateButton" type="button"></button>
         </div>
-        <div class="settings-footer" id="settingsVersionArea" title="Right click to configure update source">
+        <div class="settings-footer" id="settingsVersionArea" title="Click to configure update options">
           <span class="settings-version" id="appVersionLabel">v-</span>
         </div>
         <div class="settings-version-menu" id="settingsVersionMenu" hidden>
-          <div class="settings-version-menu-head">
-            <label class="settings-version-menu-label" id="updateRepoLabel" for="updateRepoInput">GitHub repo (owner/repo)</label>
-            <button class="settings-version-repo-link" id="openRepoButton" type="button" title="Open repository" aria-label="Open repository"></button>
-          </div>
-          <input class="settings-version-menu-input" id="updateRepoInput" type="text" placeholder="AlterEditing/Alter-Editing-Method" />
           <label class="settings-version-menu-toggle" id="updateBetaRow">
             <span class="settings-version-menu-beta-label" id="updateBetaToggleLabel">Beta</span>
-            <span class="settings-version-menu-spacer"></span>
             <input id="updateBetaToggle" type="checkbox" />
             <span class="settings-version-switch" aria-hidden="true"><span class="settings-version-switch-thumb"></span></span>
+            <button class="settings-version-repo-link" id="openRepoButton" type="button" title="Open repository" aria-label="Open repository"></button>
           </label>
         </div>
       </section>

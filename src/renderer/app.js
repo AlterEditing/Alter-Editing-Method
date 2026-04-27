@@ -430,7 +430,6 @@ const state = {
 let authConfigPersistInFlight = false;
 let authConfigPersistPending = false;
 let riskConfirmResolver = null;
-let versionPrefsSaveTimer = null;
 
 const elements = {
   body: document.body,
@@ -474,8 +473,6 @@ const elements = {
   settingsUpdateWrap: document.getElementById("settingsUpdateWrap"),
   settingsVersionArea: document.getElementById("settingsVersionArea"),
   settingsVersionMenu: document.getElementById("settingsVersionMenu"),
-  updateRepoInput: document.getElementById("updateRepoInput"),
-  updateRepoLabel: document.getElementById("updateRepoLabel"),
   updateBetaToggle: document.getElementById("updateBetaToggle"),
   updateBetaToggleLabel: document.getElementById("updateBetaToggleLabel"),
   openRepoButton: document.getElementById("openRepoButton"),
@@ -1069,11 +1066,7 @@ function bindEvents() {
   elements.appVersionLabel?.addEventListener("contextmenu", openVersionPreferencesMenu);
   elements.settingsVersionArea?.addEventListener("click", openVersionPreferencesMenu);
   elements.appVersionLabel?.addEventListener("click", openVersionPreferencesMenu);
-  elements.openRepoButton?.addEventListener("click", openVersionRepoFromInput);
-  elements.updateRepoInput?.addEventListener("input", scheduleVersionPreferencesSave);
-  elements.updateRepoInput?.addEventListener("blur", () => {
-    void persistVersionPreferences({ showErrorToast: false, checkUpdates: false });
-  });
+  elements.openRepoButton?.addEventListener("click", openVersionRepo);
   elements.updateBetaToggle?.addEventListener("change", () => {
     void persistVersionPreferences({ showErrorToast: false, checkUpdates: true });
   });
@@ -2508,26 +2501,16 @@ async function openVersionPreferencesMenu(event) {
     }
     return;
   }
-  const currentOwner = String(state.settings.updateRepoOwner || "AlterEditing").trim();
-  const currentRepo = String(state.settings.updateRepoName || "Alter-Editing-Method").trim();
-  if (elements.updateRepoInput) {
-    elements.updateRepoInput.value = `${currentOwner}/${currentRepo}`;
-  }
   if (elements.updateBetaToggle) {
     elements.updateBetaToggle.checked = Boolean(state.settings.updateAllowPrerelease);
   }
   state.versionMenuVisible = true;
   renderVersionPreferencesMenu();
-  setTimeout(() => elements.updateRepoInput?.focus(), 0);
 }
 
 function closeVersionPreferencesMenu() {
   if (!state.versionMenuVisible) {
     return;
-  }
-  if (versionPrefsSaveTimer) {
-    clearTimeout(versionPrefsSaveTimer);
-    versionPrefsSaveTimer = null;
   }
   state.versionMenuVisible = false;
   renderVersionPreferencesMenu();
@@ -2541,52 +2524,12 @@ function renderVersionPreferencesMenu() {
   elements.settingsVersionMenu.hidden = !visible;
 }
 
-function parseRepoInput(rawValue) {
-  const raw = String(rawValue || "").trim();
-  if (!raw) {
-    return null;
-  }
-  const withoutProtocol = raw.replace(/^https?:\/\/github\.com\//i, "").replace(/^github\.com\//i, "");
-  const clean = withoutProtocol.replace(/\/+$/, "");
-  const match = clean.match(/^([-A-Za-z0-9_.]+)\/([-A-Za-z0-9_.]+)$/);
-  if (!match) {
-    return null;
-  }
-  return { owner: match[1], repo: match[2] };
-}
-
-function scheduleVersionPreferencesSave() {
-  if (!state.versionMenuVisible) {
-    return;
-  }
-  if (versionPrefsSaveTimer) {
-    clearTimeout(versionPrefsSaveTimer);
-  }
-  versionPrefsSaveTimer = setTimeout(() => {
-    versionPrefsSaveTimer = null;
-    void persistVersionPreferences({ showErrorToast: false, checkUpdates: false });
-  }, 520);
-}
-
 async function persistVersionPreferences({ showErrorToast = false, checkUpdates = true } = {}) {
-  const parsed = parseRepoInput(elements.updateRepoInput?.value);
-  if (!parsed) {
-    if (showErrorToast) {
-      toast("error", t("updates"), t("updateRepoInvalid"));
-    }
-    return false;
-  }
   const updateAllowPrerelease = Boolean(elements.updateBetaToggle?.checked);
-  const sameRepo =
-    parsed.owner === state.settings.updateRepoOwner &&
-    parsed.repo === state.settings.updateRepoName &&
-    updateAllowPrerelease === Boolean(state.settings.updateAllowPrerelease);
-  if (sameRepo) {
+  if (updateAllowPrerelease === Boolean(state.settings.updateAllowPrerelease)) {
     return true;
   }
   state.settings = await window.alterE.settings.update({
-    updateRepoOwner: parsed.owner,
-    updateRepoName: parsed.repo,
     updateAllowPrerelease,
   });
   if (showErrorToast) {
@@ -2602,13 +2545,10 @@ async function persistVersionPreferences({ showErrorToast = false, checkUpdates 
   return true;
 }
 
-function openVersionRepoFromInput() {
-  const parsed = parseRepoInput(elements.updateRepoInput?.value);
-  if (!parsed) {
-    toast("error", t("updates"), t("updateRepoInvalid"));
-    return;
-  }
-  window.alterE.shell.openExternal(`https://github.com/${parsed.owner}/${parsed.repo}`);
+function openVersionRepo() {
+  const owner = String(state.settings.updateRepoOwner || "AlterEditing").trim() || "AlterEditing";
+  const repo = String(state.settings.updateRepoName || "Alter-Editing-Method").trim() || "Alter-Editing-Method";
+  window.alterE.shell.openExternal(`https://github.com/${owner}/${repo}`);
 }
 
 function renderText() {
@@ -2670,9 +2610,6 @@ function renderText() {
   elements.tutorialDoneButton.textContent = tGuide("tutorialDone");
   if (elements.appVersionLabel) {
     elements.appVersionLabel.textContent = runtimeAppVersion ? `v${runtimeAppVersion}` : "v-";
-  }
-  if (elements.updateRepoLabel) {
-    elements.updateRepoLabel.textContent = t("updateRepoPrompt");
   }
   if (elements.updateBetaToggleLabel) {
     elements.updateBetaToggleLabel.textContent = t("updateBetaToggle");
