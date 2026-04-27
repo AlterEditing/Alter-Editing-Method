@@ -23,7 +23,20 @@
       <header class="title-bar">
         <div class="brand">
           <canvas class="brand-logo" id="brandLogo" width="56" height="56" aria-hidden="true"></canvas>
-          <span>Alter Editing Method</span>
+          <div class="brand-meta">
+            <span class="brand-name">Alter Editing Method</span>
+            <div class="brand-version-row">
+              <span class="brand-version" id="appVersionLabel">v-</span>
+              <button
+                class="icon-button update-button update-button-inline"
+                id="updateButton"
+                type="button"
+                title="Updates"
+                aria-label="Updates"
+                hidden
+              ></button>
+            </div>
+          </div>
         </div>
         <div class="title-actions">
           <button class="icon-button" id="logsButton" type="button" title="Logs" aria-label="Logs"></button>
@@ -36,14 +49,6 @@
           >
             <span class="badge" id="notificationBadge" hidden>0</span>
           </button>
-          <button
-            class="icon-button update-button"
-            id="updateButton"
-            type="button"
-            title="Updates"
-            aria-label="Updates"
-            hidden
-          ></button>
           <button
             class="icon-button"
             id="debugButton"
