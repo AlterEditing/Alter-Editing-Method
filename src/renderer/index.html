@@ -44,6 +44,14 @@
             aria-label="Updates"
             hidden
           ></button>
+          <button
+            class="icon-button"
+            id="debugButton"
+            type="button"
+            title="Debug"
+            aria-label="Debug"
+            hidden
+          ></button>
           <button class="icon-button" id="settingsButton" type="button" title="Settings" aria-label="Settings"></button>
           <span class="title-separator"></span>
           <button class="window-button" id="minimizeButton" type="button" aria-label="Minimize"></button>
@@ -198,6 +206,37 @@
             <button class="panel-tool-button" id="closeConfirmStayButton" type="button">Stay</button>
             <button class="auth-button" id="closeConfirmLeaveButton" type="button">Close</button>
           </div>
+        </div>
+      </section>
+
+      <section class="floating-panel debug-panel" id="debugPanel" hidden>
+        <div class="panel-heading">
+          <strong id="debugTitle">Debug Tools</strong>
+        </div>
+        <label class="panel-field-label" id="debugAuthBaseLabel" for="debugAuthBaseInput">Auth API base</label>
+        <input class="panel-input" id="debugAuthBaseInput" type="text" placeholder="http://132.243.30.159:3000" />
+
+        <label class="panel-field-label" id="debugFallbacksLabel" for="debugFallbacksInput">Fallbacks (comma separated)</label>
+        <input class="panel-input" id="debugFallbacksInput" type="text" placeholder="http://83.147.241.28" />
+
+        <div class="panel-row">
+          <button class="panel-tool-button" id="debugApplyServerButton" type="button">Apply</button>
+          <button class="panel-tool-button" id="debugResetServerButton" type="button">Reset</button>
+        </div>
+
+        <label class="panel-toggle">
+          <input id="debugForceServerDownInput" type="checkbox" />
+          <span id="debugForceServerDownLabel">Force server unavailable</span>
+        </label>
+
+        <div class="panel-row">
+          <button class="panel-tool-button" id="debugForceAuthButton" type="button">Force auth overlay</button>
+          <button class="panel-tool-button" id="debugRefreshConfigButton" type="button">Refresh server config</button>
+        </div>
+
+        <div class="panel-row">
+          <button class="panel-tool-button" id="debugCopySnapshotButton" type="button">Copy snapshot</button>
+          <button class="panel-tool-button" id="debugOpenDebugBotButton" type="button">Open debug bot</button>
         </div>
       </section>
 

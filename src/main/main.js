@@ -26,6 +26,34 @@ let closeConfirmResolver = null;
 let closeConfirmTimer = null;
 
 const APP_PROTOCOL = "alterediting";
+loadLocalEnvFile(path.join(process.cwd(), ".env.debug.local"));
+
+function loadLocalEnvFile(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return;
+    }
+    const raw = fs.readFileSync(filePath, "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = String(line || "").trim();
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
+      const separator = trimmed.indexOf("=");
+      if (separator <= 0) {
+        continue;
+      }
+      const key = trimmed.slice(0, separator).trim();
+      if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) {
+        continue;
+      }
+      const value = trimmed.slice(separator + 1).trim();
+      process.env[key] = value.replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
+    }
+  } catch {
+    // Ignore local env load errors.
+  }
+}
 
 function assetPath(...segments) {
   return path.join(app.getAppPath(), "assets", ...segments);
@@ -222,10 +250,18 @@ function registerWindowIpc() {
       .map((item) => item.trim())
       .filter(Boolean);
     const telegramChannelUrl = String(process.env.ALTERE_TELEGRAM_CHANNEL_URL || "https://t.me/alterediting").trim();
+    const releaseChannel = String(process.env.ALTERE_RELEASE_CHANNEL || "stable").trim().toLowerCase();
+    const debugToolsEnabled = String(process.env.ALTERE_DEBUG_TOOLS || "").trim() === "1" || !app.isPackaged;
+    const debugBotUrl = String(process.env.ALTERE_DEBUG_BOT_URL || "").trim();
     return {
       authApiBase: configuredBase || primaryBase,
       authApiFallbacks: configuredFallbacks.length ? configuredFallbacks : defaultFallbacks,
       telegramChannelUrl,
+      releaseChannel: releaseChannel || "stable",
+      debugToolsEnabled,
+      debugBotUrl,
+      appVersion: app.getVersion(),
+      isPackaged: app.isPackaged,
     };
   });
 
