@@ -132,8 +132,11 @@ const translations = {
     debugNoUpdates: "No updates available right now.",
     updateRepoPrompt: "GitHub repo (owner/repo)",
     updateRepoInvalid: "Invalid repo format. Use owner/repo.",
-    updateBetaPrompt: "Enable beta updates? Type on/off",
     updatePrefsSaved: "Update source preferences saved.",
+    updateBetaToggle: "Enable beta updates",
+    updatePrefsOpenRepo: "Open repo",
+    updatePrefsSave: "Save",
+    updatePrefsClose: "Close",
   },
   ru: {
     outputSize: "Выходной размер",
@@ -411,6 +414,7 @@ const state = {
     visible: false,
     installAfterDownload: false,
   },
+  versionMenuVisible: false,
   debug: {
     forceServerUnavailable: false,
     overrideAuthBase: "",
@@ -465,6 +469,14 @@ const elements = {
   debugPanel: document.getElementById("debugPanel"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsVersionArea: document.getElementById("settingsVersionArea"),
+  settingsVersionMenu: document.getElementById("settingsVersionMenu"),
+  updateRepoInput: document.getElementById("updateRepoInput"),
+  updateRepoLabel: document.getElementById("updateRepoLabel"),
+  updateBetaToggle: document.getElementById("updateBetaToggle"),
+  updateBetaToggleLabel: document.getElementById("updateBetaToggleLabel"),
+  openRepoButton: document.getElementById("openRepoButton"),
+  saveVersionPrefsButton: document.getElementById("saveVersionPrefsButton"),
+  cancelVersionPrefsButton: document.getElementById("cancelVersionPrefsButton"),
   debugTitle: document.getElementById("debugTitle"),
   debugAuthBaseLabel: document.getElementById("debugAuthBaseLabel"),
   debugFallbacksLabel: document.getElementById("debugFallbacksLabel"),
@@ -950,6 +962,11 @@ function bindEvents() {
       return;
     }
     if (event.key === "Escape") {
+      if (state.versionMenuVisible) {
+        event.preventDefault();
+        closeVersionPreferencesMenu();
+        return;
+      }
       if (state.tutorialVisible) {
         event.preventDefault();
         closeTutorial();
@@ -1047,13 +1064,11 @@ function bindEvents() {
   elements.tutorialDoneButton.addEventListener("click", closeTutorial);
   elements.settingsVersionArea?.addEventListener("contextmenu", openVersionPreferencesMenu);
   elements.appVersionLabel?.addEventListener("contextmenu", openVersionPreferencesMenu);
-  elements.settingsVersionArea?.addEventListener("click", (event) => {
-    if (event.target === elements.appVersionLabel) {
-      return;
-    }
-    openVersionPreferencesMenu(event);
-  });
+  elements.settingsVersionArea?.addEventListener("click", openVersionPreferencesMenu);
   elements.appVersionLabel?.addEventListener("click", openVersionPreferencesMenu);
+  elements.saveVersionPrefsButton?.addEventListener("click", saveVersionPreferences);
+  elements.cancelVersionPrefsButton?.addEventListener("click", closeVersionPreferencesMenu);
+  elements.openRepoButton?.addEventListener("click", openVersionRepoFromInput);
   elements.tutorialOverlay.addEventListener("pointerdown", (event) => {
     if (event.target === elements.tutorialOverlay) {
       closeTutorial();
@@ -1975,6 +1990,9 @@ function togglePanel(panelName) {
     return;
   }
   state.openPanel = state.openPanel === panelName ? "" : panelName;
+  if (state.openPanel !== "settings") {
+    state.versionMenuVisible = false;
+  }
   if (state.openPanel === "notifications") {
     state.unreadNotifications = 0;
   }
@@ -1991,6 +2009,13 @@ function closePanelOnOutsidePointer(event) {
     Boolean
   );
   if (activePanel?.contains(event.target) || panelButtons.some((button) => button.contains(event.target))) {
+    if (state.versionMenuVisible) {
+      const inVersionArea = elements.settingsVersionArea?.contains(event.target);
+      const inVersionMenu = elements.settingsVersionMenu?.contains(event.target);
+      if (!inVersionArea && !inVersionMenu) {
+        closeVersionPreferencesMenu();
+      }
+    }
     return;
   }
 
@@ -2466,38 +2491,75 @@ async function openVersionPreferencesMenu(event) {
   }
   const currentOwner = String(state.settings.updateRepoOwner || "AlterEditing").trim();
   const currentRepo = String(state.settings.updateRepoName || "Alter-Editing-Method").trim();
-  const currentPair = `${currentOwner}/${currentRepo}`;
-  const repoInput = window.prompt(t("updateRepoPrompt"), currentPair);
-  if (repoInput === null) {
+  if (elements.updateRepoInput) {
+    elements.updateRepoInput.value = `${currentOwner}/${currentRepo}`;
+  }
+  if (elements.updateBetaToggle) {
+    elements.updateBetaToggle.checked = Boolean(state.settings.updateAllowPrerelease);
+  }
+  state.versionMenuVisible = true;
+  renderVersionPreferencesMenu();
+  setTimeout(() => elements.updateRepoInput?.focus(), 0);
+}
+
+function closeVersionPreferencesMenu() {
+  if (!state.versionMenuVisible) {
     return;
   }
+  state.versionMenuVisible = false;
+  renderVersionPreferencesMenu();
+}
 
-  const normalizedPair = String(repoInput || "").trim();
-  const match = normalizedPair.match(/^([-A-Za-z0-9_.]+)\/([-A-Za-z0-9_.]+)$/);
+function renderVersionPreferencesMenu() {
+  if (!elements.settingsVersionMenu) {
+    return;
+  }
+  const visible = Boolean(state.versionMenuVisible && state.openPanel === "settings");
+  elements.settingsVersionMenu.hidden = !visible;
+}
+
+function parseRepoInput(rawValue) {
+  const raw = String(rawValue || "").trim();
+  if (!raw) {
+    return null;
+  }
+  const withoutProtocol = raw.replace(/^https?:\/\/github\.com\//i, "").replace(/^github\.com\//i, "");
+  const clean = withoutProtocol.replace(/\/+$/, "");
+  const match = clean.match(/^([-A-Za-z0-9_.]+)\/([-A-Za-z0-9_.]+)$/);
   if (!match) {
+    return null;
+  }
+  return { owner: match[1], repo: match[2] };
+}
+
+async function saveVersionPreferences() {
+  const parsed = parseRepoInput(elements.updateRepoInput?.value);
+  if (!parsed) {
     toast("error", t("updates"), t("updateRepoInvalid"));
     return;
   }
-
-  const betaDefault = state.settings.updateAllowPrerelease ? "on" : "off";
-  const betaInput = window.prompt(t("updateBetaPrompt"), betaDefault);
-  if (betaInput === null) {
-    return;
-  }
-  const betaNormalized = String(betaInput || "").trim().toLowerCase();
-  const updateAllowPrerelease = betaNormalized === "on" || betaNormalized === "true" || betaNormalized === "1";
-
+  const updateAllowPrerelease = Boolean(elements.updateBetaToggle?.checked);
   state.settings = await window.alterE.settings.update({
-    updateRepoOwner: match[1],
-    updateRepoName: match[2],
+    updateRepoOwner: parsed.owner,
+    updateRepoName: parsed.repo,
     updateAllowPrerelease,
   });
   toast("success", t("updates"), t("updatePrefsSaved"));
+  closeVersionPreferencesMenu();
   try {
     await window.alterE.update.check();
   } catch {
     // ignore immediate check errors
   }
+}
+
+function openVersionRepoFromInput() {
+  const parsed = parseRepoInput(elements.updateRepoInput?.value);
+  if (!parsed) {
+    toast("error", t("updates"), t("updateRepoInvalid"));
+    return;
+  }
+  window.alterE.shell.openExternal(`https://github.com/${parsed.owner}/${parsed.repo}`);
 }
 
 function renderText() {
@@ -2559,6 +2621,21 @@ function renderText() {
   elements.tutorialDoneButton.textContent = tGuide("tutorialDone");
   if (elements.appVersionLabel) {
     elements.appVersionLabel.textContent = runtimeAppVersion ? `v${runtimeAppVersion}` : "v-";
+  }
+  if (elements.updateRepoLabel) {
+    elements.updateRepoLabel.textContent = t("updateRepoPrompt");
+  }
+  if (elements.updateBetaToggleLabel) {
+    elements.updateBetaToggleLabel.textContent = t("updateBetaToggle");
+  }
+  if (elements.openRepoButton) {
+    elements.openRepoButton.textContent = t("updatePrefsOpenRepo");
+  }
+  if (elements.saveVersionPrefsButton) {
+    elements.saveVersionPrefsButton.textContent = t("updatePrefsSave");
+  }
+  if (elements.cancelVersionPrefsButton) {
+    elements.cancelVersionPrefsButton.textContent = t("updatePrefsClose");
   }
 
   elements.logsButton.title = t("logs");
@@ -2725,6 +2802,7 @@ function renderPanels() {
   renderActivityList(elements.notificationsList, state.notifications, t("emptyNotifications"));
   renderLogConsole();
   renderDebugPanel();
+  renderVersionPreferencesMenu();
 }
 
 function renderDebugPanel() {
