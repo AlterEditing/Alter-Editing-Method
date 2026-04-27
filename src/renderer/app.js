@@ -464,6 +464,7 @@ const elements = {
   logsPanel: document.getElementById("logsPanel"),
   debugPanel: document.getElementById("debugPanel"),
   settingsTitle: document.getElementById("settingsTitle"),
+  settingsVersionArea: document.getElementById("settingsVersionArea"),
   debugTitle: document.getElementById("debugTitle"),
   debugAuthBaseLabel: document.getElementById("debugAuthBaseLabel"),
   debugFallbacksLabel: document.getElementById("debugFallbacksLabel"),
@@ -1044,7 +1045,8 @@ function bindEvents() {
   });
   elements.tutorialCloseButton.addEventListener("click", closeTutorial);
   elements.tutorialDoneButton.addEventListener("click", closeTutorial);
-  elements.appVersionLabel?.addEventListener("contextmenu", openVersionPreferencesMenu);
+  elements.settingsVersionArea?.addEventListener("contextmenu", openVersionPreferencesMenu);
+  elements.settingsVersionArea?.addEventListener("click", openVersionPreferencesMenu);
   elements.tutorialOverlay.addEventListener("pointerdown", (event) => {
     if (event.target === elements.tutorialOverlay) {
       closeTutorial();
