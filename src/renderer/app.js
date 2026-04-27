@@ -418,6 +418,7 @@ const elements = {
   appShell: document.querySelector(".app-shell"),
   particles: document.getElementById("particles"),
   brandLogo: document.getElementById("brandLogo"),
+  appVersionLabel: document.getElementById("appVersionLabel"),
   dropZone: document.getElementById("dropZone"),
   uploadIcon: document.getElementById("uploadIcon"),
   videoPreview: document.getElementById("videoPreview"),
@@ -2355,6 +2356,9 @@ function renderText() {
   elements.tutorialStep4Title.textContent = tGuide("tutorialStep4Title");
   elements.tutorialStep4Text.textContent = tGuide("tutorialStep4Text");
   elements.tutorialDoneButton.textContent = tGuide("tutorialDone");
+  if (elements.appVersionLabel) {
+    elements.appVersionLabel.textContent = runtimeAppVersion ? `v${runtimeAppVersion}` : "v-";
+  }
 
   elements.logsButton.title = t("logs");
   elements.notificationsButton.title = t("notifications");
