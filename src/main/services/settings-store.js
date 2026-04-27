@@ -14,6 +14,9 @@ const DEFAULT_SETTINGS = {
   telegramChannelUrl: "https://t.me/alterediting",
   telegramBotUrl: "",
   authConfigUpdatedAt: 0,
+  updateRepoOwner: "AlterEditing",
+  updateRepoName: "Alter-Editing-Method",
+  updateAllowPrerelease: false,
   dismissedMandatoryVersion: "",
 };
 
@@ -98,6 +101,9 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
   const authConfigUpdatedAt = Number.isFinite(Number(raw.authConfigUpdatedAt))
     ? Math.max(0, Math.trunc(Number(raw.authConfigUpdatedAt)))
     : 0;
+  const updateRepoOwner = normalizeRepoPart(raw.updateRepoOwner) || defaults.updateRepoOwner;
+  const updateRepoName = normalizeRepoPart(raw.updateRepoName) || defaults.updateRepoName;
+  const updateAllowPrerelease = Boolean(raw.updateAllowPrerelease);
 
   return {
     settingsVersion: defaults.settingsVersion,
@@ -112,8 +118,17 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     telegramChannelUrl,
     telegramBotUrl,
     authConfigUpdatedAt,
+    updateRepoOwner,
+    updateRepoName,
+    updateAllowPrerelease,
     dismissedMandatoryVersion,
   };
+}
+
+function normalizeRepoPart(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return /^[-A-Za-z0-9_.]+$/.test(raw) ? raw : "";
 }
 
 function normalizeFallbackUrls(value) {
