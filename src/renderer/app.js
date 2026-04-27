@@ -2708,6 +2708,14 @@ function renderUpdate() {
   elements.updateButton.hidden = !hasUpdate;
   elements.updateButton.style.setProperty("--update-progress", `${progress}%`);
   elements.settingsButton.classList.toggle("has-update", hasUpdate);
+  if (hasUpdate) {
+    const settingsState = update.downloaded ? "downloaded" : update.downloading ? "downloading" : "available";
+    elements.settingsButton.dataset.updateState = settingsState;
+    elements.settingsButton.dataset.updateLevel = update.mandatory ? "mandatory" : "optional";
+  } else {
+    delete elements.settingsButton.dataset.updateState;
+    delete elements.settingsButton.dataset.updateLevel;
+  }
 
   if (hasUpdate) {
     const suffix = update.version ? ` ${update.version}` : "";
