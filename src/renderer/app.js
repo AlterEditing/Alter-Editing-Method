@@ -124,6 +124,12 @@ const translations = {
     debugResetDone: "Debug overrides reset",
     debugSnapshotCopied: "Debug snapshot copied",
     debugBotUnavailable: "Debug bot URL is not configured",
+    debugUpdateAvailable: "Mock: update available",
+    debugUpdateDownloading: "Mock: update downloading",
+    debugUpdateDownloaded: "Mock: update downloaded",
+    debugUpdateClear: "Clear update mock",
+    debugDownloadLatest: "Download latest from GitHub",
+    debugNoUpdates: "No updates available right now.",
   },
   ru: {
     outputSize: "Выходной размер",
@@ -402,6 +408,7 @@ const state = {
     forceServerUnavailable: false,
     overrideAuthBase: "",
     overrideFallbacks: [],
+    updateMockActive: false,
   },
   tutorialVisible: false,
   riskConfirmVisible: false,
@@ -470,6 +477,11 @@ const elements = {
   debugForceServerDownLabel: document.getElementById("debugForceServerDownLabel"),
   debugForceAuthButton: document.getElementById("debugForceAuthButton"),
   debugRefreshConfigButton: document.getElementById("debugRefreshConfigButton"),
+  debugUpdateAvailableButton: document.getElementById("debugUpdateAvailableButton"),
+  debugUpdateDownloadingButton: document.getElementById("debugUpdateDownloadingButton"),
+  debugUpdateDownloadedButton: document.getElementById("debugUpdateDownloadedButton"),
+  debugUpdateClearButton: document.getElementById("debugUpdateClearButton"),
+  debugDownloadLatestButton: document.getElementById("debugDownloadLatestButton"),
   debugCopySnapshotButton: document.getElementById("debugCopySnapshotButton"),
   debugOpenDebugBotButton: document.getElementById("debugOpenDebugBotButton"),
   telegramLink: document.getElementById("telegramLink"),
@@ -567,7 +579,6 @@ function initIcons() {
   setIcon(elements.logsButton, "terminal");
   setIcon(elements.notificationsButton, "bell");
   elements.notificationsButton.appendChild(elements.notificationBadge);
-  setIcon(elements.updateButton, "download");
   setIcon(elements.debugButton, "debug");
   setIcon(elements.settingsButton, "settings");
   setIcon(elements.logoutButton, "logout");
@@ -999,6 +1010,11 @@ function bindEvents() {
     await refreshAuthServerConfig();
     render();
   });
+  elements.debugUpdateAvailableButton?.addEventListener("click", () => applyDebugUpdateMock("available"));
+  elements.debugUpdateDownloadingButton?.addEventListener("click", () => applyDebugUpdateMock("downloading"));
+  elements.debugUpdateDownloadedButton?.addEventListener("click", () => applyDebugUpdateMock("downloaded"));
+  elements.debugUpdateClearButton?.addEventListener("click", () => applyDebugUpdateMock("clear"));
+  elements.debugDownloadLatestButton?.addEventListener("click", debugDownloadLatestFromGithub);
   elements.debugCopySnapshotButton?.addEventListener("click", copyDebugSnapshot);
   elements.debugOpenDebugBotButton?.addEventListener("click", openDebugBot);
   elements.mandatoryUpdateDownloadButton.addEventListener("click", handleUpdateAction);
@@ -2006,6 +2022,104 @@ function resetDebugServerOverrides() {
   render();
 }
 
+function applyDebugUpdateMock(mode = "clear") {
+  if (!debugToolsEnabled) {
+    return;
+  }
+
+  const version = runtimeAppVersion ? `${runtimeAppVersion}-debug` : "0.0.0-debug";
+  state.debug.updateMockActive = mode !== "clear";
+
+  if (mode === "available") {
+    Object.assign(state.update, {
+      supported: true,
+      checking: false,
+      available: true,
+      downloaded: false,
+      downloading: false,
+      downloadProgress: 0,
+      transferredBytes: 0,
+      sizeBytes: 145 * 1024 * 1024,
+      version,
+      mandatory: false,
+      mandatoryDismissed: false,
+      releaseNotes: "Debug update available",
+      error: "",
+    });
+  } else if (mode === "downloading") {
+    Object.assign(state.update, {
+      supported: true,
+      checking: false,
+      available: true,
+      downloaded: false,
+      downloading: true,
+      downloadProgress: 67,
+      transferredBytes: 97 * 1024 * 1024,
+      sizeBytes: 145 * 1024 * 1024,
+      version,
+      mandatory: false,
+      mandatoryDismissed: false,
+      releaseNotes: "Debug update downloading",
+      error: "",
+    });
+  } else if (mode === "downloaded") {
+    Object.assign(state.update, {
+      supported: true,
+      checking: false,
+      available: true,
+      downloaded: true,
+      downloading: false,
+      downloadProgress: 100,
+      transferredBytes: 145 * 1024 * 1024,
+      sizeBytes: 145 * 1024 * 1024,
+      version,
+      mandatory: false,
+      mandatoryDismissed: false,
+      releaseNotes: "Debug update downloaded",
+      error: "",
+    });
+  } else {
+    state.debug.updateMockActive = false;
+    void window.alterE.update
+      ?.getState?.()
+      .then((next) => syncUpdateState(next))
+      .catch(() => {});
+    render();
+    return;
+  }
+
+  render();
+}
+
+async function debugDownloadLatestFromGithub() {
+  if (!debugToolsEnabled || !window.alterE?.update) {
+    return;
+  }
+
+  try {
+    state.debug.updateMockActive = false;
+    const current = await window.alterE.update.getState();
+    syncUpdateState(current || {});
+
+    log("system", "Debug", "Checking latest update from GitHub...");
+    const checked = await window.alterE.update.check();
+    syncUpdateState(checked || {});
+
+    if (!checked?.available) {
+      toast("info", t("updates"), t("debugNoUpdates"));
+      return;
+    }
+
+    log("system", "Debug", `Downloading latest update ${checked.version || ""}`.trim());
+    const downloadedState = await window.alterE.update.download();
+    syncUpdateState(downloadedState || {});
+  } catch (error) {
+    const message = readableError(error) || "Failed to download update";
+    toast("error", t("updates"), message);
+    log("error", "Debug update download", message);
+  }
+}
+
 function buildDebugSnapshot() {
   const now = new Date().toISOString();
   const activeCandidates = buildAuthServerCandidates();
@@ -2112,6 +2226,10 @@ function resetDropTilt() {
 }
 
 function syncUpdateState(next = {}) {
+  if (state.debug.updateMockActive) {
+    return;
+  }
+
   const previousUpdate = { ...state.update };
   state.update = {
     ...state.update,
@@ -2327,6 +2445,11 @@ function renderText() {
   if (elements.debugForceServerDownLabel) elements.debugForceServerDownLabel.textContent = t("debugForceServerDown");
   if (elements.debugForceAuthButton) elements.debugForceAuthButton.textContent = t("debugForceAuthOverlay");
   if (elements.debugRefreshConfigButton) elements.debugRefreshConfigButton.textContent = t("debugRefreshConfig");
+  if (elements.debugUpdateAvailableButton) elements.debugUpdateAvailableButton.textContent = t("debugUpdateAvailable");
+  if (elements.debugUpdateDownloadingButton) elements.debugUpdateDownloadingButton.textContent = t("debugUpdateDownloading");
+  if (elements.debugUpdateDownloadedButton) elements.debugUpdateDownloadedButton.textContent = t("debugUpdateDownloaded");
+  if (elements.debugUpdateClearButton) elements.debugUpdateClearButton.textContent = t("debugUpdateClear");
+  if (elements.debugDownloadLatestButton) elements.debugDownloadLatestButton.textContent = t("debugDownloadLatest");
   if (elements.debugCopySnapshotButton) elements.debugCopySnapshotButton.textContent = t("debugCopySnapshot");
   if (elements.debugOpenDebugBotButton) elements.debugOpenDebugBotButton.textContent = t("debugOpenBot");
   elements.authTitle.textContent = t("authTitle");
@@ -2385,6 +2508,7 @@ function renderText() {
 
   setActionButton(elements.languageButton, "languages", `${t("language")}: ${state.settings.language.toUpperCase()}`);
   setActionButton(elements.themeButton, state.settings.theme === "dark" ? "moon" : "sun", state.settings.theme === "dark" ? t("themeDark") : t("themeLight"));
+  setActionButton(elements.updateButton, "download", t("updates"));
 }
 
 function renderCloseConfirm() {
@@ -2583,9 +2707,18 @@ function renderUpdate() {
   const progress = clamp(Math.round(Number(update.downloadProgress || 0)), 0, 100);
   elements.updateButton.hidden = !hasUpdate;
   elements.updateButton.style.setProperty("--update-progress", `${progress}%`);
+  elements.settingsButton.classList.toggle("has-update", hasUpdate);
 
   if (hasUpdate) {
     const suffix = update.version ? ` ${update.version}` : "";
+    const actionText = update.downloaded
+      ? t("updateInstall")
+      : update.downloading
+        ? `${t("updateDownloading")} ${progress}%`
+        : update.mandatory
+          ? t("updateDownloadAndInstall")
+          : t("updateDownload");
+    setActionButton(elements.updateButton, "download", update.version ? `${actionText} (${update.version})` : actionText);
     if (update.downloaded) {
       elements.updateButton.title = `${t("updateInstall")}${suffix}`;
     } else if (update.downloading) {
@@ -2809,6 +2942,9 @@ function getPanelElement(name) {
   }
   if (name === "logs") {
     return elements.logsPanel;
+  }
+  if (!hasUpdate) {
+    setActionButton(elements.updateButton, "download", t("updates"));
   }
   if (name === "debug") {
     return elements.debugPanel;

@@ -227,21 +227,6 @@ body.is-booting .toast-host {
   text-overflow: ellipsis;
 }
 
-.brand-version-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 16px;
-  justify-content: center;
-}
-
-.brand-version {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-}
-
 .brand-logo {
   width: 28px;
   height: 28px;
@@ -252,14 +237,6 @@ body.is-booting .toast-host {
   display: flex;
   align-items: center;
   gap: 4px;
-  -webkit-app-region: no-drag;
-}
-
-.title-center {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   -webkit-app-region: no-drag;
 }
 
@@ -316,22 +293,21 @@ body[data-theme="light"] .icon-button.is-open {
   border: 1px solid var(--panel-border);
 }
 
-.update-button-inline {
-  width: 18px;
-  height: 18px;
-  border: 0;
-  border-radius: 4px;
-  padding: 0;
-  box-shadow: none;
-}
-
-.update-button-inline::before {
-  display: none;
-}
-
-.update-button-inline svg {
+.icon-button.has-update::after {
+  content: "↓";
+  position: absolute;
+  right: -1px;
+  top: -1px;
   width: 13px;
   height: 13px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--inverse);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 13px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--title-bg);
 }
 
 .update-button[data-level="mandatory"] {
@@ -1353,6 +1329,21 @@ body[data-theme="light"] .floating-panel {
   background: var(--control-hover);
   border-color: color-mix(in srgb, var(--panel-border) 70%, var(--accent) 30%);
   transform: translateY(-1px);
+}
+
+.settings-footer {
+  margin: 10px 10px 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: center;
+}
+
+.settings-version {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .activity-panel {
