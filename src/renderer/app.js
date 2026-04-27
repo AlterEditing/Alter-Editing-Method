@@ -1046,7 +1046,14 @@ function bindEvents() {
   elements.tutorialCloseButton.addEventListener("click", closeTutorial);
   elements.tutorialDoneButton.addEventListener("click", closeTutorial);
   elements.settingsVersionArea?.addEventListener("contextmenu", openVersionPreferencesMenu);
-  elements.settingsVersionArea?.addEventListener("click", openVersionPreferencesMenu);
+  elements.appVersionLabel?.addEventListener("contextmenu", openVersionPreferencesMenu);
+  elements.settingsVersionArea?.addEventListener("click", (event) => {
+    if (event.target === elements.appVersionLabel) {
+      return;
+    }
+    openVersionPreferencesMenu(event);
+  });
+  elements.appVersionLabel?.addEventListener("click", openVersionPreferencesMenu);
   elements.tutorialOverlay.addEventListener("pointerdown", (event) => {
     if (event.target === elements.tutorialOverlay) {
       closeTutorial();
@@ -2451,7 +2458,12 @@ function render() {
 }
 
 async function openVersionPreferencesMenu(event) {
-  event.preventDefault();
+  if (event && typeof event.preventDefault === "function") {
+    event.preventDefault();
+  }
+  if (event && typeof event.stopPropagation === "function") {
+    event.stopPropagation();
+  }
   const currentOwner = String(state.settings.updateRepoOwner || "AlterEditing").trim();
   const currentRepo = String(state.settings.updateRepoName || "Alter-Editing-Method").trim();
   const currentPair = `${currentOwner}/${currentRepo}`;

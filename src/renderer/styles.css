@@ -1366,18 +1366,6 @@ body[data-theme="light"] .floating-panel {
   border-top: 1px solid var(--panel-border);
   display: flex;
   justify-content: center;
-  border-radius: 7px;
-  cursor: pointer;
-  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-}
-
-.settings-footer:hover {
-  background: color-mix(in srgb, var(--control-hover) 70%, transparent);
-  box-shadow: inset 0 0 0 1px var(--panel-border);
-}
-
-.settings-footer:active {
-  transform: translateY(1px);
 }
 
 .settings-version {
@@ -1385,6 +1373,20 @@ body[data-theme="light"] .floating-panel {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  border-radius: 5px;
+  padding: 1px 4px;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease, box-shadow 140ms ease, transform 120ms ease;
+}
+
+.settings-version:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--control-hover) 70%, transparent);
+  box-shadow: inset 0 0 0 1px var(--panel-border);
+}
+
+.settings-version:active {
+  transform: translateY(1px);
 }
 
 .activity-panel {
