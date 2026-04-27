@@ -94,13 +94,13 @@ Follow these steps to patch and upload your video safely:
 
 Drag and drop a video file into the app, or select it manually.
 
-<img src="docs/how-to-use/1.gif" alt="Step 1 - Import video" width="760" />
+<img src="docs/how-to-use/1.gif" alt="Step 1 - Import video" width="300" />
 
 ### 2. Set bitrate (or keep source quality) ⚙️
 
 Choose a bitrate, or keep the original source quality.
 
-<img src="docs/how-to-use/2.gif" alt="Step 2 - Set bitrate" width="760" />
+<img src="docs/how-to-use/2.gif" alt="Step 2 - Set bitrate" width="300" />
 
 > ⚠️ **Important:** 2K/4K video or bitrate above **50 Mbps** is not recommended, because it may increase the risk of TikTok account restrictions.
 
@@ -108,10 +108,10 @@ Choose a bitrate, or keep the original source quality.
 
 Click **`PATCH`** and wait until processing is complete.
 
-<img src="docs/how-to-use/3.gif" alt="Step 3 - Run patching" width="760" />
+<img src="docs/how-to-use/3.gif" alt="Step 3 - Run patching" width="300" />
 
 ### 4. Upload to TikTok 📤
 
 Upload the processed video to TikTok using your preferred standard upload method, without extra third-party methods.
 
-<img src="docs/how-to-use/4.gif" alt="Step 4 - Upload to TikTok" width="760" />
+<img src="docs/how-to-use/4.gif" alt="Step 4 - Upload to TikTok" width="300" />
