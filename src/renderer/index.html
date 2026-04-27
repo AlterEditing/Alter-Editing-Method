@@ -27,19 +27,6 @@
             <span class="brand-name">Alter Editing Method</span>
           </div>
         </div>
-        <div class="title-center">
-          <div class="brand-version-row">
-            <span class="brand-version" id="appVersionLabel">v-</span>
-            <button
-              class="icon-button update-button update-button-inline"
-              id="updateButton"
-              type="button"
-              title="Updates"
-              aria-label="Updates"
-              hidden
-            ></button>
-          </div>
-        </div>
         <div class="title-actions">
           <button class="icon-button" id="logsButton" type="button" title="Logs" aria-label="Logs"></button>
           <button
@@ -141,6 +128,10 @@
         </div>
         <button class="panel-action" id="languageButton" type="button"></button>
         <button class="panel-action" id="themeButton" type="button"></button>
+        <button class="panel-action" id="updateButton" type="button" hidden></button>
+        <div class="settings-footer">
+          <span class="settings-version" id="appVersionLabel">v-</span>
+        </div>
       </section>
 
       <section class="floating-panel activity-panel" id="notificationsPanel" hidden>
@@ -239,6 +230,20 @@
         <div class="panel-row">
           <button class="panel-tool-button" id="debugForceAuthButton" type="button">Force auth overlay</button>
           <button class="panel-tool-button" id="debugRefreshConfigButton" type="button">Refresh server config</button>
+        </div>
+
+        <div class="panel-row">
+          <button class="panel-tool-button" id="debugUpdateAvailableButton" type="button">Mock update: available</button>
+          <button class="panel-tool-button" id="debugUpdateDownloadingButton" type="button">Mock update: downloading</button>
+        </div>
+
+        <div class="panel-row">
+          <button class="panel-tool-button" id="debugUpdateDownloadedButton" type="button">Mock update: downloaded</button>
+          <button class="panel-tool-button" id="debugUpdateClearButton" type="button">Clear mock update</button>
+        </div>
+
+        <div class="panel-row">
+          <button class="panel-tool-button" id="debugDownloadLatestButton" type="button">Download latest from GitHub</button>
         </div>
 
         <div class="panel-row">
