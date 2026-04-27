@@ -16,6 +16,8 @@ const icons = {
     '<svg viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>',
   download:
     '<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>',
+  help: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6"/><path d="M12 7h.01"/></svg>',
+  logout: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
 };
 
 const translations = {
@@ -86,6 +88,22 @@ const translations = {
     closeConfirmPatchAndUpdateText: "If you exit now, video processing will stop and the update download will be interrupted.",
     closeConfirmClose: "Close",
     closeConfirmStay: "Stay",
+    logoutDone: "You have signed out.",
+    howToUse: "How to use",
+    tutorialTitle: "How to use",
+    tutorialStep1Title: "1. Select video",
+    tutorialStep1Text: "Drag and drop a video, or click the frame to select a file.",
+    tutorialStep2Title: "2. Set bitrate",
+    tutorialStep2Text: "Choose bitrate or keep source quality.",
+    tutorialStep3Title: "3. Patch video",
+    tutorialStep3Text: "Press PATCH and wait until processing is complete.",
+    tutorialStep4Title: "4. Upload to TikTok",
+    tutorialStep4Text: "Upload the processed video to TikTok.",
+    tutorialDone: "Got it",
+    riskWarningTitle: "Warning",
+    riskWarningText: "High bitrate (70+ mbps) or resolution above 1080p can increase TikTok ban risk. Continue anyway?",
+    continueAnyway: "Continue",
+    cancelAction: "Cancel",
     mb: "MB",
     kbps: "kbps",
     fps: "fps",
@@ -234,6 +252,52 @@ const translations = {
   },
 };
 
+const guideTranslations = {
+  en: {
+    howToUse: "How to use",
+    tutorialTitle: "How to use",
+    tutorialStep1Title: "1. Select video",
+    tutorialStep1Text: "Drag and drop a video, or click the frame to select a file.",
+    tutorialStep2Title: "2. Set bitrate",
+    tutorialStep2Text: "Choose bitrate or keep source quality.",
+    tutorialStep3Title: "3. Patch video",
+    tutorialStep3Text: "Press PATCH and wait until processing is complete.",
+    tutorialStep4Title: "4. Upload to TikTok",
+    tutorialStep4Text: "Upload the processed video to TikTok.",
+    tutorialDone: "Got it",
+  },
+  ru: {
+    howToUse: "\u041a\u0430\u043a \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c",
+    tutorialTitle: "\u041a\u0430\u043a \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c",
+    tutorialStep1Title: "1. \u0412\u044b\u0431\u043e\u0440 \u0432\u0438\u0434\u0435\u043e",
+    tutorialStep1Text:
+      "\u041f\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435 \u0432\u0438\u0434\u0435\u043e \u0432 \u043e\u043a\u043d\u043e \u0438\u043b\u0438 \u043d\u0430\u0436\u043c\u0438\u0442\u0435 \u043d\u0430 \u0440\u0430\u043c\u043a\u0443 \u0434\u043b\u044f \u0432\u044b\u0431\u043e\u0440\u0430 \u0444\u0430\u0439\u043b\u0430.",
+    tutorialStep2Title: "2. \u0411\u0438\u0442\u0440\u0435\u0439\u0442",
+    tutorialStep2Text:
+      "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0431\u0438\u0442\u0440\u0435\u0439\u0442 \u0438\u043b\u0438 \u043e\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0438\u0441\u0445\u043e\u0434\u043d\u043e\u0435 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u043e.",
+    tutorialStep3Title: "3. \u041f\u0430\u0442\u0447",
+    tutorialStep3Text:
+      "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 PATCH \u0438 \u0434\u043e\u0436\u0434\u0438\u0442\u0435\u0441\u044c \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438.",
+    tutorialStep4Title: "4. \u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0432 TikTok",
+    tutorialStep4Text:
+      "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u0430\u043d\u043d\u043e\u0435 \u0432\u0438\u0434\u0435\u043e \u0432 TikTok.",
+    tutorialDone: "\u041f\u043e\u043d\u044f\u0442\u043d\u043e",
+  },
+  tr: {
+    howToUse: "Nasil kullanilir",
+    tutorialTitle: "Nasil kullanilir",
+    tutorialStep1Title: "1. Video sec",
+    tutorialStep1Text: "Videoyu surukleyip birakin veya cerceveye tiklayip dosya secin.",
+    tutorialStep2Title: "2. Bitrate ayarla",
+    tutorialStep2Text: "Bitrate secin veya kaynak kalitesini koruyun.",
+    tutorialStep3Title: "3. Patch uygula",
+    tutorialStep3Text: "PATCH tusuna basin ve islem tamamlanana kadar bekleyin.",
+    tutorialStep4Title: "4. TikTok'a yukle",
+    tutorialStep4Text: "Islenen videoyu TikTok'a yukleyin.",
+    tutorialDone: "Tamam",
+  },
+};
+
 const languageOrder = ["ru", "en", "tr"];
 const DEFAULT_AUTH_API_BASE = "http://132.243.30.159:3000";
 const DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/alterediting";
@@ -309,10 +373,13 @@ const state = {
     visible: false,
     installAfterDownload: false,
   },
+  tutorialVisible: false,
+  riskConfirmVisible: false,
 };
 
 let authConfigPersistInFlight = false;
 let authConfigPersistPending = false;
+let riskConfirmResolver = null;
 
 const elements = {
   body: document.body,
@@ -327,6 +394,8 @@ const elements = {
   fileTitle: document.getElementById("fileTitle"),
   fileMeta: document.getElementById("fileMeta"),
   fileStream: document.getElementById("fileStream"),
+  howToUseButton: document.getElementById("howToUseButton"),
+  howToUseLabel: document.getElementById("howToUseLabel"),
   selectPill: document.getElementById("selectPill"),
   dropProgress: document.getElementById("dropProgress"),
   outputSizeLabel: document.getElementById("outputSizeLabel"),
@@ -348,6 +417,7 @@ const elements = {
   notificationsPanel: document.getElementById("notificationsPanel"),
   logsPanel: document.getElementById("logsPanel"),
   settingsTitle: document.getElementById("settingsTitle"),
+  logoutButton: document.getElementById("logoutButton"),
   notificationsTitle: document.getElementById("notificationsTitle"),
   logsTitle: document.getElementById("logsTitle"),
   languageButton: document.getElementById("languageButton"),
@@ -385,6 +455,24 @@ const elements = {
   closeConfirmText: document.getElementById("closeConfirmText"),
   closeConfirmStayButton: document.getElementById("closeConfirmStayButton"),
   closeConfirmLeaveButton: document.getElementById("closeConfirmLeaveButton"),
+  riskConfirmOverlay: document.getElementById("riskConfirmOverlay"),
+  riskConfirmTitle: document.getElementById("riskConfirmTitle"),
+  riskConfirmText: document.getElementById("riskConfirmText"),
+  riskConfirmCancelButton: document.getElementById("riskConfirmCancelButton"),
+  riskConfirmContinueButton: document.getElementById("riskConfirmContinueButton"),
+  tutorialOverlay: document.getElementById("tutorialOverlay"),
+  tutorialCloseButton: document.getElementById("tutorialCloseButton"),
+  tutorialTitle: document.getElementById("tutorialTitle"),
+  tutorialStep1Title: document.getElementById("tutorialStep1Title"),
+  tutorialStep1Text: document.getElementById("tutorialStep1Text"),
+  tutorialStep2Title: document.getElementById("tutorialStep2Title"),
+  tutorialStep2Text: document.getElementById("tutorialStep2Text"),
+  tutorialStep3Title: document.getElementById("tutorialStep3Title"),
+  tutorialStep3Text: document.getElementById("tutorialStep3Text"),
+  tutorialStep4Title: document.getElementById("tutorialStep4Title"),
+  tutorialStep4Text: document.getElementById("tutorialStep4Text"),
+  tutorialDoneButton: document.getElementById("tutorialDoneButton"),
+  tutorialVideos: Array.from(document.querySelectorAll(".tutorial-video")),
   toastHost: document.getElementById("toastHost"),
 };
 
@@ -406,6 +494,11 @@ function t(key) {
 
 function tEn(key) {
   return translations.en[key] || key;
+}
+
+function tGuide(key) {
+  const lang = guideTranslations[state.settings.language] ? state.settings.language : "en";
+  return guideTranslations[lang][key] || guideTranslations.en[key] || key;
 }
 
 function setIcon(element, iconName) {
@@ -430,9 +523,14 @@ function initIcons() {
   elements.notificationsButton.appendChild(elements.notificationBadge);
   setIcon(elements.updateButton, "download");
   setIcon(elements.settingsButton, "settings");
+  setIcon(elements.logoutButton, "logout");
   setIcon(elements.minimizeButton, "minus");
   setIcon(elements.closeButton, "close");
   elements.uploadIcon.innerHTML = icons.upload;
+  const tutorialIcon = elements.howToUseButton?.querySelector(".tutorial-trigger-icon");
+  if (tutorialIcon) {
+    tutorialIcon.innerHTML = icons.help;
+  }
   renderTelegramLink();
 }
 
@@ -752,6 +850,16 @@ function bindEvents() {
   document.addEventListener("pointerdown", closePanelOnOutsidePointer);
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      if (state.tutorialVisible) {
+        event.preventDefault();
+        closeTutorial();
+        return;
+      }
+      if (state.riskConfirmVisible) {
+        event.preventDefault();
+        resolveRiskConfirm(false);
+        return;
+      }
       if (state.closeConfirmVisible) {
         event.preventDefault();
         respondCloseConfirmation(false);
@@ -778,6 +886,7 @@ function bindEvents() {
   elements.dropZone.addEventListener("drop", handleDrop);
   elements.dropZone.addEventListener("mousemove", updateDropGlow);
   elements.dropZone.addEventListener("mouseleave", resetDropTilt);
+  elements.howToUseButton.addEventListener("click", openTutorial);
 
   elements.bitrateSlider.addEventListener("input", () => setOutputBitrate(Number(elements.bitrateSlider.value)));
   elements.bitrateInput.addEventListener("change", () => {
@@ -792,6 +901,7 @@ function bindEvents() {
   elements.patchButton.addEventListener("click", startOrCancelPatch);
   elements.languageButton.addEventListener("click", cycleLanguage);
   elements.themeButton.addEventListener("click", toggleTheme);
+  elements.logoutButton.addEventListener("click", logoutFromAccount);
   elements.authButton.addEventListener("click", startTelegramAuthorization);
   window.alterE.auth?.onDeepLink?.(handleAuthDeepLink);
   elements.telegramLink.addEventListener("click", () => window.alterE.shell.openExternal(telegramChannelUrl));
@@ -805,6 +915,21 @@ function bindEvents() {
   elements.updateDetailsCloseButton.addEventListener("click", closeUpdateDialog);
   elements.closeConfirmStayButton.addEventListener("click", () => respondCloseConfirmation(false));
   elements.closeConfirmLeaveButton.addEventListener("click", () => respondCloseConfirmation(true));
+  elements.riskConfirmCancelButton.addEventListener("click", () => resolveRiskConfirm(false));
+  elements.riskConfirmContinueButton.addEventListener("click", () => resolveRiskConfirm(true));
+  elements.riskConfirmOverlay.addEventListener("pointerdown", (event) => {
+    if (event.target === elements.riskConfirmOverlay) {
+      resolveRiskConfirm(false);
+    }
+  });
+  elements.tutorialCloseButton.addEventListener("click", closeTutorial);
+  elements.tutorialDoneButton.addEventListener("click", closeTutorial);
+  elements.tutorialOverlay.addEventListener("pointerdown", (event) => {
+    if (event.target === elements.tutorialOverlay) {
+      closeTutorial();
+    }
+  });
+  bindTutorialStepHoverPlayback();
   window.alterE.app?.onRequestCloseConfirmation?.((payload = {}) => {
     state.closeConfirmReason = String(payload?.reason || "patch");
     state.closeConfirmVisible = true;
@@ -908,6 +1033,98 @@ function setOutputBitrate(value) {
   render();
 }
 
+function openTutorial() {
+  state.tutorialVisible = true;
+  renderTutorial();
+}
+
+function closeTutorial() {
+  state.tutorialVisible = false;
+  renderTutorial();
+  stopTutorialVideos();
+}
+
+function bindTutorialStepHoverPlayback() {
+  document.querySelectorAll(".tutorial-step").forEach((step) => {
+    const video = step.querySelector(".tutorial-video");
+    if (!video) {
+      return;
+    }
+
+    step.addEventListener("pointerenter", () => {
+      if (!state.tutorialVisible) {
+        return;
+      }
+      try {
+        video.currentTime = 0;
+      } catch {
+        // Ignore if currentTime cannot be changed yet.
+      }
+      const playPromise = video.play();
+      if (playPromise?.catch) {
+        playPromise.catch(() => {});
+      }
+    });
+
+    step.addEventListener("pointerleave", () => {
+      video.pause();
+      try {
+        video.currentTime = 0;
+      } catch {
+        // Ignore if currentTime cannot be changed yet.
+      }
+    });
+  });
+}
+
+function stopTutorialVideos() {
+  for (const video of elements.tutorialVideos) {
+    if (!video) {
+      continue;
+    }
+    video.pause();
+    try {
+      video.currentTime = 0;
+    } catch {
+      // Ignore if currentTime cannot be changed yet.
+    }
+  }
+}
+
+function isHighRiskTikTokVideo(video) {
+  if (!video) {
+    return false;
+  }
+  const bitrateKbps = Number(video.videoBitrateKbps || 0);
+  const width = Number(video.width || 0);
+  const height = Number(video.height || 0);
+  return bitrateKbps > 70000 || width > 1920 || height > 1080;
+}
+
+function requestRiskConfirm() {
+  if (state.riskConfirmVisible) {
+    return Promise.resolve(false);
+  }
+  state.riskConfirmVisible = true;
+  renderRiskConfirm();
+  return new Promise((resolve) => {
+    riskConfirmResolver = resolve;
+  });
+}
+
+function resolveRiskConfirm(accepted) {
+  if (!state.riskConfirmVisible) {
+    return;
+  }
+  state.riskConfirmVisible = false;
+  renderRiskConfirm();
+  const resolve = riskConfirmResolver;
+  riskConfirmResolver = null;
+  if (resolve) {
+    resolve(Boolean(accepted));
+  }
+}
+
 async function startOrCancelPatch() {
   if (state.working) {
     await window.alterE.video.cancel();
@@ -923,6 +1140,13 @@ async function startOrCancelPatch() {
     notify("warning", t("authText"));
     render();
     return;
+  }
+
+  if (isHighRiskTikTokVideo(state.video)) {
+    const accepted = await requestRiskConfirm();
+    if (!accepted) {
+      return;
+    }
   }
 
   const outputPath = await window.alterE.dialog.saveOutput({
@@ -977,6 +1201,17 @@ async function toggleTheme() {
   const theme = state.settings.theme === "dark" ? "light" : "dark";
   state.settings = await window.alterE.settings.update({ theme });
   log("system", "Theme changed", theme);
+  render();
+}
+
+async function logoutFromAccount() {
+  if (!state.settings.authorized && !state.auth.offlineGuest) {
+    return;
+  }
+
+  await clearAuthorization(false);
+  state.auth.error = "";
+  notify("success", t("logoutDone"));
   render();
 }
 
@@ -1782,10 +2017,13 @@ function render() {
   renderAuth();
   renderUpdate();
   renderCloseConfirm();
+  renderRiskConfirm();
+  renderTutorial();
 }
 
 function renderText() {
   elements.outputSizeLabel.textContent = t("outputSize");
+  elements.howToUseLabel.textContent = tGuide("howToUse");
   elements.selectPill.textContent = state.video ? t("changeVideo") : t("selectVideo");
   elements.patchButtonLabel.textContent = state.working ? t("cancel") : t("patch");
   document.querySelector('[data-mode="low"]').textContent = t("low");
@@ -1809,6 +2047,20 @@ function renderText() {
   elements.closeConfirmText.textContent = t("closeConfirmText");
   elements.closeConfirmLeaveButton.textContent = t("closeConfirmClose");
   elements.closeConfirmStayButton.textContent = t("closeConfirmStay");
+  elements.riskConfirmTitle.textContent = t("riskWarningTitle");
+  elements.riskConfirmText.textContent = t("riskWarningText");
+  elements.riskConfirmCancelButton.textContent = t("cancelAction");
+  elements.riskConfirmContinueButton.textContent = t("continueAnyway");
+  elements.tutorialTitle.textContent = tGuide("tutorialTitle");
+  elements.tutorialStep1Title.textContent = tGuide("tutorialStep1Title");
+  elements.tutorialStep1Text.textContent = tGuide("tutorialStep1Text");
+  elements.tutorialStep2Title.textContent = tGuide("tutorialStep2Title");
+  elements.tutorialStep2Text.textContent = tGuide("tutorialStep2Text");
+  elements.tutorialStep3Title.textContent = tGuide("tutorialStep3Title");
+  elements.tutorialStep3Text.textContent = tGuide("tutorialStep3Text");
+  elements.tutorialStep4Title.textContent = tGuide("tutorialStep4Title");
+  elements.tutorialStep4Text.textContent = tGuide("tutorialStep4Text");
+  elements.tutorialDoneButton.textContent = tGuide("tutorialDone");
 
   elements.logsButton.title = t("logs");
   elements.notificationsButton.title = t("notifications");
@@ -1818,6 +2070,14 @@ function renderText() {
   elements.notificationsButton.setAttribute("aria-label", t("notifications"));
   elements.updateButton.setAttribute("aria-label", t("updates"));
   elements.settingsButton.setAttribute("aria-label", t("settings"));
+  elements.howToUseButton.setAttribute("aria-label", tGuide("howToUse"));
+  elements.logoutButton.title =
+    state.settings.language === "ru"
+      ? "Выйти из аккаунта."
+      : state.settings.language === "tr"
+        ? "Hesaptan cikis yap."
+        : "Log out of account.";
+  elements.logoutButton.setAttribute("aria-label", elements.logoutButton.title);
   elements.dropZone.setAttribute("aria-label", state.video ? t("changeVideo") : t("selectVideo"));
   elements.patchButton.title = state.working ? t("cancel") : t("patch");
 
@@ -1837,6 +2097,17 @@ function renderCloseConfirm() {
   }
   elements.closeConfirmLeaveButton.textContent = t("closeConfirmClose");
   elements.closeConfirmStayButton.textContent = t("closeConfirmStay");
+}
+
+function renderRiskConfirm() {
+  elements.riskConfirmOverlay.hidden = !state.riskConfirmVisible;
+}
+
+function renderTutorial() {
+  elements.tutorialOverlay.hidden = !state.tutorialVisible;
+  if (!state.tutorialVisible) {
+    stopTutorialVideos();
+  }
 }
 
 function renderVideo() {
