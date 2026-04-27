@@ -2380,8 +2380,23 @@ function compactUpdateNotes(value, maxLength = 320) {
 }
 
 function formatUpdateSize() {
-  const size = formatSize(state.update.sizeBytes || state.update.transferredBytes || 0);
+  const size = formatSize(state.update.sizeBytes || 0);
   return size === "-" ? t("updateSizeUnknown") : size;
+}
+
+function formatUpdateProgressSize() {
+  const transferred = formatSize(state.update.transferredBytes || 0);
+  const total = formatSize(state.update.sizeBytes || 0);
+  if (transferred === "-" && total === "-") {
+    return t("updateSizeUnknown");
+  }
+  if (total === "-") {
+    return transferred;
+  }
+  if (transferred === "-") {
+    return total;
+  }
+  return `${transferred} / ${total}`;
 }
 
 function formatUpdateInfoLine() {
@@ -2775,7 +2790,7 @@ function renderUpdateDialog() {
   elements.updateDetailsTitle.textContent = update.mandatory ? t("updateMandatoryTitle") : t("updateAvailable");
   elements.updateDetailsVersion.textContent = update.version ? `${t("updateVersion")}: ${update.version}` : "";
   elements.updateDetailsNotes.textContent = getUpdateDescription();
-  elements.updateDetailsSize.textContent = `${t("updateSize")}: ${formatUpdateSize()}`;
+  elements.updateDetailsSize.textContent = `${t("updateSize")}: ${downloading ? formatUpdateProgressSize() : formatUpdateSize()}`;
   elements.updateDetailsProgressBlock.hidden = !downloading;
   elements.updateDetailsProgressText.textContent = t("updateDownloading");
   elements.updateDetailsProgressValue.textContent = `${progress}%`;
