@@ -285,6 +285,7 @@ function registerSettingsIpc() {
 
   ipcMain.handle("settings:update", (_event, patch) => {
     const next = settingsStore.update(patch);
+    updateService?.applyPreferences?.(next);
     mainWindow?.webContents.send("settings:changed", next);
     return next;
   });

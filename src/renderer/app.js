@@ -130,6 +130,10 @@ const translations = {
     debugUpdateClear: "Clear update mock",
     debugDownloadLatest: "Download latest from GitHub",
     debugNoUpdates: "No updates available right now.",
+    updateRepoPrompt: "GitHub repo (owner/repo)",
+    updateRepoInvalid: "Invalid repo format. Use owner/repo.",
+    updateBetaPrompt: "Enable beta updates? Type on/off",
+    updatePrefsSaved: "Update source preferences saved.",
   },
   ru: {
     outputSize: "Выходной размер",
@@ -354,6 +358,9 @@ const state = {
     telegramChannelUrl: DEFAULT_TELEGRAM_CHANNEL_URL,
     telegramBotUrl: "",
     authConfigUpdatedAt: 0,
+    updateRepoOwner: "AlterEditing",
+    updateRepoName: "Alter-Editing-Method",
+    updateAllowPrerelease: false,
   },
   auth: {
     checking: false,
@@ -799,6 +806,9 @@ async function init() {
       telegramChannelUrl: DEFAULT_TELEGRAM_CHANNEL_URL,
       telegramBotUrl: "",
       authConfigUpdatedAt: 0,
+      updateRepoOwner: "AlterEditing",
+      updateRepoName: "Alter-Editing-Method",
+      updateAllowPrerelease: false,
     };
   }
   applyCachedAuthConfigFromSettings(state.settings);
@@ -1034,6 +1044,7 @@ function bindEvents() {
   });
   elements.tutorialCloseButton.addEventListener("click", closeTutorial);
   elements.tutorialDoneButton.addEventListener("click", closeTutorial);
+  elements.appVersionLabel?.addEventListener("contextmenu", openVersionPreferencesMenu);
   elements.tutorialOverlay.addEventListener("pointerdown", (event) => {
     if (event.target === elements.tutorialOverlay) {
       closeTutorial();
@@ -2435,6 +2446,44 @@ function render() {
   renderCloseConfirm();
   renderRiskConfirm();
   renderTutorial();
+}
+
+async function openVersionPreferencesMenu(event) {
+  event.preventDefault();
+  const currentOwner = String(state.settings.updateRepoOwner || "AlterEditing").trim();
+  const currentRepo = String(state.settings.updateRepoName || "Alter-Editing-Method").trim();
+  const currentPair = `${currentOwner}/${currentRepo}`;
+  const repoInput = window.prompt(t("updateRepoPrompt"), currentPair);
+  if (repoInput === null) {
+    return;
+  }
+
+  const normalizedPair = String(repoInput || "").trim();
+  const match = normalizedPair.match(/^([-A-Za-z0-9_.]+)\/([-A-Za-z0-9_.]+)$/);
+  if (!match) {
+    toast("error", t("updates"), t("updateRepoInvalid"));
+    return;
+  }
+
+  const betaDefault = state.settings.updateAllowPrerelease ? "on" : "off";
+  const betaInput = window.prompt(t("updateBetaPrompt"), betaDefault);
+  if (betaInput === null) {
+    return;
+  }
+  const betaNormalized = String(betaInput || "").trim().toLowerCase();
+  const updateAllowPrerelease = betaNormalized === "on" || betaNormalized === "true" || betaNormalized === "1";
+
+  state.settings = await window.alterE.settings.update({
+    updateRepoOwner: match[1],
+    updateRepoName: match[2],
+    updateAllowPrerelease,
+  });
+  toast("success", t("updates"), t("updatePrefsSaved"));
+  try {
+    await window.alterE.update.check();
+  } catch {
+    // ignore immediate check errors
+  }
 }
 
 function renderText() {

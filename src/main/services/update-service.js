@@ -4,8 +4,8 @@ const path = require("path");
 const { app, shell } = require("electron");
 const { autoUpdater } = require("electron-updater");
 
-const GITHUB_OWNER = "AlterEditing";
-const GITHUB_REPO = "Alter-Editing-Method";
+const DEFAULT_GITHUB_OWNER = "AlterEditing";
+const DEFAULT_GITHUB_REPO = "Alter-Editing-Method";
 const DEV_UPDATE_CONFIG_FILE = "dev-app-update.yml";
 const DEV_UPDATER_ENV_NAMES = ["ALTERE_ENABLE_DEV_UPDATER", "ALTERE_FORCE_DEV_UPDATES"];
 
@@ -23,10 +23,13 @@ const CLEAN_RELEASE_PATTERNS = [
   /\bforce\s*[:=]\s*true\b/gi,
 ];
 
-function createUpdateService({ onStateChange, onLog }) {
+function createUpdateService({ settingsStore, onStateChange, onLog }) {
   const devUpdater = isDevUpdaterEnabled();
   let sessionDismissedMandatoryVersion = "";
   let downloadedFilePath = "";
+  let githubOwner = DEFAULT_GITHUB_OWNER;
+  let githubRepo = DEFAULT_GITHUB_REPO;
+  let allowPrerelease = false;
 
   const state = {
     supported: app.isPackaged || devUpdater,
@@ -43,10 +46,14 @@ function createUpdateService({ onStateChange, onLog }) {
     error: "",
     mandatoryDismissed: false,
     checkedAt: 0,
+    githubOwner,
+    githubRepo,
+    allowPrerelease,
   };
 
   if (state.supported) {
     configureUpdater();
+    applyPreferences(settingsStore?.getAll?.() || {});
   }
 
   function configureUpdater() {
@@ -58,6 +65,7 @@ function createUpdateService({ onStateChange, onLog }) {
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
     autoUpdater.allowDowngrade = false;
+    autoUpdater.allowPrerelease = allowPrerelease;
 
     autoUpdater.on("checking-for-update", () => {
       updateState({ checking: true, error: "" });
@@ -87,7 +95,7 @@ function createUpdateService({ onStateChange, onLog }) {
     autoUpdater.on("update-available", async (info) => {
       const version = String(info?.version || "").trim();
       const releaseNotes = normalizeReleaseNotes(info?.releaseNotes);
-      const apiNotes = releaseNotes || (await fetchReleaseBody(version));
+      const apiNotes = releaseNotes || (await fetchReleaseBody(version, githubOwner, githubRepo));
       const mandatory = detectMandatoryUpdate(apiNotes);
       const estimatedSizeBytes = resolveUpdateSizeBytes(info);
 
@@ -160,6 +168,36 @@ function createUpdateService({ onStateChange, onLog }) {
   function updateState(patch) {
     Object.assign(state, patch);
     onStateChange?.(getState());
+  }
+
+  function applyPreferences(settings = {}) {
+    const nextOwner = normalizeRepoPart(settings.updateRepoOwner) || DEFAULT_GITHUB_OWNER;
+    const nextRepo = normalizeRepoPart(settings.updateRepoName) || DEFAULT_GITHUB_REPO;
+    const nextAllowPrerelease = Boolean(settings.updateAllowPrerelease);
+
+    githubOwner = nextOwner;
+    githubRepo = nextRepo;
+    allowPrerelease = nextAllowPrerelease;
+
+    try {
+      autoUpdater.allowPrerelease = allowPrerelease;
+      autoUpdater.setFeedURL({
+        provider: "github",
+        owner: githubOwner,
+        repo: githubRepo,
+        releaseType: allowPrerelease ? "prerelease" : "release",
+      });
+    } catch (error) {
+      onLog?.("warning", "Update feed reconfigure failed", normalizeError(error));
+    }
+
+    updateState({
+      githubOwner,
+      githubRepo,
+      allowPrerelease,
+    });
+    onLog?.("info", `Update source: ${githubOwner}/${githubRepo} | prerelease=${allowPrerelease ? "on" : "off"}`);
+    return getState();
   }
 
   function getState() {
@@ -236,6 +274,7 @@ function createUpdateService({ onStateChange, onLog }) {
     dismissMandatory,
     clearMandatoryDismiss,
     isDownloading,
+    applyPreferences,
   };
 }
 
@@ -341,7 +380,7 @@ function resolveDownloadedFilePath(info) {
   return String(info.downloadedFile || info.file || info.path || "").trim();
 }
 
-async function fetchReleaseBody(version) {
+async function fetchReleaseBody(version, owner = DEFAULT_GITHUB_OWNER, repo = DEFAULT_GITHUB_REPO) {
   const targetVersion = String(version || "").trim();
   if (!targetVersion) {
     return "";
@@ -349,7 +388,7 @@ async function fetchReleaseBody(version) {
 
   const attempts = [`v${targetVersion}`, targetVersion];
   for (const tag of attempts) {
-    const body = await fetchReleaseBodyByTag(tag);
+    const body = await fetchReleaseBodyByTag(tag, owner, repo);
     if (body) {
       return body;
     }
@@ -358,9 +397,11 @@ async function fetchReleaseBody(version) {
   return "";
 }
 
-function fetchReleaseBodyByTag(tag) {
+function fetchReleaseBodyByTag(tag, owner = DEFAULT_GITHUB_OWNER, repo = DEFAULT_GITHUB_REPO) {
   return new Promise((resolve) => {
-    const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tags/${encodeURIComponent(tag)}`;
+    const safeOwner = normalizeRepoPart(owner) || DEFAULT_GITHUB_OWNER;
+    const safeRepo = normalizeRepoPart(repo) || DEFAULT_GITHUB_REPO;
+    const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/releases/tags/${encodeURIComponent(tag)}`;
     const request = https.get(
       url,
       {
@@ -401,6 +442,12 @@ function fetchReleaseBodyByTag(tag) {
       resolve("");
     });
   });
+}
+
+function normalizeRepoPart(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return /^[-A-Za-z0-9_.]+$/.test(raw) ? raw : "";
 }
 
 function normalizeError(error) {
