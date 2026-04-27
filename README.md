@@ -86,3 +86,37 @@ These binaries are ignored by git. For licensing details and release obligations
 - Code of conduct: `CODE_OF_CONDUCT.md`
 - Privacy notice: `PRIVACY.md`
 - Code signing policy: `CODE_SIGNING_POLICY.md`
+## How to Use / Как пользоваться
+
+### English
+
+1. Drag and drop a video file into the app, or select it manually.  
+   ![Step 1 - Select video](docs/how-to-use/1.gif)
+
+2. Choose a bitrate, or keep the original source quality.  
+   ![Step 2 - Choose bitrate](docs/how-to-use/2.gif)
+
+   > Note: 2K/4K video or bitrate above 50 Mbps is not recommended, because there is a risk of TikTok account restrictions.
+
+3. Click the `PATCH` button and wait until processing is complete.  
+   ![Step 3 - Patch video](docs/how-to-use/3.gif)
+
+4. Upload the processed video to TikTok using your preferred standard upload method, without additional third-party methods.  
+   ![Step 4 - Upload to TikTok](docs/how-to-use/4.gif)
+
+### Русский
+
+1. Перетащите видео в приложение или выберите его вручную.  
+   ![Шаг 1 - Выбор видео](docs/how-to-use/1.gif)
+
+2. Выберите битрейт или оставьте исходное качество видеофайла.  
+   ![Шаг 2 - Выбор битрейта](docs/how-to-use/2.gif)
+
+   > Примечание: Видео в 2K/4K или с битрейтом выше 50 Mbps не рекомендуется, так как есть риск ограничений аккаунта TikTok.
+
+3. Нажмите кнопку `PATCH` и дождитесь завершения обработки.  
+   ![Шаг 3 - Патч видео](docs/how-to-use/3.gif)
+
+4. Загрузите обработанное видео в TikTok удобным для вас стандартным способом, без использования дополнительных сторонних методов.  
+   ![Шаг 4 - Загрузка в TikTok](docs/how-to-use/4.gif)
+
