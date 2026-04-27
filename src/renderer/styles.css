@@ -310,6 +310,35 @@ body[data-theme="light"] .icon-button.is-open {
   box-shadow: 0 0 0 2px var(--title-bg);
 }
 
+.icon-button.has-update[data-update-state="available"]::after {
+  content: "↓";
+  background: var(--accent);
+}
+
+.icon-button.has-update[data-update-level="mandatory"]::after {
+  background: var(--warning);
+}
+
+.icon-button.has-update[data-update-state="downloading"]::after {
+  content: "↻";
+  background: var(--success);
+  animation: settings-update-spin 1s linear infinite;
+}
+
+.icon-button.has-update[data-update-state="downloaded"]::after {
+  content: "✓";
+  background: var(--success);
+}
+
+@keyframes settings-update-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .update-button[data-level="mandatory"] {
   color: var(--warning);
 }
