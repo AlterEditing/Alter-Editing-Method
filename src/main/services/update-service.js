@@ -4,8 +4,8 @@ const path = require("path");
 const { app, shell } = require("electron");
 const { autoUpdater } = require("electron-updater");
 
-const DEFAULT_GITHUB_OWNER = "AlterEditing";
-const DEFAULT_GITHUB_REPO = "Alter-Editing-Method";
+const GITHUB_OWNER = "AlterEditing";
+const GITHUB_REPO = "Alter-Editing-Method";
 const DEV_UPDATE_CONFIG_FILE = "dev-app-update.yml";
 const DEV_UPDATER_ENV_NAMES = ["ALTERE_ENABLE_DEV_UPDATER", "ALTERE_FORCE_DEV_UPDATES"];
 
@@ -23,13 +23,10 @@ const CLEAN_RELEASE_PATTERNS = [
   /\bforce\s*[:=]\s*true\b/gi,
 ];
 
-function createUpdateService({ settingsStore, onStateChange, onLog }) {
+function createUpdateService({ onStateChange, onLog }) {
   const devUpdater = isDevUpdaterEnabled();
   let sessionDismissedMandatoryVersion = "";
   let downloadedFilePath = "";
-  let githubOwner = DEFAULT_GITHUB_OWNER;
-  let githubRepo = DEFAULT_GITHUB_REPO;
-  let allowPrerelease = false;
 
   const state = {
     supported: app.isPackaged || devUpdater,
@@ -46,14 +43,10 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
     error: "",
     mandatoryDismissed: false,
     checkedAt: 0,
-    githubOwner,
-    githubRepo,
-    allowPrerelease,
   };
 
   if (state.supported) {
     configureUpdater();
-    applyPreferences(settingsStore?.getAll?.() || {});
   }
 
   function configureUpdater() {
@@ -65,7 +58,6 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
     autoUpdater.allowDowngrade = false;
-    autoUpdater.allowPrerelease = allowPrerelease;
 
     autoUpdater.on("checking-for-update", () => {
       updateState({ checking: true, error: "" });
@@ -95,9 +87,9 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
     autoUpdater.on("update-available", async (info) => {
       const version = String(info?.version || "").trim();
       const releaseNotes = normalizeReleaseNotes(info?.releaseNotes);
-      const apiNotes = releaseNotes || (await fetchReleaseBody(version, githubOwner, githubRepo));
+      const apiNotes = releaseNotes || (await fetchReleaseBody(version));
       const mandatory = detectMandatoryUpdate(apiNotes);
-      const estimatedSizeBytes = resolveUpdateSizeBytes(info);
+      const sizeBytes = resolveUpdateSizeBytes(info);
 
       downloadedFilePath = "";
       updateState({
@@ -107,8 +99,7 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
         downloading: false,
         downloadProgress: 0,
         transferredBytes: 0,
-        // Do not show guessed size before real download starts.
-        sizeBytes: 0,
+        sizeBytes,
         version,
         mandatory,
         releaseNotes: cleanReleaseNotes(apiNotes),
@@ -117,9 +108,6 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
         checkedAt: Date.now(),
       });
 
-      if (estimatedSizeBytes > 0) {
-        onLog?.("info", `Update estimated package size: ${estimatedSizeBytes} bytes`);
-      }
       onLog?.("info", `Update available: ${version}${mandatory ? " (mandatory)" : ""}`);
     });
 
@@ -127,10 +115,6 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
       const percent = Number(progress?.percent || 0);
       const transferredBytes = toPositiveNumber(progress?.transferred);
       const totalBytes = toPositiveNumber(progress?.total);
-      const previousTotalBytes = toPositiveNumber(state.sizeBytes);
-      if (previousTotalBytes > 0 && totalBytes > Math.max(previousTotalBytes * 1.4, previousTotalBytes + 20 * 1024 * 1024)) {
-        onLog?.("warning", "Update switched to full package download (differential package unavailable)");
-      }
       updateState({
         checking: false,
         downloading: true,
@@ -168,36 +152,6 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
   function updateState(patch) {
     Object.assign(state, patch);
     onStateChange?.(getState());
-  }
-
-  function applyPreferences(settings = {}) {
-    const nextOwner = normalizeRepoPart(settings.updateRepoOwner) || DEFAULT_GITHUB_OWNER;
-    const nextRepo = normalizeRepoPart(settings.updateRepoName) || DEFAULT_GITHUB_REPO;
-    const nextAllowPrerelease = Boolean(settings.updateAllowPrerelease);
-
-    githubOwner = nextOwner;
-    githubRepo = nextRepo;
-    allowPrerelease = nextAllowPrerelease;
-
-    try {
-      autoUpdater.allowPrerelease = allowPrerelease;
-      autoUpdater.setFeedURL({
-        provider: "github",
-        owner: githubOwner,
-        repo: githubRepo,
-        releaseType: allowPrerelease ? "prerelease" : "release",
-      });
-    } catch (error) {
-      onLog?.("warning", "Update feed reconfigure failed", normalizeError(error));
-    }
-
-    updateState({
-      githubOwner,
-      githubRepo,
-      allowPrerelease,
-    });
-    onLog?.("info", `Update source: ${githubOwner}/${githubRepo} | prerelease=${allowPrerelease ? "on" : "off"}`);
-    return getState();
   }
 
   function getState() {
@@ -274,7 +228,6 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
     dismissMandatory,
     clearMandatoryDismiss,
     isDownloading,
-    applyPreferences,
   };
 }
 
@@ -380,7 +333,7 @@ function resolveDownloadedFilePath(info) {
   return String(info.downloadedFile || info.file || info.path || "").trim();
 }
 
-async function fetchReleaseBody(version, owner = DEFAULT_GITHUB_OWNER, repo = DEFAULT_GITHUB_REPO) {
+async function fetchReleaseBody(version) {
   const targetVersion = String(version || "").trim();
   if (!targetVersion) {
     return "";
@@ -388,7 +341,7 @@ async function fetchReleaseBody(version, owner = DEFAULT_GITHUB_OWNER, repo = DE
 
   const attempts = [`v${targetVersion}`, targetVersion];
   for (const tag of attempts) {
-    const body = await fetchReleaseBodyByTag(tag, owner, repo);
+    const body = await fetchReleaseBodyByTag(tag);
     if (body) {
       return body;
     }
@@ -397,11 +350,9 @@ async function fetchReleaseBody(version, owner = DEFAULT_GITHUB_OWNER, repo = DE
   return "";
 }
 
-function fetchReleaseBodyByTag(tag, owner = DEFAULT_GITHUB_OWNER, repo = DEFAULT_GITHUB_REPO) {
+function fetchReleaseBodyByTag(tag) {
   return new Promise((resolve) => {
-    const safeOwner = normalizeRepoPart(owner) || DEFAULT_GITHUB_OWNER;
-    const safeRepo = normalizeRepoPart(repo) || DEFAULT_GITHUB_REPO;
-    const url = `https://api.github.com/repos/${safeOwner}/${safeRepo}/releases/tags/${encodeURIComponent(tag)}`;
+    const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tags/${encodeURIComponent(tag)}`;
     const request = https.get(
       url,
       {
@@ -442,12 +393,6 @@ function fetchReleaseBodyByTag(tag, owner = DEFAULT_GITHUB_OWNER, repo = DEFAULT
       resolve("");
     });
   });
-}
-
-function normalizeRepoPart(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  return /^[-A-Za-z0-9_.]+$/.test(raw) ? raw : "";
 }
 
 function normalizeError(error) {
