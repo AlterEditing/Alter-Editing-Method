@@ -310,6 +310,7 @@ const AUTH_POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const AUTH_SUBSCRIPTION_RETRY_MS = 30 * 1000;
 const AUTH_FETCH_TIMEOUT_MS = 7000;
 const AUTH_SERVER_CONFIG_PATH = "/client-config";
+const AUTH_OFFLINE_BOT_NONCE_TTL_MS = 20 * 60 * 1000;
 
 const state = {
   settings: {
@@ -340,6 +341,8 @@ const state = {
     degradedReason: "",
     guestCheckInFlight: false,
     guestRetryTimer: null,
+    offlineBotNonce: "",
+    offlineBotExpiresAt: 0,
   },
   video: null,
   mode: "balanced",
@@ -1383,6 +1386,59 @@ async function checkStoredSubscriptionOnce(reason = "auto") {
   }
 }
 
+function createClientNonce(byteLength = 12) {
+  const targetLength = Math.max(8, Number(byteLength) || 12);
+  const buffer = new Uint8Array(targetLength);
+  if (window.crypto?.getRandomValues) {
+    window.crypto.getRandomValues(buffer);
+  } else {
+    for (let index = 0; index < buffer.length; index += 1) {
+      buffer[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  return Array.from(buffer, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+function buildBotStartUrl(baseUrl, startPayload) {
+  const normalizedBase = normalizeHttpUrl(baseUrl, { allowHttp: false, allowHttps: true });
+  if (!normalizedBase || !startPayload) {
+    return "";
+  }
+  try {
+    const target = new URL(normalizedBase);
+    target.searchParams.set("start", String(startPayload));
+    return target.toString();
+  } catch {
+    return "";
+  }
+}
+
+function isPendingOfflineBotNonce(nonce) {
+  const expectedNonce = String(state.auth.offlineBotNonce || "");
+  if (!expectedNonce) {
+    return false;
+  }
+  if (String(nonce || "") !== expectedNonce) {
+    return false;
+  }
+  return Date.now() <= Number(state.auth.offlineBotExpiresAt || 0);
+}
+
+function activateTemporaryBotAuthorization() {
+  stopAuthPolling();
+  state.auth.pending = false;
+  state.auth.checking = false;
+  state.auth.error = "";
+  state.auth.sessionId = "";
+  state.auth.startedAt = 0;
+  state.auth.offlineGuest = true;
+  state.auth.degradedReason = "bot_offline_verified";
+  state.auth.offlineBotNonce = "";
+  state.auth.offlineBotExpiresAt = 0;
+  notify("success", t("authSuccess"));
+  render();
+}
+
 async function startTelegramAuthorization() {
   if (state.auth.pending || state.auth.checking) {
     return;
@@ -1429,7 +1485,12 @@ async function startTelegramAuthorization() {
       const fallbackBotUrl = normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true });
       if (fallbackBotUrl) {
         try {
-          await window.alterE.shell.openExternal(fallbackBotUrl);
+          const offlineNonce = createClientNonce(12);
+          const startPayload = `offauth_${offlineNonce}`;
+          const offlineBotUrl = buildBotStartUrl(fallbackBotUrl, startPayload);
+          state.auth.offlineBotNonce = offlineNonce;
+          state.auth.offlineBotExpiresAt = Date.now() + AUTH_OFFLINE_BOT_NONCE_TTL_MS;
+          await window.alterE.shell.openExternal(offlineBotUrl || fallbackBotUrl);
         } catch {
           // Keep auth overlay error text only when fallback bot link cannot be opened.
         }
@@ -1443,9 +1504,13 @@ async function startTelegramAuthorization() {
 
 function handleAuthDeepLink(rawUrl) {
   let sessionId = "";
+  let offline = false;
+  let offlineNonce = "";
   try {
     const url = new URL(String(rawUrl || ""));
     sessionId = url.searchParams.get("session") || "";
+    offline = url.searchParams.get("offline") === "1";
+    offlineNonce = url.searchParams.get("nonce") || "";
     const deepLinkServer = normalizeHttpUrl(url.searchParams.get("server"), {
       allowHttp: true,
       allowHttps: true,
@@ -1468,10 +1533,21 @@ function handleAuthDeepLink(rawUrl) {
     return;
   }
 
+  if (offline) {
+    if (isPendingOfflineBotNonce(offlineNonce)) {
+      activateTemporaryBotAuthorization();
+    } else {
+      log("warning", "Offline bot authorization", "Ignored stale or unknown deep-link nonce");
+    }
+    return;
+  }
+
   if (!sessionId) {
     return;
   }
 
+  state.auth.offlineBotNonce = "";
+  state.auth.offlineBotExpiresAt = 0;
   state.auth.pending = true;
   state.auth.error = "";
   state.auth.sessionId = sessionId;
@@ -1553,6 +1629,8 @@ async function exchangeAuthorization(sessionId) {
     state.auth.checking = false;
     state.auth.subscriptionCheckedThisSession = true;
     state.auth.offlineGuest = false;
+    state.auth.offlineBotNonce = "";
+    state.auth.offlineBotExpiresAt = 0;
     state.auth.error = "";
     state.auth.sessionId = "";
     log("success", "Session authorized", `telegram_id=${telegramId}`);
@@ -1586,6 +1664,8 @@ async function clearAuthorization(showLog) {
   state.auth.guestCheckInFlight = false;
   state.auth.offlineGuest = false;
   state.auth.degradedReason = "";
+  state.auth.offlineBotNonce = "";
+  state.auth.offlineBotExpiresAt = 0;
   state.settings = await window.alterE.settings.update({
     authorized: false,
     telegramId: null,
