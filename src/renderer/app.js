@@ -623,6 +623,15 @@ function applyAuthServerMeta(meta = {}) {
     currentBotUrl = nextBotUrl;
   }
 
+  if (Array.isArray(meta?.authApiFallbacks)) {
+    const normalizedFallbacks = meta.authApiFallbacks
+      .map((item) => normalizeHttpUrl(item, { allowHttp: true, allowHttps: true }))
+      .filter(Boolean);
+    if (normalizedFallbacks.length) {
+      authApiFallbacks = Array.from(new Set(normalizedFallbacks));
+    }
+  }
+
   schedulePersistAuthConfigCache();
 }
 
