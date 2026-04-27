@@ -128,22 +128,24 @@
         </div>
         <button class="panel-action" id="languageButton" type="button"></button>
         <button class="panel-action" id="themeButton" type="button"></button>
-        <button class="panel-action" id="updateButton" type="button" hidden></button>
+        <div class="settings-update-wrap" id="settingsUpdateWrap" hidden>
+          <button class="settings-update-button" id="updateButton" type="button"></button>
+        </div>
         <div class="settings-footer" id="settingsVersionArea" title="Right click to configure update source">
           <span class="settings-version" id="appVersionLabel">v-</span>
         </div>
         <div class="settings-version-menu" id="settingsVersionMenu" hidden>
-          <label class="settings-version-menu-label" id="updateRepoLabel" for="updateRepoInput">GitHub repo (owner/repo)</label>
-          <input class="settings-version-menu-input" id="updateRepoInput" type="text" placeholder="AlterEditing/Alter-Editing-Method" />
-          <label class="settings-version-menu-toggle">
-            <input id="updateBetaToggle" type="checkbox" />
-            <span id="updateBetaToggleLabel">Enable beta updates</span>
-          </label>
-          <div class="settings-version-menu-actions">
-            <button class="panel-tool-button" id="openRepoButton" type="button">Open repo</button>
-            <button class="panel-tool-button" id="saveVersionPrefsButton" type="button">Save</button>
-            <button class="panel-tool-button" id="cancelVersionPrefsButton" type="button">Close</button>
+          <div class="settings-version-menu-head">
+            <label class="settings-version-menu-label" id="updateRepoLabel" for="updateRepoInput">GitHub repo (owner/repo)</label>
+            <button class="settings-version-repo-link" id="openRepoButton" type="button" title="Open repository" aria-label="Open repository"></button>
           </div>
+          <input class="settings-version-menu-input" id="updateRepoInput" type="text" placeholder="AlterEditing/Alter-Editing-Method" />
+          <label class="settings-version-menu-toggle" id="updateBetaRow">
+            <span class="settings-version-menu-beta-label" id="updateBetaToggleLabel">Beta</span>
+            <span class="settings-version-menu-spacer"></span>
+            <input id="updateBetaToggle" type="checkbox" />
+            <span class="settings-version-switch" aria-hidden="true"><span class="settings-version-switch-thumb"></span></span>
+          </label>
         </div>
       </section>
 
