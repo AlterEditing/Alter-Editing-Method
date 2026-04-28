@@ -587,7 +587,8 @@ body[data-theme="light"] .video-preview {
 
 .file-title,
 .file-meta,
-.file-stream {
+.file-stream,
+.file-codec {
   position: absolute;
   left: 24px;
   right: 24px;
@@ -619,12 +620,19 @@ body[data-theme="light"] .video-preview {
   color: rgba(219, 229, 236, 0.52);
 }
 
+.file-codec {
+  top: 142px;
+  font-size: 10px;
+  color: rgba(219, 229, 236, 0.52);
+}
+
 body[data-theme="light"] .file-title {
   color: rgba(16, 21, 26, 0.94);
 }
 
 body[data-theme="light"] .file-meta,
-body[data-theme="light"] .file-stream {
+body[data-theme="light"] .file-stream,
+body[data-theme="light"] .file-codec {
   color: rgba(28, 35, 40, 0.7);
 }
 
@@ -640,6 +648,10 @@ body[data-theme="light"] .file-stream {
   color: rgba(235, 244, 250, 0.84);
 }
 
+.drop-zone.has-video .file-codec {
+  color: rgba(235, 244, 250, 0.84);
+}
+
 body[data-theme="light"] .drop-zone.has-video .file-title {
   color: rgba(255, 255, 255, 0.99);
 }
@@ -649,6 +661,10 @@ body[data-theme="light"] .drop-zone.has-video .file-meta {
 }
 
 body[data-theme="light"] .drop-zone.has-video .file-stream {
+  color: rgba(235, 244, 250, 0.84);
+}
+
+body[data-theme="light"] .drop-zone.has-video .file-codec {
   color: rgba(235, 244, 250, 0.84);
 }
 
@@ -937,6 +953,12 @@ body[data-theme="light"] .bitrate-slider::-webkit-slider-thumb {
   gap: 4px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.render-settings-grid label.is-custom-field > span::after {
+  content: " !";
+  color: var(--warning);
+  font-weight: 800;
 }
 
 .render-settings-grid select,
@@ -2287,7 +2309,8 @@ body[data-theme="light"] .toast {
 
   .file-title,
   .file-meta,
-  .file-stream {
+  .file-stream,
+  .file-codec {
     left: 16px;
     right: 16px;
   }
@@ -2360,6 +2383,10 @@ body[data-theme="light"] .toast {
 
   .file-stream {
     top: 106px;
+  }
+
+  .file-codec {
+    top: 122px;
   }
 
   .output-panel {

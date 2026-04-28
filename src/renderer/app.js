@@ -117,7 +117,7 @@ const translations = {
     containerMp4: "MP4",
     containerMov: "MOV",
     audioAac: "AAC",
-    renderSettingsCustomHint: "Custom render settings are enabled",
+    renderSettingsCustomHint: "Render settings changed",
     renderSettingsDone: "Done",
     support: "Support",
     supportInvoked: "Support request sent",
@@ -225,7 +225,7 @@ const translations = {
     containerMov: "MOV",
     audioAac: "AAC",
     audioSource: "\u0418\u0441\u0445\u043e\u0434\u043d\u043e\u0435 (\u043e\u0440\u0438\u0433\u0438\u043d\u0430\u043b)",
-    renderSettingsCustomHint: "\u0412\u043a\u043b\u044e\u0447\u0435\u043d\u044b \u043d\u0435\u0438\u0441\u0445\u043e\u0434\u043d\u044b\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
+    renderSettingsCustomHint: "\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u044b \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
     renderSettingsDone: "\u0413\u043e\u0442\u043e\u0432\u043e",
     support: "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430",
     supportInvoked: "\u0417\u0430\u043f\u0440\u043e\u0441 \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d",
@@ -321,7 +321,7 @@ const translations = {
     containerMov: "MOV",
     audioAac: "AAC",
     audioSource: "Kaynak (orijinal)",
-    renderSettingsCustomHint: "Ozel render ayarlari etkin",
+    renderSettingsCustomHint: "Render ayarlari degisti",
     renderSettingsDone: "Tamam",
     support: "Destek",
     supportInvoked: "Destek talebi gonderildi",
@@ -500,6 +500,7 @@ const elements = {
   fileTitle: document.getElementById("fileTitle"),
   fileMeta: document.getElementById("fileMeta"),
   fileStream: document.getElementById("fileStream"),
+  fileCodec: document.getElementById("fileCodec"),
   howToUseButton: document.getElementById("howToUseButton"),
   howToUseLabel: document.getElementById("howToUseLabel"),
   selectPill: document.getElementById("selectPill"),
@@ -2708,6 +2709,14 @@ function renderText() {
     elements.renderSettingsButton.classList.toggle("is-custom", hasCustom);
     elements.renderSettingsButton.title = hasCustom ? t("renderSettingsCustomHint") : t("renderSettings");
   }
+  const renderCodecChanged = normalizeRenderCodec(state.settings.renderCodec) !== RENDER_DEFAULTS.codec;
+  const renderContainerChanged = normalizeRenderContainer(state.settings.renderContainer) !== RENDER_DEFAULTS.container;
+  const renderAudioChanged =
+    normalizeRenderAudioMode(state.settings.renderAudioMode) !== RENDER_DEFAULTS.audioMode ||
+    getRenderAudioBitrateKbps() !== RENDER_DEFAULTS.audioBitrateKbps;
+  elements.renderCodecLabel?.closest("label")?.classList.toggle("is-custom-field", renderCodecChanged);
+  elements.renderContainerLabel?.closest("label")?.classList.toggle("is-custom-field", renderContainerChanged);
+  elements.renderAudioBitrateLabel?.closest("label")?.classList.toggle("is-custom-field", renderAudioChanged);
 }
 
 function renderCloseConfirm() {
@@ -2744,6 +2753,7 @@ function renderVideo() {
     elements.fileTitle.textContent = "";
     elements.fileMeta.textContent = "";
     elements.fileStream.textContent = "";
+    elements.fileCodec.textContent = "";
     elements.videoPreview.pause();
     elements.videoPreview.hidden = true;
     elements.videoPreview.removeAttribute("src");
@@ -2761,6 +2771,9 @@ function renderVideo() {
     video.fps ? `${formatNumber(video.fps, 2)} ${t("fps")}` : "",
     video.videoBitrateKbps ? `${video.videoBitrateKbps} ${t("kbps")}` : "",
   ]
+    .filter(Boolean)
+    .join(" | ");
+  elements.fileCodec.textContent = [String(video.codec || "").toLowerCase(), String(video.container || video.format || "").toLowerCase()]
     .filter(Boolean)
     .join(" | ");
 

@@ -242,7 +242,7 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
       return true;
     }
 
-    setImmediate(() => autoUpdater.quitAndInstall(false, true));
+    setImmediate(() => autoUpdater.quitAndInstall(true, true));
     return true;
   }
 

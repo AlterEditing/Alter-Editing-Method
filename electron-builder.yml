@@ -29,7 +29,7 @@ publish:
 nsis:
   oneClick: false
   allowElevation: true
-  allowToChangeInstallationDirectory: true
+  allowToChangeInstallationDirectory: false
   perMachine: false
   deleteAppDataOnUninstall: false
   artifactName: ${productName}-Setup-${version}.${ext}
