@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const DEFAULT_SETTINGS = {
-  settingsVersion: 4,
+  settingsVersion: 5,
   language: "en",
   theme: "dark",
   authRequired: true,
@@ -14,6 +14,11 @@ const DEFAULT_SETTINGS = {
   telegramChannelUrl: "https://t.me/alterediting",
   telegramBotUrl: "",
   authConfigUpdatedAt: 0,
+  offlineAuthStartedAt: 0,
+  renderCodec: "source",
+  renderContainer: "source",
+  renderAudioMode: "source",
+  renderAudioBitrateKbps: 192,
   updateRepoOwner: "AlterEditing",
   updateRepoName: "Alter-Editing-Method",
   updateAllowPrerelease: false,
@@ -22,6 +27,9 @@ const DEFAULT_SETTINGS = {
 
 const SUPPORTED_LANGUAGES = new Set(["ru", "en", "tr"]);
 const SUPPORTED_THEMES = new Set(["dark", "light"]);
+const SUPPORTED_RENDER_CODECS = new Set(["source", "h264", "h265"]);
+const SUPPORTED_RENDER_CONTAINERS = new Set(["source", "mp4", "mov"]);
+const SUPPORTED_RENDER_AUDIO_MODES = new Set(["source", "aac"]);
 
 class SettingsStore {
   constructor(electronApp) {
@@ -110,6 +118,19 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
   const authConfigUpdatedAt = Number.isFinite(Number(raw.authConfigUpdatedAt))
     ? Math.max(0, Math.trunc(Number(raw.authConfigUpdatedAt)))
     : 0;
+  const offlineAuthStartedAt = Number.isFinite(Number(raw.offlineAuthStartedAt))
+    ? Math.max(0, Math.trunc(Number(raw.offlineAuthStartedAt)))
+    : 0;
+  const renderCodec = SUPPORTED_RENDER_CODECS.has(String(raw.renderCodec || "").toLowerCase())
+    ? String(raw.renderCodec).toLowerCase()
+    : defaults.renderCodec;
+  const renderContainer = SUPPORTED_RENDER_CONTAINERS.has(String(raw.renderContainer || "").toLowerCase())
+    ? String(raw.renderContainer).toLowerCase()
+    : defaults.renderContainer;
+  const renderAudioMode = SUPPORTED_RENDER_AUDIO_MODES.has(String(raw.renderAudioMode || "").toLowerCase())
+    ? String(raw.renderAudioMode).toLowerCase()
+    : defaults.renderAudioMode;
+  const renderAudioBitrateKbps = clampInteger(raw.renderAudioBitrateKbps, 32, 512, defaults.renderAudioBitrateKbps);
   const updateRepoOwner = normalizeRepoPart(raw.updateRepoOwner) || defaults.updateRepoOwner;
   const updateRepoName = normalizeRepoPart(raw.updateRepoName) || defaults.updateRepoName;
   const updateAllowPrerelease =
@@ -130,6 +151,11 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     telegramChannelUrl,
     telegramBotUrl,
     authConfigUpdatedAt,
+    offlineAuthStartedAt,
+    renderCodec,
+    renderContainer,
+    renderAudioMode,
+    renderAudioBitrateKbps,
     updateRepoOwner,
     updateRepoName,
     updateAllowPrerelease,
@@ -186,6 +212,14 @@ function normalizeTelegramId(value) {
     return null;
   }
   return String(Math.trunc(asNumber));
+}
+
+function clampInteger(value, min, max, fallback) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.max(min, Math.min(max, Math.round(parsed)));
 }
 
 module.exports = {

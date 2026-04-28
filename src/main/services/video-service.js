@@ -15,13 +15,13 @@ function isSupportedVideoPath(filePath) {
   return SUPPORTED_EXTENSIONS.has(path.extname(String(filePath || "")).toLowerCase());
 }
 
-function createDefaultOutputPath(inputPath, mode = "balanced") {
+function createDefaultOutputPath(inputPath, mode = "balanced", renderContainer = "source") {
   if (!inputPath) {
     return "";
   }
 
   const parsed = path.parse(inputPath);
-  const extension = mode === "source" ? parsed.ext || ".mov" : ".mp4";
+  const extension = resolveOutputExtension(parsed.ext, mode, renderContainer);
   return path.join(parsed.dir, `${parsed.name}_AlterE${extension}`);
 }
 
@@ -63,6 +63,7 @@ async function probeVideo(filePath) {
     height: toInteger(videoStream.height),
     fps: parseFrameRate(videoStream.avg_frame_rate || videoStream.r_frame_rate),
     codec: String(videoStream.codec_name || ""),
+    audioCodec: String(audioStream.codec_name || ""),
     hasAudio: Boolean(audioStream.codec_type),
     videoBitrateKbps,
     audioBitrateKbps,
@@ -75,6 +76,11 @@ async function patchVideo({
   mode,
   outputBitrateKbps,
   sourceVideoBitrateKbps,
+  sourceVideoCodec,
+  renderCodec,
+  renderContainer,
+  renderAudioMode,
+  renderAudioBitrateKbps,
   durationSeconds,
   onProgress,
 }) {
@@ -90,8 +96,19 @@ async function patchVideo({
 
   const target = path.resolve(outputPath);
   const normalizedMode = normalizeMode(mode);
+  const normalizedRenderCodec = normalizeRenderCodec(renderCodec);
+  const normalizedRenderContainer = normalizeRenderContainer(renderContainer);
+  const normalizedRenderAudioMode = normalizeRenderAudioMode(renderAudioMode);
   const sourceBitrate = Math.max(0, Number(sourceVideoBitrateKbps || 0));
   const outputBitrate = calculateOutputBitrateKbps(normalizedMode, sourceBitrate, outputBitrateKbps);
+  const sourceExt = path.extname(source).toLowerCase();
+  const targetExt = path.extname(target).toLowerCase();
+  const useSourceFastPath =
+    normalizedMode === "source" &&
+    normalizedRenderCodec === "source" &&
+    normalizedRenderAudioMode === "source" &&
+    normalizedRenderContainer === "source" &&
+    sourceExt === targetExt;
 
   if (source.toLowerCase() === target.toLowerCase()) {
     throw new Error("Output path must be different from the source video.");
@@ -106,7 +123,7 @@ async function patchVideo({
   try {
     patchedTempPath = createTempOutputPath(target);
 
-    if (normalizedMode === "source") {
+    if (useSourceFastPath) {
       onProgress?.(60);
       await copyAndPatchElst(source, patchedTempPath);
       await commitOutput(patchedTempPath, target);
@@ -121,6 +138,10 @@ async function patchVideo({
       inputPath: source,
       outputPath: tempPath,
       bitrateKbps: outputBitrate,
+      sourceVideoCodec,
+      renderCodec: normalizedRenderCodec,
+      renderAudioMode: normalizedRenderAudioMode,
+      renderAudioBitrateKbps,
       durationSeconds,
       onProgress: (renderProgress) => {
         const scaled = 8 + Math.round(renderProgress * 0.86);
@@ -172,8 +193,23 @@ function isPatchInProgress() {
   return Boolean(activePatch);
 }
 
-async function renderHevc({ inputPath, outputPath, bitrateKbps, durationSeconds, onProgress }) {
+async function renderHevc({
+  inputPath,
+  outputPath,
+  bitrateKbps,
+  sourceVideoCodec,
+  renderCodec,
+  renderAudioMode,
+  renderAudioBitrateKbps,
+  durationSeconds,
+  onProgress,
+}) {
   const bitrate = clampInteger(bitrateKbps, MIN_BITRATE_KBPS, MAX_BITRATE_KBPS);
+  const normalizedCodec = normalizeRenderCodec(renderCodec);
+  const videoCodecName = resolveVideoCodec(normalizedCodec, sourceVideoCodec);
+  const videoTag = videoCodecName === "libx264" ? "avc1" : "hvc1";
+  const normalizedAudioMode = normalizeRenderAudioMode(renderAudioMode);
+  const audioBitrate = clampInteger(renderAudioBitrateKbps || 192, 32, 512);
   const args = [
     "-y",
     "-i",
@@ -185,7 +221,7 @@ async function renderHevc({ inputPath, outputPath, bitrateKbps, durationSeconds,
     "-map_metadata",
     "0",
     "-c:v",
-    "libx265",
+    videoCodecName,
     "-b:v",
     `${bitrate}k`,
     "-maxrate",
@@ -195,11 +231,8 @@ async function renderHevc({ inputPath, outputPath, bitrateKbps, durationSeconds,
     "-pix_fmt",
     "yuv420p",
     "-tag:v",
-    "hvc1",
-    "-c:a",
-    "aac",
-    "-b:a",
-    "192k",
+    videoTag,
+    ...(normalizedAudioMode === "source" ? ["-c:a", "copy"] : ["-c:a", "aac", "-b:a", `${audioBitrate}k`]),
     "-movflags",
     "+faststart",
     outputPath,
@@ -218,6 +251,62 @@ async function renderHevc({ inputPath, outputPath, bitrateKbps, durationSeconds,
       }
     },
   });
+}
+
+function resolveOutputExtension(inputExt, mode = "balanced", renderContainer = "source") {
+  const ext = String(inputExt || "").toLowerCase();
+  const normalizedContainer = normalizeRenderContainer(renderContainer);
+  if (normalizedContainer === "mov") {
+    return ".mov";
+  }
+  if (normalizedContainer === "mp4") {
+    return ".mp4";
+  }
+  if (mode === "source") {
+    return ext || ".mov";
+  }
+  return ".mp4";
+}
+
+function normalizeRenderCodec(value) {
+  const codec = String(value || "").toLowerCase();
+  if (codec === "h264" || codec === "h265" || codec === "source") {
+    return codec;
+  }
+  return "source";
+}
+
+function normalizeRenderContainer(value) {
+  const container = String(value || "").toLowerCase();
+  if (container === "mp4" || container === "mov" || container === "source") {
+    return container;
+  }
+  return "source";
+}
+
+function normalizeRenderAudioMode(value) {
+  const mode = String(value || "").toLowerCase();
+  if (mode === "aac" || mode === "source") {
+    return mode;
+  }
+  return "source";
+}
+
+function resolveVideoCodec(renderCodec, sourceVideoCodec) {
+  if (renderCodec === "h264") {
+    return "libx264";
+  }
+  if (renderCodec === "h265") {
+    return "libx265";
+  }
+  const source = String(sourceVideoCodec || "").toLowerCase();
+  if (source === "h264" || source === "avc1") {
+    return "libx264";
+  }
+  if (source === "hevc" || source === "h265" || source === "hev1") {
+    return "libx265";
+  }
+  return "libx265";
 }
 
 function normalizeInputPath(filePath) {
@@ -266,7 +355,8 @@ function calculateOutputBitrateKbps(mode, sourceBitrateKbps, overrideBitrateKbps
 function createTempRenderPath(outputPath) {
   const parsed = path.parse(outputPath);
   const id = crypto.randomBytes(5).toString("hex");
-  return path.join(parsed.dir, `${parsed.name}.render-${id}.tmp.mp4`);
+  const extension = parsed.ext || ".mp4";
+  return path.join(parsed.dir, `${parsed.name}.render-${id}.tmp${extension}`);
 }
 
 function createTempOutputPath(outputPath) {

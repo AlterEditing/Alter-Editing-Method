@@ -17,9 +17,9 @@ const icons = {
   download:
     '<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>',
   help: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6"/><path d="M12 7h.01"/></svg>',
+  renderSettings:
+    '<svg viewBox="0 0 24 24"><path d="M10.8 2h2.4l.45 1.9c.5.13.98.33 1.42.59l1.76-.85 1.7 1.7-.85 1.76c.26.44.46.92.59 1.42L20 10.8v2.4l-1.9.45a6.1 6.1 0 0 1-.59 1.42l.85 1.76-1.7 1.7-1.76-.85c-.44.26-.92.46-1.42.59L13.2 22h-2.4l-.45-1.9a6.1 6.1 0 0 1-1.42-.59l-1.76.85-1.7-1.7.85-1.76a6.1 6.1 0 0 1-.59-1.42L4 13.2v-2.4l1.9-.45c.13-.5.33-.98.59-1.42l-.85-1.76 1.7-1.7 1.76.85c.44-.26.92-.46 1.42-.59z"/><circle cx="12" cy="12" r="2.6"/></svg>',
   logout: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
-  debug:
-    '<svg viewBox="0 0 24 24"><path d="M9 6V4"/><path d="M15 6V4"/><path d="M8 10h8"/><rect x="5" y="6" width="14" height="12" rx="2"/><path d="M9 14h.01"/><path d="M15 14h.01"/></svg>',
   github:
     '<svg viewBox="0 0 24 24"><path d="M12 2.7a9.3 9.3 0 0 0-2.94 18.12c.46.09.62-.2.62-.44v-1.55c-2.54.56-3.07-1.07-3.07-1.07-.42-1.05-1.02-1.33-1.02-1.33-.84-.57.06-.56.06-.56.93.06 1.42.94 1.42.94.82 1.42 2.17 1 2.7.77.08-.6.32-1 .58-1.22-2.03-.23-4.16-1.01-4.16-4.5 0-.99.35-1.79.94-2.42-.1-.22-.41-1.14.09-2.36 0 0 .76-.24 2.49.92a8.7 8.7 0 0 1 4.54 0c1.73-1.16 2.49-.92 2.49-.92.5 1.22.19 2.14.09 2.36.59.63.94 1.43.94 2.42 0 3.5-2.13 4.27-4.17 4.5.33.28.61.83.61 1.67v2.6c0 .24.16.53.63.44A9.3 9.3 0 0 0 12 2.7"/></svg>',
 };
@@ -49,6 +49,7 @@ const translations = {
     authWaiting: "Confirm the subscription in Telegram, then return here.",
     authFailed: "Authorization failed. Try again.",
     authServerUnavailable: "Authorization server is unavailable. Please try again later.",
+    offlineAccessExpired: "Offline access time has expired. Please authorize again when the server is available.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
     retry: "RETRY",
@@ -104,34 +105,33 @@ const translations = {
     tutorialStep4Title: "4. Upload to TikTok",
     tutorialStep4Text: "Upload the processed video to TikTok.",
     tutorialDone: "Got it",
+    renderSettings: "Render settings",
+    renderCodec: "Codec",
+    renderContainer: "Container",
+    renderAudioMode: "Audio mode",
+    renderAudioBitrate: "Audio bitrate",
+    resetToSource: "Reset to source",
+    sourceValue: "Source",
+    codecH264: "H.264",
+    codecH265: "H.265",
+    containerMp4: "MP4",
+    containerMov: "MOV",
+    audioAac: "AAC",
+    renderSettingsCustomHint: "Custom render settings are enabled",
+    support: "Support",
+    supportInvoked: "Support request sent",
+    supportOpen: "Open support bot",
+    supportFailed: "Failed to send support request",
     riskWarningTitle: "Warning",
-    riskWarningText: "High bitrate (70+ mbps) or resolution above 1080p can increase TikTok ban risk. Continue anyway?",
+    riskWarningText: "Risk detected: {issues}. Continue anyway?",
+    riskIssueBitrate: "bitrate is above 70 Mbps",
+    riskIssueResolution: "resolution is above 1920x1080",
+    riskIssueBoth: "bitrate is above 70 Mbps and resolution is above 1920x1080",
     continueAnyway: "Continue",
     cancelAction: "Cancel",
     mb: "MB",
     kbps: "kbps",
     fps: "fps",
-    debug: "Debug",
-    debugTitle: "Debug tools",
-    debugAuthBase: "Auth API base",
-    debugFallbacks: "Fallbacks (comma separated)",
-    debugApply: "Apply",
-    debugReset: "Reset",
-    debugForceServerDown: "Force server unavailable",
-    debugForceAuthOverlay: "Force auth overlay",
-    debugRefreshConfig: "Refresh server config",
-    debugCopySnapshot: "Copy snapshot",
-    debugOpenBot: "Open debug bot",
-    debugApplied: "Debug server config applied",
-    debugResetDone: "Debug overrides reset",
-    debugSnapshotCopied: "Debug snapshot copied",
-    debugBotUnavailable: "Debug bot URL is not configured",
-    debugUpdateAvailable: "Mock: update available",
-    debugUpdateDownloading: "Mock: update downloading",
-    debugUpdateDownloaded: "Mock: update downloaded",
-    debugUpdateClear: "Clear update mock",
-    debugDownloadLatest: "Download latest from GitHub",
-    debugNoUpdates: "No updates available right now.",
     updateRepoPrompt: "GitHub repo (owner/repo)",
     updateRepoInvalid: "Invalid repo format. Use owner/repo.",
     updatePrefsSaved: "Update source preferences saved.",
@@ -164,6 +164,7 @@ const translations = {
     authWaiting: "Подтвердите подписку в Telegram и вернитесь сюда.",
     authFailed: "Ошибка авторизации. Попробуйте снова.",
     authServerUnavailable: "Сервер авторизации недоступен. Пожалуйста, попробуйте позже.",
+    offlineAccessExpired: "Время офлайн-доступа истекло. Выполните авторизацию снова, когда сервер станет доступен.",
     authSuccess: "Авторизация выполнена",
     subscriptionRequired: "Нужна подписка",
     retry: "ПОВТОРИТЬ",
@@ -210,6 +211,29 @@ const translations = {
     mb: "МБ",
     kbps: "кбит/с",
     fps: "fps",
+    renderSettings: "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
+    renderCodec: "\u041a\u043e\u0434\u0435\u043a",
+    renderContainer: "\u041a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440",
+    renderAudioMode: "\u0420\u0435\u0436\u0438\u043c \u0430\u0443\u0434\u0438\u043e",
+    renderAudioBitrate: "\u0410\u0443\u0434\u0438\u043e \u0431\u0438\u0442\u0440\u0435\u0439\u0442",
+    resetToSource: "\u0421\u0431\u0440\u043e\u0441 \u043a \u0438\u0441\u0445\u043e\u0434\u043d\u044b\u043c",
+    sourceValue: "\u0418\u0441\u0445\u043e\u0434\u043d\u043e\u0435",
+    codecH264: "H.264",
+    codecH265: "H.265",
+    containerMp4: "MP4",
+    containerMov: "MOV",
+    audioAac: "AAC",
+    audioSource: "\u0418\u0441\u0445\u043e\u0434\u043d\u043e\u0435 (\u043e\u0440\u0438\u0433\u0438\u043d\u0430\u043b)",
+    renderSettingsCustomHint: "\u0412\u043a\u043b\u044e\u0447\u0435\u043d\u044b \u043d\u0435\u0438\u0441\u0445\u043e\u0434\u043d\u044b\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
+    support: "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430",
+    supportInvoked: "\u0417\u0430\u043f\u0440\u043e\u0441 \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d",
+    supportOpen: "\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0431\u043e\u0442 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438",
+    supportFailed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u043f\u0440\u043e\u0441 \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443",
+    riskWarningTitle: "\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435",
+    riskWarningText: "\u041e\u0431\u043d\u0430\u0440\u0443\u0436\u0435\u043d \u0440\u0438\u0441\u043a: {issues}. \u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u044c?",
+    riskIssueBitrate: "\u0431\u0438\u0442\u0440\u0435\u0439\u0442 \u0432\u044b\u0448\u0435 70 Mbps",
+    riskIssueResolution: "\u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u0435 \u0432\u044b\u0448\u0435 1920x1080",
+    riskIssueBoth: "\u0431\u0438\u0442\u0440\u0435\u0439\u0442 \u0432\u044b\u0448\u0435 70 Mbps \u0438 \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u0438\u0435 \u0432\u044b\u0448\u0435 1920x1080",
   },
   tr: {
     outputSize: "Cikis boyutu",
@@ -235,6 +259,7 @@ const translations = {
     authWaiting: "Telegram aboneligini onaylayin ve buraya donun.",
     authFailed: "Yetkilendirme basarisiz. Tekrar deneyin.",
     authServerUnavailable: "Yetkilendirme sunucusu kullanilamiyor. Lutfen daha sonra tekrar deneyin.",
+    offlineAccessExpired: "Cevrimdisi erisim suresi doldu. Sunucu ulasilabilir oldugunda yeniden yetkilendirin.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
     retry: "RETRY",
@@ -281,6 +306,29 @@ const translations = {
     mb: "MB",
     kbps: "kbps",
     fps: "fps",
+    renderSettings: "Render ayarlari",
+    renderCodec: "Codec",
+    renderContainer: "Container",
+    renderAudioMode: "Ses modu",
+    renderAudioBitrate: "Ses bitrate",
+    resetToSource: "Kaynaga sifirla",
+    sourceValue: "Kaynak",
+    codecH264: "H.264",
+    codecH265: "H.265",
+    containerMp4: "MP4",
+    containerMov: "MOV",
+    audioAac: "AAC",
+    audioSource: "Kaynak (orijinal)",
+    renderSettingsCustomHint: "Ozel render ayarlari etkin",
+    support: "Destek",
+    supportInvoked: "Destek talebi gonderildi",
+    supportOpen: "Destek botunu ac",
+    supportFailed: "Destek talebi gonderilemedi",
+    riskWarningTitle: "Uyari",
+    riskWarningText: "Risk algilandi: {issues}. Yine de devam edilsin mi?",
+    riskIssueBitrate: "bitrate 70 Mbps ustunde",
+    riskIssueResolution: "cozunurluk 1920x1080 ustunde",
+    riskIssueBoth: "bitrate 70 Mbps ve cozunurluk 1920x1080 ustunde",
   },
 };
 
@@ -333,6 +381,7 @@ const guideTranslations = {
 const languageOrder = ["ru", "en", "tr"];
 const DEFAULT_AUTH_API_BASE = "http://132.243.30.159:3000";
 const DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/alterediting";
+const DEFAULT_SUPPORT_BOT_URL = "https://t.me/alterediting_support_bot";
 let authApiBase = DEFAULT_AUTH_API_BASE;
 let authApiFallbacks = [];
 let telegramChannelUrl = DEFAULT_TELEGRAM_CHANNEL_URL;
@@ -344,10 +393,17 @@ const AUTH_SUBSCRIPTION_RETRY_MS = 30 * 1000;
 const AUTH_FETCH_TIMEOUT_MS = 7000;
 const AUTH_SERVER_CONFIG_PATH = "/client-config";
 const AUTH_OFFLINE_BOT_NONCE_TTL_MS = 20 * 60 * 1000;
+const AUTH_OFFLINE_MAX_MS = 24 * 60 * 60 * 1000;
+const RENDER_DEFAULTS = Object.freeze({
+  codec: "source",
+  container: "source",
+  audioMode: "source",
+  audioBitrateKbps: 192,
+});
 
 const state = {
   settings: {
-    settingsVersion: 4,
+    settingsVersion: 5,
     language: "en",
     theme: "dark",
     authRequired: true,
@@ -359,6 +415,11 @@ const state = {
     telegramChannelUrl: DEFAULT_TELEGRAM_CHANNEL_URL,
     telegramBotUrl: "",
     authConfigUpdatedAt: 0,
+    offlineAuthStartedAt: 0,
+    renderCodec: RENDER_DEFAULTS.codec,
+    renderContainer: RENDER_DEFAULTS.container,
+    renderAudioMode: RENDER_DEFAULTS.audioMode,
+    renderAudioBitrateKbps: RENDER_DEFAULTS.audioBitrateKbps,
     updateRepoOwner: "AlterEditing",
     updateRepoName: "Alter-Editing-Method",
     updateAllowPrerelease: false,
@@ -415,6 +476,7 @@ const state = {
   versionMenuVisible: false,
   tutorialVisible: false,
   riskConfirmVisible: false,
+  renderSettingsVisible: false,
 };
 
 let authConfigPersistInFlight = false;
@@ -441,6 +503,19 @@ const elements = {
   dropProgress: document.getElementById("dropProgress"),
   outputSizeLabel: document.getElementById("outputSizeLabel"),
   outputSizeValue: document.getElementById("outputSizeValue"),
+  renderSettingsButton: document.getElementById("renderSettingsButton"),
+  renderSettingsOverlay: document.getElementById("renderSettingsOverlay"),
+  renderSettingsTitle: document.getElementById("renderSettingsTitle"),
+  renderCodecLabel: document.getElementById("renderCodecLabel"),
+  renderCodecSelect: document.getElementById("renderCodecSelect"),
+  renderContainerLabel: document.getElementById("renderContainerLabel"),
+  renderContainerSelect: document.getElementById("renderContainerSelect"),
+  renderAudioModeLabel: document.getElementById("renderAudioModeLabel"),
+  renderAudioModeSelect: document.getElementById("renderAudioModeSelect"),
+  renderAudioBitrateLabel: document.getElementById("renderAudioBitrateLabel"),
+  renderAudioBitrateSelect: document.getElementById("renderAudioBitrateSelect"),
+  renderSettingsResetButton: document.getElementById("renderSettingsResetButton"),
+  renderSettingsDoneButton: document.getElementById("renderSettingsDoneButton"),
   bitrateSlider: document.getElementById("bitrateSlider"),
   bitrateInput: document.getElementById("bitrateInput"),
   bitrateUnit: document.getElementById("bitrateUnit"),
@@ -469,6 +544,7 @@ const elements = {
   logsTitle: document.getElementById("logsTitle"),
   languageButton: document.getElementById("languageButton"),
   themeButton: document.getElementById("themeButton"),
+  supportButton: document.getElementById("supportButton"),
   notificationsList: document.getElementById("notificationsList"),
   logsList: document.getElementById("logsList"),
   copyLogsButton: document.getElementById("copyLogsButton"),
@@ -572,6 +648,7 @@ function initIcons() {
   setIcon(elements.notificationsButton, "bell");
   elements.notificationsButton.appendChild(elements.notificationBadge);
   setIcon(elements.settingsButton, "settings");
+  setIcon(elements.renderSettingsButton, "renderSettings");
   setIcon(elements.logoutButton, "logout");
   setIcon(elements.minimizeButton, "minus");
   setIcon(elements.closeButton, "close");
@@ -581,6 +658,7 @@ function initIcons() {
     tutorialIcon.innerHTML = icons.help;
   }
   setIcon(elements.openRepoButton, "github");
+  setIcon(elements.supportButton, "send");
   renderTelegramLink();
 }
 
@@ -767,7 +845,7 @@ async function init() {
     state.settings = await window.alterE.settings.get();
   } catch {
     state.settings = {
-      settingsVersion: 4,
+      settingsVersion: 5,
       language: "en",
       theme: "dark",
       authRequired: true,
@@ -779,6 +857,11 @@ async function init() {
       telegramChannelUrl: DEFAULT_TELEGRAM_CHANNEL_URL,
       telegramBotUrl: "",
       authConfigUpdatedAt: 0,
+      offlineAuthStartedAt: 0,
+      renderCodec: RENDER_DEFAULTS.codec,
+      renderContainer: RENDER_DEFAULTS.container,
+      renderAudioMode: RENDER_DEFAULTS.audioMode,
+      renderAudioBitrateKbps: RENDER_DEFAULTS.audioBitrateKbps,
       updateRepoOwner: "AlterEditing",
       updateRepoName: "Alter-Editing-Method",
       updateAllowPrerelease: false,
@@ -918,6 +1001,11 @@ function bindEvents() {
         closeVersionPreferencesMenu();
         return;
       }
+      if (state.renderSettingsVisible) {
+        event.preventDefault();
+        toggleRenderSettingsPanel(false);
+        return;
+      }
       if (state.tutorialVisible) {
         event.preventDefault();
         closeTutorial();
@@ -955,6 +1043,25 @@ function bindEvents() {
   elements.dropZone.addEventListener("mousemove", updateDropGlow);
   elements.dropZone.addEventListener("mouseleave", resetDropTilt);
   elements.howToUseButton.addEventListener("click", openTutorial);
+  elements.renderSettingsButton?.addEventListener("click", () => toggleRenderSettingsPanel());
+  elements.renderCodecSelect?.addEventListener("change", () => {
+    void updateRenderSettings({ renderCodec: elements.renderCodecSelect.value });
+  });
+  elements.renderContainerSelect?.addEventListener("change", () => {
+    void updateRenderSettings({ renderContainer: elements.renderContainerSelect.value });
+  });
+  elements.renderAudioBitrateSelect?.addEventListener("change", () => {
+    const value = String(elements.renderAudioBitrateSelect.value || "source");
+    if (value === "source") {
+      void updateRenderSettings({ renderAudioMode: "source" });
+      return;
+    }
+    void updateRenderSettings({ renderAudioMode: "aac", renderAudioBitrateKbps: Number(value) });
+  });
+  elements.renderSettingsResetButton?.addEventListener("click", () => {
+    void resetRenderSettings();
+  });
+  elements.renderSettingsDoneButton?.addEventListener("click", () => toggleRenderSettingsPanel(false));
 
   elements.bitrateSlider.addEventListener("input", () => setOutputBitrate(Number(elements.bitrateSlider.value)));
   elements.bitrateInput.addEventListener("change", () => {
@@ -969,6 +1076,9 @@ function bindEvents() {
   elements.patchButton.addEventListener("click", startOrCancelPatch);
   elements.languageButton.addEventListener("click", cycleLanguage);
   elements.themeButton.addEventListener("click", toggleTheme);
+  elements.supportButton.addEventListener("click", () => {
+    void openSupport();
+  });
   elements.logoutButton.addEventListener("click", logoutFromAccount);
   elements.authButton.addEventListener("click", startTelegramAuthorization);
   window.alterE.auth?.onDeepLink?.(handleAuthDeepLink);
@@ -988,6 +1098,11 @@ function bindEvents() {
   elements.riskConfirmOverlay.addEventListener("pointerdown", (event) => {
     if (event.target === elements.riskConfirmOverlay) {
       resolveRiskConfirm(false);
+    }
+  });
+  elements.renderSettingsOverlay?.addEventListener("pointerdown", (event) => {
+    if (event.target === elements.renderSettingsOverlay) {
+      toggleRenderSettingsPanel(false);
     }
   });
   elements.tutorialCloseButton.addEventListener("click", closeTutorial);
@@ -1167,20 +1282,89 @@ function stopTutorialVideos() {
   }
 }
 
-function isHighRiskTikTokVideo(video) {
-  if (!video) {
-    return false;
+function toggleRenderSettingsPanel(forceVisible = null) {
+  const next = forceVisible === null ? !state.renderSettingsVisible : Boolean(forceVisible);
+  state.renderSettingsVisible = next;
+  if (elements.renderSettingsOverlay) {
+    elements.renderSettingsOverlay.hidden = !next;
   }
-  const bitrateKbps = Number(video.videoBitrateKbps || 0);
-  const width = Number(video.width || 0);
-  const height = Number(video.height || 0);
-  return bitrateKbps > 70000 || width > 1920 || height > 1080;
 }
 
-function requestRiskConfirm() {
+async function updateRenderSettings(patch = {}) {
+  state.settings = await window.alterE.settings.update({
+    renderCodec: normalizeRenderCodec(patch.renderCodec ?? state.settings.renderCodec),
+    renderContainer: normalizeRenderContainer(patch.renderContainer ?? state.settings.renderContainer),
+    renderAudioMode: normalizeRenderAudioMode(patch.renderAudioMode ?? state.settings.renderAudioMode),
+    renderAudioBitrateKbps: clamp(
+      Math.round(Number(patch.renderAudioBitrateKbps ?? state.settings.renderAudioBitrateKbps)),
+      32,
+      512
+    ),
+  });
+  render();
+}
+
+async function resetRenderSettings() {
+  await updateRenderSettings({
+    renderCodec: RENDER_DEFAULTS.codec,
+    renderContainer: RENDER_DEFAULTS.container,
+    renderAudioMode: RENDER_DEFAULTS.audioMode,
+    renderAudioBitrateKbps: RENDER_DEFAULTS.audioBitrateKbps,
+  });
+}
+
+function createSupportLogText() {
+  const rows = state.logs.slice(0, 200).map((item) => formatLogLine(item));
+  return rows.join("\n");
+}
+
+async function openSupport() {
+  const token = String(state.settings.authToken || "");
+  const telegramId = normalizeTelegramId(state.settings.telegramId);
+  const logsText = createSupportLogText();
+
+  if (token && telegramId) {
+    try {
+      await authFetch("/support/app-help", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appVersion: runtimeAppVersion || "",
+          logs: logsText,
+        }),
+      });
+      notify("success", t("support"), t("supportInvoked"));
+    } catch (error) {
+      log("warning", "Support invoke failed", readableError(error));
+      notify("warning", t("support"), t("supportFailed"));
+    }
+  }
+
+  await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
+}
+
+function buildRiskWarningText(issues) {
+  const hasBitrate = issues.includes("bitrate");
+  const hasResolution = issues.includes("resolution");
+  let issueText = "";
+  if (hasBitrate && hasResolution) {
+    issueText = t("riskIssueBoth");
+  } else if (hasBitrate) {
+    issueText = t("riskIssueBitrate");
+  } else if (hasResolution) {
+    issueText = t("riskIssueResolution");
+  }
+  return t("riskWarningText").replace("{issues}", issueText || t("riskIssueBitrate"));
+}
+
+function requestRiskConfirm(issues = []) {
   if (state.riskConfirmVisible) {
     return Promise.resolve(false);
   }
+  elements.riskConfirmText.textContent = buildRiskWarningText(issues);
   state.riskConfirmVisible = true;
   renderRiskConfirm();
   return new Promise((resolve) => {
@@ -1218,8 +1402,9 @@ async function startOrCancelPatch() {
     return;
   }
 
-  if (isHighRiskTikTokVideo(state.video)) {
-    const accepted = await requestRiskConfirm();
+  const riskIssues = getRiskIssues(state.video);
+  if (riskIssues.length) {
+    const accepted = await requestRiskConfirm(riskIssues);
     if (!accepted) {
       return;
     }
@@ -1228,6 +1413,7 @@ async function startOrCancelPatch() {
   const outputPath = await window.alterE.dialog.saveOutput({
     inputPath: state.video.path,
     mode: state.mode === "source" ? "source" : "custom",
+    renderContainer: normalizeRenderContainer(state.settings.renderContainer),
   });
 
   if (!outputPath) {
@@ -1247,6 +1433,11 @@ async function startOrCancelPatch() {
       mode: state.mode === "source" ? "source" : "custom",
       outputBitrateKbps: state.outputBitrateKbps,
       sourceVideoBitrateKbps: state.video.videoBitrateKbps,
+      sourceVideoCodec: String(state.video.codec || ""),
+      renderCodec: normalizeRenderCodec(state.settings.renderCodec),
+      renderContainer: normalizeRenderContainer(state.settings.renderContainer),
+      renderAudioMode: normalizeRenderAudioMode(state.settings.renderAudioMode),
+      renderAudioBitrateKbps: getRenderAudioBitrateKbps(),
       durationSeconds: state.video.durationSeconds,
     });
     state.progress = 100;
@@ -1316,6 +1507,28 @@ async function verifyStoredAuthorization() {
   state.auth.error = "";
   render();
   scheduleSubscriptionCheck("startup");
+}
+
+function getOfflineAuthStartedAt() {
+  const value = Number(state.settings.offlineAuthStartedAt || 0);
+  return Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0;
+}
+
+async function clearOfflineAuthStartedAt() {
+  if (!getOfflineAuthStartedAt()) {
+    return;
+  }
+  state.settings = await window.alterE.settings.update({ offlineAuthStartedAt: 0 });
+}
+
+async function ensureOfflineAuthStartedAt() {
+  const startedAt = getOfflineAuthStartedAt();
+  if (startedAt > 0) {
+    return startedAt;
+  }
+  const now = Date.now();
+  state.settings = await window.alterE.settings.update({ offlineAuthStartedAt: now });
+  return now;
 }
 
 async function handleMissingAuthorization() {
@@ -1433,6 +1646,7 @@ async function checkStoredSubscriptionOnce(reason = "auto") {
 
     state.auth.subscriptionCheckedThisSession = true;
     state.auth.error = "";
+    await clearOfflineAuthStartedAt();
     state.settings = await window.alterE.settings.update({
       authorized: true,
       telegramId: serverTelegramId,
@@ -1446,9 +1660,18 @@ async function checkStoredSubscriptionOnce(reason = "auto") {
       await clearAuthorization(true);
       toast("warning", t("subscriptionRequired"), readableError(error));
     } else {
-      retryLater = true;
-      state.auth.error = readableError(error);
-      log("warning", "Subscription check postponed", "Auth server unavailable; local session remains active");
+      const startedAt = await ensureOfflineAuthStartedAt();
+      const elapsed = Date.now() - startedAt;
+      if (elapsed >= AUTH_OFFLINE_MAX_MS) {
+        state.auth.subscriptionCheckedThisSession = true;
+        state.auth.error = t("offlineAccessExpired");
+        await clearAuthorization(true);
+        toast("warning", t("authFailed"), t("offlineAccessExpired"));
+      } else {
+        retryLater = true;
+        state.auth.error = readableError(error);
+        log("warning", "Subscription check postponed", "Auth server unavailable; local session remains active");
+      }
     }
   } finally {
     state.auth.subscriptionCheckInFlight = false;
@@ -1697,6 +1920,7 @@ async function exchangeAuthorization(sessionId) {
       authorized: true,
       telegramId,
       authToken: String(data.token),
+      offlineAuthStartedAt: 0,
     });
     state.auth.pending = false;
     state.auth.checking = false;
@@ -1743,6 +1967,7 @@ async function clearAuthorization(showLog) {
     authorized: false,
     telegramId: null,
     authToken: "",
+    offlineAuthStartedAt: 0,
   });
   if (showLog) {
     log("warning", "Session revoked", "Subscription is missing or token is invalid");
@@ -1922,6 +2147,14 @@ function togglePanel(panelName) {
 }
 
 function closePanelOnOutsidePointer(event) {
+  if (state.renderSettingsVisible) {
+    const clickedToggle = elements.renderSettingsButton?.contains(event.target);
+    const clickedPanel = elements.renderSettingsOverlay?.contains(event.target);
+    if (!clickedToggle && !clickedPanel) {
+      toggleRenderSettingsPanel(false);
+    }
+  }
+
   if (!state.openPanel) {
     return;
   }
@@ -2298,7 +2531,9 @@ function renderText() {
   elements.closeConfirmLeaveButton.textContent = t("closeConfirmClose");
   elements.closeConfirmStayButton.textContent = t("closeConfirmStay");
   elements.riskConfirmTitle.textContent = t("riskWarningTitle");
-  elements.riskConfirmText.textContent = t("riskWarningText");
+  if (!state.riskConfirmVisible) {
+    elements.riskConfirmText.textContent = buildRiskWarningText(["bitrate", "resolution"]);
+  }
   elements.riskConfirmCancelButton.textContent = t("cancelAction");
   elements.riskConfirmContinueButton.textContent = t("continueAnyway");
   elements.tutorialTitle.textContent = tGuide("tutorialTitle");
@@ -2311,6 +2546,12 @@ function renderText() {
   elements.tutorialStep4Title.textContent = tGuide("tutorialStep4Title");
   elements.tutorialStep4Text.textContent = tGuide("tutorialStep4Text");
   elements.tutorialDoneButton.textContent = tGuide("tutorialDone");
+  if (elements.renderCodecLabel) elements.renderCodecLabel.textContent = t("renderCodec");
+  if (elements.renderContainerLabel) elements.renderContainerLabel.textContent = t("renderContainer");
+  if (elements.renderSettingsTitle) elements.renderSettingsTitle.textContent = t("renderSettings");
+  if (elements.renderAudioBitrateLabel) elements.renderAudioBitrateLabel.textContent = t("renderAudioBitrate");
+  if (elements.renderSettingsResetButton) elements.renderSettingsResetButton.textContent = t("resetToSource");
+  if (elements.renderSettingsDoneButton) elements.renderSettingsDoneButton.textContent = t("continueAnyway");
   if (elements.appVersionLabel) {
     elements.appVersionLabel.textContent = runtimeAppVersion ? `v${runtimeAppVersion}` : "v-";
   }
@@ -2326,10 +2567,12 @@ function renderText() {
   elements.notificationsButton.title = t("notifications");
   elements.updateButton.title = t("updates");
   elements.settingsButton.title = t("settings");
+  elements.renderSettingsButton.title = t("renderSettings");
   elements.logsButton.setAttribute("aria-label", t("logs"));
   elements.notificationsButton.setAttribute("aria-label", t("notifications"));
   elements.updateButton.setAttribute("aria-label", t("updates"));
   elements.settingsButton.setAttribute("aria-label", t("settings"));
+  elements.renderSettingsButton.setAttribute("aria-label", t("renderSettings"));
   elements.howToUseButton.setAttribute("aria-label", tGuide("howToUse"));
   elements.logoutButton.title =
     state.settings.language === "ru"
@@ -2343,7 +2586,27 @@ function renderText() {
 
   setActionButton(elements.languageButton, "languages", `${t("language")}: ${state.settings.language.toUpperCase()}`);
   setActionButton(elements.themeButton, state.settings.theme === "dark" ? "moon" : "sun", state.settings.theme === "dark" ? t("themeDark") : t("themeLight"));
+  setActionButton(elements.supportButton, "send", t("support"));
   setActionButton(elements.updateButton, "download", t("updates"));
+
+  if (elements.renderCodecSelect) {
+    elements.renderCodecSelect.value = normalizeRenderCodec(state.settings.renderCodec);
+  }
+  if (elements.renderContainerSelect) {
+    elements.renderContainerSelect.value = normalizeRenderContainer(state.settings.renderContainer);
+  }
+  if (elements.renderAudioBitrateSelect) {
+    const mode = normalizeRenderAudioMode(state.settings.renderAudioMode);
+    elements.renderAudioBitrateSelect.value = mode === "source" ? "source" : String(getRenderAudioBitrateKbps());
+  }
+  if (elements.renderSettingsOverlay) {
+    elements.renderSettingsOverlay.hidden = !state.renderSettingsVisible;
+  }
+  if (elements.renderSettingsButton) {
+    const hasCustom = isCustomRenderSettingsEnabled();
+    elements.renderSettingsButton.classList.toggle("is-custom", hasCustom);
+    elements.renderSettingsButton.title = hasCustom ? t("renderSettingsCustomHint") : t("renderSettings");
+  }
 }
 
 function renderCloseConfirm() {
@@ -2778,6 +3041,76 @@ function calculatePresetBitrate(mode) {
   return clamp(Math.round(source / (mode === "low" ? 4 : 2)), 200, getBitrateMax());
 }
 
+function normalizeRenderCodec(value) {
+  const codec = String(value || "").toLowerCase();
+  if (codec === "h264" || codec === "h265" || codec === "source") {
+    return codec;
+  }
+  return RENDER_DEFAULTS.codec;
+}
+
+function normalizeRenderContainer(value) {
+  const container = String(value || "").toLowerCase();
+  if (container === "mp4" || container === "mov" || container === "source") {
+    return container;
+  }
+  return RENDER_DEFAULTS.container;
+}
+
+function normalizeRenderAudioMode(value) {
+  const mode = String(value || "").toLowerCase();
+  if (mode === "aac" || mode === "source") {
+    return mode;
+  }
+  return RENDER_DEFAULTS.audioMode;
+}
+
+function getRenderAudioBitrateKbps() {
+  const raw = Number(state.settings.renderAudioBitrateKbps || RENDER_DEFAULTS.audioBitrateKbps);
+  return clamp(Math.round(raw), 32, 512);
+}
+
+function isCustomRenderSettingsEnabled() {
+  return (
+    normalizeRenderCodec(state.settings.renderCodec) !== RENDER_DEFAULTS.codec ||
+    normalizeRenderContainer(state.settings.renderContainer) !== RENDER_DEFAULTS.container ||
+    normalizeRenderAudioMode(state.settings.renderAudioMode) !== RENDER_DEFAULTS.audioMode ||
+    getRenderAudioBitrateKbps() !== RENDER_DEFAULTS.audioBitrateKbps
+  );
+}
+
+function getEffectiveVideoBitrateKbps() {
+  if (state.mode === "source") {
+    return Number(state.video?.videoBitrateKbps || 0);
+  }
+  return Number(state.outputBitrateKbps || 0);
+}
+
+function isSourceFastPathSelected() {
+  return (
+    state.mode === "source" &&
+    normalizeRenderCodec(state.settings.renderCodec) === "source" &&
+    normalizeRenderContainer(state.settings.renderContainer) === "source" &&
+    normalizeRenderAudioMode(state.settings.renderAudioMode) === "source"
+  );
+}
+
+function getRiskIssues(video) {
+  if (!video) {
+    return [];
+  }
+  const issues = [];
+  if (getEffectiveVideoBitrateKbps() > 70000) {
+    issues.push("bitrate");
+  }
+  const width = Number(video.width || 0);
+  const height = Number(video.height || 0);
+  if (width * height > 1920 * 1080) {
+    issues.push("resolution");
+  }
+  return issues;
+}
+
 function getRangePresetForBitrate(kbps) {
   if (!state.video) {
     return "";
@@ -2805,7 +3138,7 @@ function estimateOutputSize() {
     return "-";
   }
 
-  if (state.mode === "source") {
+  if (isSourceFastPathSelected()) {
     return formatSize(video.sizeBytes);
   }
 
@@ -2813,8 +3146,9 @@ function estimateOutputSize() {
     return "-";
   }
 
-  const audioKbps = video.hasAudio ? 192 : 0;
-  const totalKbps = Math.max(0, state.outputBitrateKbps) + audioKbps;
+  const audioMode = normalizeRenderAudioMode(state.settings.renderAudioMode);
+  const audioKbps = video.hasAudio ? (audioMode === "source" ? Number(video.audioBitrateKbps || 0) : getRenderAudioBitrateKbps()) : 0;
+  const totalKbps = Math.max(0, getEffectiveVideoBitrateKbps()) + Math.max(0, audioKbps);
   const bytes = (totalKbps * 1000 * video.durationSeconds) / 8;
   return formatSize(bytes);
 }

@@ -1,6 +1,6 @@
 {
   "name": "Alter-Editing-Video-Patcher",
-  "version": "1.2.3-beta.0",
+  "version": "1.2.4-beta.1",
   "description": "Alter Editing video patcher ",
   "author": "Alter Editing",
   "license": "GPL-3.0-only",
@@ -9,7 +9,6 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "dev:debug": "set ALTERE_DEBUG_TOOLS=1&& electron .",
     "check": "node --check src/main/main.js && node --check src/main/services/elst-patcher.js && node --check src/main/services/ffmpeg.js && node --check src/main/services/settings-store.js && node --check src/main/services/update-service.js && node --check src/main/services/video-service.js && node --check src/preload/preload.js && node --check src/renderer/app.js",
     "dist:win": "electron-builder --win nsis --publish never",
     "release:win": "electron-builder --win nsis --publish always",
@@ -28,3 +27,4 @@
     "electron": "^41.3.0"
   }
 }
+

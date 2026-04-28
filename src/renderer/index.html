@@ -78,6 +78,7 @@
                 <span id="outputSizeLabel">Output size</span>
                 <strong id="outputSizeValue">-</strong>
               </div>
+              <button class="render-settings-toggle" id="renderSettingsButton" type="button" title="Render settings" aria-label="Render settings"></button>
             </div>
             <div class="bitrate-row">
               <input
@@ -120,6 +121,7 @@
         </div>
         <button class="panel-action" id="languageButton" type="button"></button>
         <button class="panel-action" id="themeButton" type="button"></button>
+        <button class="panel-action" id="supportButton" type="button"></button>
         <div class="settings-update-wrap" id="settingsUpdateWrap" hidden>
           <button class="settings-update-button" id="updateButton" type="button"></button>
         </div>
@@ -216,6 +218,47 @@
           <div class="confirm-actions">
             <button class="panel-tool-button" id="riskConfirmCancelButton" type="button">Cancel</button>
             <button class="auth-button" id="riskConfirmContinueButton" type="button">Continue</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="confirm-overlay" id="renderSettingsOverlay" hidden>
+        <div class="confirm-dialog render-settings-dialog">
+          <strong id="renderSettingsTitle">Render settings</strong>
+          <div class="render-settings-grid">
+            <label>
+              <span id="renderCodecLabel">Codec</span>
+              <select id="renderCodecSelect">
+                <option value="source">Source</option>
+                <option value="h264">H.264</option>
+                <option value="h265">H.265</option>
+              </select>
+            </label>
+            <label>
+              <span id="renderContainerLabel">Container</span>
+              <select id="renderContainerSelect">
+                <option value="source">Source</option>
+                <option value="mp4">MP4</option>
+                <option value="mov">MOV</option>
+              </select>
+            </label>
+            <label>
+              <span id="renderAudioBitrateLabel">Audio bitrate</span>
+              <select id="renderAudioBitrateSelect">
+                <option value="source">Source (original)</option>
+                <option value="64">64 kbps</option>
+                <option value="96">96 kbps</option>
+                <option value="128">128 kbps</option>
+                <option value="160">160 kbps</option>
+                <option value="192">192 kbps</option>
+                <option value="256">256 kbps</option>
+                <option value="320">320 kbps</option>
+              </select>
+            </label>
+          </div>
+          <div class="confirm-actions">
+            <button class="panel-tool-button" id="renderSettingsResetButton" type="button">Reset to source</button>
+            <button class="auth-button" id="renderSettingsDoneButton" type="button">Done</button>
           </div>
         </div>
       </section>
