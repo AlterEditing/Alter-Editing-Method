@@ -1409,20 +1409,27 @@ async function openSupport() {
   const telegramId = normalizeTelegramId(state.settings.telegramId);
   const logsText = createSupportLogText();
   const supportUrl = DEFAULT_SUPPORT_BOT_URL;
+  const supportTgDeepLink = "tg://resolve?domain=alterediting_support_bot";
 
+  let opened = false;
   try {
-    const opened = await window.alterE.shell.openExternal(supportUrl);
-    if (!opened) {
-      window.open(supportUrl, "_blank", "noopener,noreferrer");
-      notify("warning", t("support"), supportUrl);
-    }
+    opened = Boolean(await window.alterE.shell.openExternal(supportTgDeepLink));
   } catch (error) {
-    log("warning", "Support open failed", readableError(error));
+    log("warning", "Support deep-link open failed", readableError(error));
+  }
+  if (!opened) {
+    try {
+      opened = Boolean(await window.alterE.shell.openExternal(supportUrl));
+    } catch (error) {
+      log("warning", "Support URL open failed", readableError(error));
+    }
+  }
+  if (!opened) {
     try {
       window.open(supportUrl, "_blank", "noopener,noreferrer");
       notify("warning", t("support"), supportUrl);
-    } catch {
-      // ignore fallback error
+    } catch (error) {
+      log("warning", "Support fallback window.open failed", readableError(error));
     }
   }
 
