@@ -68,6 +68,7 @@
             <span class="file-title" id="fileTitle"></span>
             <span class="file-meta" id="fileMeta"></span>
             <span class="file-stream" id="fileStream"></span>
+            <span class="file-codec" id="fileCodec"></span>
             <span class="select-pill" id="selectPill">Select video</span>
             <span class="drop-progress" id="dropProgress"></span>
           </button>
@@ -79,6 +80,9 @@
                 <strong id="outputSizeValue">-</strong>
               </div>
               <button class="render-settings-toggle" id="renderSettingsButton" type="button" title="Render settings" aria-label="Render settings"></button>
+            </div>
+            <div class="bitrate-label-row">
+              <span id="bitrateLabel">Bitrate</span>
             </div>
             <div class="bitrate-row">
               <input
@@ -149,6 +153,7 @@
         <div class="panel-heading">
           <strong id="logsTitle">Logs</strong>
           <div class="panel-tools">
+            <button class="panel-tool-icon-button" id="openLogsFolderButton" type="button" title="Open logs folder" aria-label="Open logs folder"></button>
             <button class="panel-tool-button" id="copyLogsButton" type="button">Copy</button>
             <button class="panel-tool-button" id="exportLogsButton" type="button">Export</button>
           </div>
