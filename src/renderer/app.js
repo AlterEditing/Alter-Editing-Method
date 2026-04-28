@@ -118,6 +118,7 @@ const translations = {
     containerMov: "MOV",
     audioAac: "AAC",
     renderSettingsCustomHint: "Custom render settings are enabled",
+    renderSettingsDone: "Done",
     support: "Support",
     supportInvoked: "Support request sent",
     supportOpen: "Open support bot",
@@ -225,6 +226,7 @@ const translations = {
     audioAac: "AAC",
     audioSource: "\u0418\u0441\u0445\u043e\u0434\u043d\u043e\u0435 (\u043e\u0440\u0438\u0433\u0438\u043d\u0430\u043b)",
     renderSettingsCustomHint: "\u0412\u043a\u043b\u044e\u0447\u0435\u043d\u044b \u043d\u0435\u0438\u0441\u0445\u043e\u0434\u043d\u044b\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
+    renderSettingsDone: "\u0413\u043e\u0442\u043e\u0432\u043e",
     support: "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430",
     supportInvoked: "\u0417\u0430\u043f\u0440\u043e\u0441 \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d",
     supportOpen: "\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0431\u043e\u0442 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438",
@@ -320,6 +322,7 @@ const translations = {
     audioAac: "AAC",
     audioSource: "Kaynak (orijinal)",
     renderSettingsCustomHint: "Ozel render ayarlari etkin",
+    renderSettingsDone: "Tamam",
     support: "Destek",
     supportInvoked: "Destek talebi gonderildi",
     supportOpen: "Destek botunu ac",
@@ -1314,8 +1317,91 @@ async function resetRenderSettings() {
 }
 
 function createSupportLogText() {
-  const rows = state.logs.slice(0, 200).map((item) => formatLogLine(item));
-  return rows.join("\n");
+  const safe = (value) => (value === null || value === undefined ? "" : String(value));
+  const lines = [];
+  const video = state.video || {};
+  const settings = state.settings || {};
+  const update = state.update || {};
+  const auth = state.auth || {};
+  const app = state.app || {};
+  const env = {
+    locale:
+      navigator.languages && navigator.languages.length
+        ? navigator.languages.join(", ")
+        : navigator.language || "unknown",
+    online: navigator.onLine ? "true" : "false",
+    userAgent: navigator.userAgent || "unknown",
+    platform: navigator.platform || "unknown",
+    hwConcurrency: navigator.hardwareConcurrency || "unknown",
+    screen: typeof screen !== "undefined" ? `${screen.width}x${screen.height}` : "unknown",
+    tz:
+      Intl.DateTimeFormat && Intl.DateTimeFormat().resolvedOptions
+        ? Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"
+        : "unknown",
+  };
+
+  lines.push("# ALTERE SUPPORT LOG");
+  lines.push(`generatedAt: ${new Date().toISOString()}`);
+  lines.push("");
+  lines.push("[app]");
+  lines.push(`version: ${safe(runtimeAppVersion || "unknown")}`);
+  lines.push(`language: ${safe(settings.language || "en")}`);
+  lines.push(`theme: ${safe(settings.theme || "dark")}`);
+  lines.push(`mode: ${safe(state.mode || "balanced")}`);
+  lines.push(`authorized: ${settings.authorized ? "true" : "false"}`);
+  lines.push(`telegramId: ${safe(settings.telegramId || "")}`);
+  lines.push(`authPending: ${auth.pending ? "true" : "false"}`);
+  lines.push(`authChecking: ${auth.checking ? "true" : "false"}`);
+  lines.push(`authServerUnavailable: ${auth.serverUnavailable ? "true" : "false"}`);
+  lines.push(`offlineGuest: ${auth.offlineGuest ? "true" : "false"}`);
+  lines.push(`offlineAuthStartedAt: ${safe(settings.offlineAuthStartedAt || 0)}`);
+  lines.push(`buildRepo: ${safe(settings.updateRepoOwner || "")}/${safe(settings.updateRepoName || "")}`);
+  lines.push(`allowPrerelease: ${settings.updateAllowPrerelease ? "true" : "false"}`);
+  lines.push(`windowTitle: ${safe(document && document.title)}`);
+  lines.push("");
+  lines.push("[environment]");
+  Object.entries(env).forEach(([k, v]) => lines.push(`${k}: ${safe(v)}`));
+  lines.push("");
+  lines.push("[video]");
+  lines.push(`selectedPath: ${safe(app.filePath || "")}`);
+  lines.push(`container: ${safe(video.container || video.format || "")}`);
+  lines.push(`durationSeconds: ${safe(video.durationSeconds || 0)}`);
+  lines.push(`sizeBytes: ${safe(video.sizeBytes || 0)}`);
+  lines.push(`width: ${safe(video.width || 0)}`);
+  lines.push(`height: ${safe(video.height || 0)}`);
+  lines.push(`fps: ${safe(video.fps || 0)}`);
+  lines.push(`videoCodec: ${safe(video.codec || video.videoCodec || "")}`);
+  lines.push(`videoBitrateKbps: ${safe(video.videoBitrateKbps || video.bitrateKbps || 0)}`);
+  lines.push(`hasAudio: ${video.hasAudio ? "true" : "false"}`);
+  lines.push(`audioCodec: ${safe(video.audioCodec || "")}`);
+  lines.push(`audioBitrateKbps: ${safe(video.audioBitrateKbps || 0)}`);
+  lines.push(`audioSampleRate: ${safe(video.audioSampleRate || 0)}`);
+  lines.push(`audioChannels: ${safe(video.audioChannels || 0)}`);
+  lines.push("");
+  lines.push("[render]");
+  lines.push(`outputBitrateKbps: ${safe(state.outputBitrateKbps || 0)}`);
+  lines.push(`renderCodec: ${safe(normalizeRenderCodec(settings.renderCodec))}`);
+  lines.push(`renderContainer: ${safe(normalizeRenderContainer(settings.renderContainer))}`);
+  lines.push(`renderAudioMode: ${safe(normalizeRenderAudioMode(settings.renderAudioMode))}`);
+  lines.push(`renderAudioBitrateKbps: ${safe(getRenderAudioBitrateKbps())}`);
+  lines.push(`isCustomRenderSettings: ${isCustomRenderSettingsEnabled() ? "true" : "false"}`);
+  lines.push(`effectiveOutputEstimate: ${safe(getEstimatedOutputSize())}`);
+  lines.push("");
+  lines.push("[update]");
+  lines.push(`supported: ${update.supported ? "true" : "false"}`);
+  lines.push(`available: ${update.available ? "true" : "false"}`);
+  lines.push(`mandatory: ${update.mandatory ? "true" : "false"}`);
+  lines.push(`version: ${safe(update.version || "")}`);
+  lines.push(`downloading: ${update.downloading ? "true" : "false"}`);
+  lines.push(`downloaded: ${update.downloaded ? "true" : "false"}`);
+  lines.push(`downloadProgress: ${safe(update.downloadProgress || 0)}`);
+  lines.push(`sizeBytes: ${safe(update.sizeBytes || 0)}`);
+  lines.push(`transferredBytes: ${safe(update.transferredBytes || 0)}`);
+  lines.push("");
+  lines.push("[recentLogs]");
+  const rows = state.logs.slice(0, 500).map((item) => formatLogLine(item));
+  lines.push(...rows);
+  return lines.join("\n");
 }
 
 async function openSupport() {
@@ -2381,14 +2467,14 @@ function compactUpdateNotes(value, maxLength = 320) {
 
 function formatUpdateSize() {
   const size = formatSize(state.update.sizeBytes || 0);
-  return size === "-" ? t("updateSizeUnknown") : size;
+  return size === "-" ? "" : size;
 }
 
 function formatUpdateProgressSize() {
   const transferred = formatSize(state.update.transferredBytes || 0);
   const total = formatSize(state.update.sizeBytes || 0);
   if (transferred === "-" && total === "-") {
-    return t("updateSizeUnknown");
+    return "";
   }
   if (total === "-") {
     return transferred;
@@ -2551,7 +2637,7 @@ function renderText() {
   if (elements.renderSettingsTitle) elements.renderSettingsTitle.textContent = t("renderSettings");
   if (elements.renderAudioBitrateLabel) elements.renderAudioBitrateLabel.textContent = t("renderAudioBitrate");
   if (elements.renderSettingsResetButton) elements.renderSettingsResetButton.textContent = t("resetToSource");
-  if (elements.renderSettingsDoneButton) elements.renderSettingsDoneButton.textContent = t("continueAnyway");
+  if (elements.renderSettingsDoneButton) elements.renderSettingsDoneButton.textContent = t("renderSettingsDone");
   if (elements.appVersionLabel) {
     elements.appVersionLabel.textContent = runtimeAppVersion ? `v${runtimeAppVersion}` : "v-";
   }
@@ -2848,7 +2934,8 @@ function renderUpdateDialog() {
   elements.updateDetailsTitle.textContent = update.mandatory ? t("updateMandatoryTitle") : t("updateAvailable");
   elements.updateDetailsVersion.textContent = update.version ? `${t("updateVersion")}: ${update.version}` : "";
   elements.updateDetailsNotes.textContent = getUpdateDescription();
-  elements.updateDetailsSize.textContent = `${t("updateSize")}: ${downloading ? formatUpdateProgressSize() : formatUpdateSize()}`;
+  const sizeText = downloading ? formatUpdateProgressSize() : formatUpdateSize();
+  elements.updateDetailsSize.textContent = sizeText ? `${t("updateSize")}: ${sizeText}` : "";
   elements.updateDetailsProgressBlock.hidden = !downloading;
   elements.updateDetailsProgressText.textContent = t("updateDownloading");
   elements.updateDetailsProgressValue.textContent = `${progress}%`;
