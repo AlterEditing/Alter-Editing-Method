@@ -2711,9 +2711,11 @@ function renderText() {
   }
   const renderCodecChanged = normalizeRenderCodec(state.settings.renderCodec) !== RENDER_DEFAULTS.codec;
   const renderContainerChanged = normalizeRenderContainer(state.settings.renderContainer) !== RENDER_DEFAULTS.container;
+  const currentAudioMode = normalizeRenderAudioMode(state.settings.renderAudioMode);
+  const defaultAudioMode = normalizeRenderAudioMode(RENDER_DEFAULTS.audioMode);
   const renderAudioChanged =
-    normalizeRenderAudioMode(state.settings.renderAudioMode) !== RENDER_DEFAULTS.audioMode ||
-    getRenderAudioBitrateKbps() !== RENDER_DEFAULTS.audioBitrateKbps;
+    currentAudioMode !== defaultAudioMode ||
+    (currentAudioMode !== "source" && getRenderAudioBitrateKbps() !== RENDER_DEFAULTS.audioBitrateKbps);
   elements.renderCodecLabel?.closest("label")?.classList.toggle("is-custom-field", renderCodecChanged);
   elements.renderContainerLabel?.closest("label")?.classList.toggle("is-custom-field", renderContainerChanged);
   elements.renderAudioBitrateLabel?.closest("label")?.classList.toggle("is-custom-field", renderAudioChanged);
@@ -3186,11 +3188,13 @@ function getRenderAudioBitrateKbps() {
 }
 
 function isCustomRenderSettingsEnabled() {
+  const currentAudioMode = normalizeRenderAudioMode(state.settings.renderAudioMode);
+  const defaultAudioMode = normalizeRenderAudioMode(RENDER_DEFAULTS.audioMode);
   return (
     normalizeRenderCodec(state.settings.renderCodec) !== RENDER_DEFAULTS.codec ||
     normalizeRenderContainer(state.settings.renderContainer) !== RENDER_DEFAULTS.container ||
-    normalizeRenderAudioMode(state.settings.renderAudioMode) !== RENDER_DEFAULTS.audioMode ||
-    getRenderAudioBitrateKbps() !== RENDER_DEFAULTS.audioBitrateKbps
+    currentAudioMode !== defaultAudioMode ||
+    (currentAudioMode !== "source" && getRenderAudioBitrateKbps() !== RENDER_DEFAULTS.audioBitrateKbps)
   );
 }
 

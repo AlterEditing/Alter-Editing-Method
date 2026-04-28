@@ -839,6 +839,17 @@ body[data-theme="light"] .select-pill {
   margin-top: clamp(12px, 3vh, 18px);
 }
 
+.bitrate-label-row {
+  margin-top: 6px;
+  margin-bottom: -4px;
+  color: color-mix(in srgb, var(--muted) 68%, transparent);
+  font-size: 9px;
+  font-weight: 560;
+  letter-spacing: 0.015em;
+  width: calc(100% - 104px);
+  text-align: center;
+}
+
 .bitrate-slider {
   width: 100%;
   height: 28px;
