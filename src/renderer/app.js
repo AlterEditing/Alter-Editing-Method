@@ -1425,6 +1425,7 @@ async function openSupport() {
     },
     body: JSON.stringify({
       appVersion: runtimeAppVersion || "",
+      telegramId,
       logs: logsText,
     }),
   })
