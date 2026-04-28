@@ -1409,9 +1409,14 @@ async function openSupport() {
   const telegramId = normalizeTelegramId(state.settings.telegramId);
   const logsText = createSupportLogText();
 
+  try {
+    await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
+  } catch (error) {
+    log("warning", "Support open failed", readableError(error));
+  }
+
   if (token && telegramId) {
-    try {
-      await authFetch("/support/app-help", {
+    authFetch("/support/app-help", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1421,15 +1426,14 @@ async function openSupport() {
           appVersion: runtimeAppVersion || "",
           logs: logsText,
         }),
+      })
+      .then(() => {
+        notify("success", t("support"), t("supportInvoked"));
+      })
+      .catch((error) => {
+        log("warning", "Support invoke failed", readableError(error));
       });
-      notify("success", t("support"), t("supportInvoked"));
-    } catch (error) {
-      log("warning", "Support invoke failed", readableError(error));
-      notify("warning", t("support"), t("supportFailed"));
-    }
   }
-
-  await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
 }
 
 function buildRiskWarningText(issues) {
