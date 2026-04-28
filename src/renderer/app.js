@@ -18,12 +18,10 @@ const icons = {
     '<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>',
   help: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6"/><path d="M12 7h.01"/></svg>',
   renderSettings:
-    '<svg viewBox="0 0 24 24"><path d="M9.67 2h4.66l.6 2.03a7.8 7.8 0 0 1 1.66.96l2.08-.5L21 8.52l-1.48 1.54a7.3 7.3 0 0 1 0 1.88L21 13.48l-2.33 4.03-2.08-.5a7.8 7.8 0 0 1-1.66.96l-.6 2.03H9.67l-.6-2.03a7.8 7.8 0 0 1-1.66-.96l-2.08.5L3 13.48l1.48-1.54a7.3 7.3 0 0 1 0-1.88L3 8.52l2.33-4.03 2.08.5a7.8 7.8 0 0 1 1.66-.96z"/><circle cx="12" cy="11" r="3"/></svg>',
+    '<svg viewBox="0 0 24 24"><path d="M10.8 2h2.4l.45 1.9c.5.13.98.33 1.42.59l1.76-.85 1.7 1.7-.85 1.76c.26.44.46.92.59 1.42L20 10.8v2.4l-1.9.45a6.1 6.1 0 0 1-.59 1.42l.85 1.76-1.7 1.7-1.76-.85c-.44.26-.92.46-1.42.59L13.2 22h-2.4l-.45-1.9a6.1 6.1 0 0 1-1.42-.59l-1.76.85-1.7-1.7.85-1.76a6.1 6.1 0 0 1-.59-1.42L4 13.2v-2.4l1.9-.45c.13-.5.33-.98.59-1.42l-.85-1.76 1.7-1.7 1.76.85c.44-.26.92-.46 1.42-.59z"/><circle cx="12" cy="12" r="2.6"/></svg>',
   logout: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
   github:
     '<svg viewBox="0 0 24 24"><path d="M12 2.7a9.3 9.3 0 0 0-2.94 18.12c.46.09.62-.2.62-.44v-1.55c-2.54.56-3.07-1.07-3.07-1.07-.42-1.05-1.02-1.33-1.02-1.33-.84-.57.06-.56.06-.56.93.06 1.42.94 1.42.94.82 1.42 2.17 1 2.7.77.08-.6.32-1 .58-1.22-2.03-.23-4.16-1.01-4.16-4.5 0-.99.35-1.79.94-2.42-.1-.22-.41-1.14.09-2.36 0 0 .76-.24 2.49.92a8.7 8.7 0 0 1 4.54 0c1.73-1.16 2.49-.92 2.49-.92.5 1.22.19 2.14.09 2.36.59.63.94 1.43.94 2.42 0 3.5-2.13 4.27-4.17 4.5.33.28.61.83.61 1.67v2.6c0 .24.16.53.63.44A9.3 9.3 0 0 0 12 2.7"/></svg>',
-  folder:
-    '<svg viewBox="0 0 24 24"><path d="M3 7.5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
 };
 
 const translations = {
@@ -59,8 +57,6 @@ const translations = {
     exported: "Logs exported",
     copyLogs: "Copy",
     exportLogs: "Export",
-    openLogsFolder: "Open logs folder",
-    criticalLogSaved: "Critical log saved",
     selectError: "Select an MP4 or MOV video.",
     alreadyPatched: "This video is already patched.",
     unsupported: "Only MP4 and MOV videos are supported.",
@@ -114,7 +110,6 @@ const translations = {
     renderContainer: "Container",
     renderAudioMode: "Audio mode",
     renderAudioBitrate: "Audio bitrate",
-    bitrateLabel: "Bitrate",
     resetToSource: "Reset to source",
     sourceValue: "Source",
     codecH264: "H.264",
@@ -122,8 +117,7 @@ const translations = {
     containerMp4: "MP4",
     containerMov: "MOV",
     audioAac: "AAC",
-    renderSettingsCustomHint: "Render settings changed",
-    renderSettingsDone: "Done",
+    renderSettingsCustomHint: "Custom render settings are enabled",
     support: "Support",
     supportInvoked: "Support request sent",
     supportOpen: "Open support bot",
@@ -178,8 +172,6 @@ const translations = {
     exported: "Логи экспортированы",
     copyLogs: "Копировать",
     exportLogs: "Экспорт",
-    openLogsFolder: "Открыть папку логов",
-    criticalLogSaved: "Критический лог сохранен",
     selectError: "Выберите MP4 или MOV видео.",
     alreadyPatched: "Это видео уже запатчено.",
     unsupported: "Поддерживаются только MP4 и MOV видео.",
@@ -224,7 +216,6 @@ const translations = {
     renderContainer: "\u041a\u043e\u043d\u0442\u0435\u0439\u043d\u0435\u0440",
     renderAudioMode: "\u0420\u0435\u0436\u0438\u043c \u0430\u0443\u0434\u0438\u043e",
     renderAudioBitrate: "\u0410\u0443\u0434\u0438\u043e \u0431\u0438\u0442\u0440\u0435\u0439\u0442",
-    bitrateLabel: "\u0411\u0438\u0442\u0440\u0435\u0439\u0442",
     resetToSource: "\u0421\u0431\u0440\u043e\u0441 \u043a \u0438\u0441\u0445\u043e\u0434\u043d\u044b\u043c",
     sourceValue: "\u0418\u0441\u0445\u043e\u0434\u043d\u043e\u0435",
     codecH264: "H.264",
@@ -233,8 +224,7 @@ const translations = {
     containerMov: "MOV",
     audioAac: "AAC",
     audioSource: "\u0418\u0441\u0445\u043e\u0434\u043d\u043e\u0435 (\u043e\u0440\u0438\u0433\u0438\u043d\u0430\u043b)",
-    renderSettingsCustomHint: "\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u044b \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
-    renderSettingsDone: "\u0413\u043e\u0442\u043e\u0432\u043e",
+    renderSettingsCustomHint: "\u0412\u043a\u043b\u044e\u0447\u0435\u043d\u044b \u043d\u0435\u0438\u0441\u0445\u043e\u0434\u043d\u044b\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
     support: "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430",
     supportInvoked: "\u0417\u0430\u043f\u0440\u043e\u0441 \u0432 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0443 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d",
     supportOpen: "\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0431\u043e\u0442 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438",
@@ -277,8 +267,6 @@ const translations = {
     exported: "Logs exported",
     copyLogs: "Copy",
     exportLogs: "Export",
-    openLogsFolder: "Log klasorunu ac",
-    criticalLogSaved: "Kritik log kaydedildi",
     selectError: "MP4 veya MOV video secin.",
     alreadyPatched: "This video is already patched.",
     unsupported: "Yalnizca MP4 ve MOV videolar desteklenir.",
@@ -323,7 +311,6 @@ const translations = {
     renderContainer: "Container",
     renderAudioMode: "Ses modu",
     renderAudioBitrate: "Ses bitrate",
-    bitrateLabel: "Bitrate",
     resetToSource: "Kaynaga sifirla",
     sourceValue: "Kaynak",
     codecH264: "H.264",
@@ -332,8 +319,7 @@ const translations = {
     containerMov: "MOV",
     audioAac: "AAC",
     audioSource: "Kaynak (orijinal)",
-    renderSettingsCustomHint: "Render ayarlari degisti",
-    renderSettingsDone: "Tamam",
+    renderSettingsCustomHint: "Ozel render ayarlari etkin",
     support: "Destek",
     supportInvoked: "Destek talebi gonderildi",
     supportOpen: "Destek botunu ac",
@@ -511,7 +497,6 @@ const elements = {
   fileTitle: document.getElementById("fileTitle"),
   fileMeta: document.getElementById("fileMeta"),
   fileStream: document.getElementById("fileStream"),
-  fileCodec: document.getElementById("fileCodec"),
   howToUseButton: document.getElementById("howToUseButton"),
   howToUseLabel: document.getElementById("howToUseLabel"),
   selectPill: document.getElementById("selectPill"),
@@ -532,7 +517,6 @@ const elements = {
   renderSettingsResetButton: document.getElementById("renderSettingsResetButton"),
   renderSettingsDoneButton: document.getElementById("renderSettingsDoneButton"),
   bitrateSlider: document.getElementById("bitrateSlider"),
-  bitrateLabel: document.getElementById("bitrateLabel"),
   bitrateInput: document.getElementById("bitrateInput"),
   bitrateUnit: document.getElementById("bitrateUnit"),
   patchButton: document.getElementById("patchButton"),
@@ -565,7 +549,6 @@ const elements = {
   logsList: document.getElementById("logsList"),
   copyLogsButton: document.getElementById("copyLogsButton"),
   exportLogsButton: document.getElementById("exportLogsButton"),
-  openLogsFolderButton: document.getElementById("openLogsFolderButton"),
   telegramLink: document.getElementById("telegramLink"),
   authOverlay: document.getElementById("authOverlay"),
   authLogo: document.getElementById("authLogo"),
@@ -675,7 +658,6 @@ function initIcons() {
     tutorialIcon.innerHTML = icons.help;
   }
   setIcon(elements.openRepoButton, "github");
-  setIcon(elements.openLogsFolderButton, "folder");
   setIcon(elements.supportButton, "send");
   renderTelegramLink();
 }
@@ -1103,7 +1085,6 @@ function bindEvents() {
   elements.telegramLink.addEventListener("click", () => window.alterE.shell.openExternal(telegramChannelUrl));
   elements.copyLogsButton.addEventListener("click", copyLogs);
   elements.exportLogsButton.addEventListener("click", exportLogs);
-  elements.openLogsFolderButton?.addEventListener("click", openLogsFolder);
   elements.mandatoryUpdateDownloadButton.addEventListener("click", handleUpdateAction);
   elements.mandatoryUpdateLaterButton.addEventListener("click", () => dismissMandatoryUpdateNotice());
   elements.mandatoryUpdateCloseButton.addEventListener("click", () => dismissMandatoryUpdateNotice());
@@ -1333,99 +1314,36 @@ async function resetRenderSettings() {
 }
 
 function createSupportLogText() {
-  const safe = (value) => (value === null || value === undefined ? "" : String(value));
-  const lines = [];
-  const video = state.video || {};
-  const settings = state.settings || {};
-  const update = state.update || {};
-  const auth = state.auth || {};
-  const app = state.app || {};
-  const env = {
-    locale:
-      navigator.languages && navigator.languages.length
-        ? navigator.languages.join(", ")
-        : navigator.language || "unknown",
-    online: navigator.onLine ? "true" : "false",
-    userAgent: navigator.userAgent || "unknown",
-    platform: navigator.platform || "unknown",
-    hwConcurrency: navigator.hardwareConcurrency || "unknown",
-    screen: typeof screen !== "undefined" ? `${screen.width}x${screen.height}` : "unknown",
-    tz:
-      Intl.DateTimeFormat && Intl.DateTimeFormat().resolvedOptions
-        ? Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown"
-        : "unknown",
-  };
-
-  lines.push("# ALTERE SUPPORT LOG");
-  lines.push(`generatedAt: ${new Date().toISOString()}`);
-  lines.push("");
-  lines.push("[app]");
-  lines.push(`version: ${safe(runtimeAppVersion || "unknown")}`);
-  lines.push(`language: ${safe(settings.language || "en")}`);
-  lines.push(`theme: ${safe(settings.theme || "dark")}`);
-  lines.push(`mode: ${safe(state.mode || "balanced")}`);
-  lines.push(`authorized: ${settings.authorized ? "true" : "false"}`);
-  lines.push(`telegramId: ${safe(settings.telegramId || "")}`);
-  lines.push(`authPending: ${auth.pending ? "true" : "false"}`);
-  lines.push(`authChecking: ${auth.checking ? "true" : "false"}`);
-  lines.push(`authServerUnavailable: ${auth.serverUnavailable ? "true" : "false"}`);
-  lines.push(`offlineGuest: ${auth.offlineGuest ? "true" : "false"}`);
-  lines.push(`offlineAuthStartedAt: ${safe(settings.offlineAuthStartedAt || 0)}`);
-  lines.push(`buildRepo: ${safe(settings.updateRepoOwner || "")}/${safe(settings.updateRepoName || "")}`);
-  lines.push(`allowPrerelease: ${settings.updateAllowPrerelease ? "true" : "false"}`);
-  lines.push(`windowTitle: ${safe(document && document.title)}`);
-  lines.push("");
-  lines.push("[environment]");
-  Object.entries(env).forEach(([k, v]) => lines.push(`${k}: ${safe(v)}`));
-  lines.push("");
-  lines.push("[video]");
-  lines.push(`selectedPath: ${safe(app.filePath || "")}`);
-  lines.push(`container: ${safe(video.container || video.format || "")}`);
-  lines.push(`durationSeconds: ${safe(video.durationSeconds || 0)}`);
-  lines.push(`sizeBytes: ${safe(video.sizeBytes || 0)}`);
-  lines.push(`width: ${safe(video.width || 0)}`);
-  lines.push(`height: ${safe(video.height || 0)}`);
-  lines.push(`fps: ${safe(video.fps || 0)}`);
-  lines.push(`videoCodec: ${safe(video.codec || video.videoCodec || "")}`);
-  lines.push(`videoBitrateKbps: ${safe(video.videoBitrateKbps || video.bitrateKbps || 0)}`);
-  lines.push(`hasAudio: ${video.hasAudio ? "true" : "false"}`);
-  lines.push(`audioCodec: ${safe(video.audioCodec || "")}`);
-  lines.push(`audioBitrateKbps: ${safe(video.audioBitrateKbps || 0)}`);
-  lines.push(`audioSampleRate: ${safe(video.audioSampleRate || 0)}`);
-  lines.push(`audioChannels: ${safe(video.audioChannels || 0)}`);
-  lines.push("");
-  lines.push("[render]");
-  lines.push(`outputBitrateKbps: ${safe(state.outputBitrateKbps || 0)}`);
-  lines.push(`renderCodec: ${safe(normalizeRenderCodec(settings.renderCodec))}`);
-  lines.push(`renderContainer: ${safe(normalizeRenderContainer(settings.renderContainer))}`);
-  lines.push(`renderAudioMode: ${safe(normalizeRenderAudioMode(settings.renderAudioMode))}`);
-  lines.push(`renderAudioBitrateKbps: ${safe(getRenderAudioBitrateKbps())}`);
-  lines.push(`isCustomRenderSettings: ${isCustomRenderSettingsEnabled() ? "true" : "false"}`);
-  lines.push(`effectiveOutputEstimate: ${safe(getEstimatedOutputSize())}`);
-  lines.push("");
-  lines.push("[update]");
-  lines.push(`supported: ${update.supported ? "true" : "false"}`);
-  lines.push(`available: ${update.available ? "true" : "false"}`);
-  lines.push(`mandatory: ${update.mandatory ? "true" : "false"}`);
-  lines.push(`version: ${safe(update.version || "")}`);
-  lines.push(`downloading: ${update.downloading ? "true" : "false"}`);
-  lines.push(`downloaded: ${update.downloaded ? "true" : "false"}`);
-  lines.push(`downloadProgress: ${safe(update.downloadProgress || 0)}`);
-  lines.push(`sizeBytes: ${safe(update.sizeBytes || 0)}`);
-  lines.push(`transferredBytes: ${safe(update.transferredBytes || 0)}`);
-  lines.push("");
-  lines.push("[recentLogs]");
-  const rows = state.logs.slice(0, 500).map((item) => formatLogLine(item));
-  lines.push(...rows);
-  return lines.join("\n");
+  const rows = state.logs.slice(0, 200).map((item) => formatLogLine(item));
+  return rows.join("\n");
 }
 
 async function openSupport() {
-  try {
-    await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
-  } catch (error) {
-    log("warning", "Support open failed", readableError(error));
+  const token = String(state.settings.authToken || "");
+  const telegramId = normalizeTelegramId(state.settings.telegramId);
+  const logsText = createSupportLogText();
+
+  if (token && telegramId) {
+    try {
+      await authFetch("/support/app-help", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appVersion: runtimeAppVersion || "",
+          logs: logsText,
+        }),
+      });
+      notify("success", t("support"), t("supportInvoked"));
+    } catch (error) {
+      log("warning", "Support invoke failed", readableError(error));
+      notify("warning", t("support"), t("supportFailed"));
+    }
   }
+
+  await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
 }
 
 function buildRiskWarningText(issues) {
@@ -1530,17 +1448,6 @@ async function startOrCancelPatch() {
     const message = readableError(error);
     const cancelled = /cancelled|canceled|patch_cancelled|sigterm|signal/i.test(message);
     log(cancelled ? "warning" : "error", cancelled ? tEn("cancelled") : tEn("failed"), compactError(message));
-    if (!cancelled) {
-      log(
-        "error",
-        "Render diagnostics",
-        [
-          formatDiagnosticsBlock("video", getVideoDiagnostics()),
-          formatDiagnosticsBlock("render", getRenderDiagnostics()),
-          formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
-        ].join(" || ")
-      );
-    }
     notify(cancelled ? "warning" : "error", cancelled ? t("cancelled") : t("failed"));
   } finally {
     state.working = false;
@@ -1887,14 +1794,6 @@ async function startTelegramAuthorization() {
     } else {
       toast("error", t("authFailed"), state.auth.error);
     }
-    log(
-      "error",
-      "Auth request diagnostics",
-      [
-        formatDiagnosticsBlock("auth", getAuthDiagnostics()),
-        formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
-      ].join(" || ")
-    );
     render();
   }
 }
@@ -1980,14 +1879,6 @@ function startAuthPolling(sessionId) {
       state.auth.error = serverUnavailable ? "" : readableError(error) || t("authFailed");
       if (serverUnavailable) {
         log("warning", "Authorization polling", `Auth server unavailable | ${readableError(error)}`);
-        log(
-          "warning",
-          "Auth polling diagnostics",
-          [
-            formatDiagnosticsBlock("auth", getAuthDiagnostics()),
-            formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
-          ].join(" || ")
-        );
       }
       render();
     }
@@ -2051,14 +1942,6 @@ async function exchangeAuthorization(sessionId) {
     } else {
       toast("error", t("authFailed"), state.auth.error);
     }
-    log(
-      "error",
-      "Auth exchange diagnostics",
-      [
-        formatDiagnosticsBlock("auth", getAuthDiagnostics()),
-        formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
-      ].join(" || ")
-    );
   } finally {
     render();
   }
@@ -2498,14 +2381,14 @@ function compactUpdateNotes(value, maxLength = 320) {
 
 function formatUpdateSize() {
   const size = formatSize(state.update.sizeBytes || 0);
-  return size === "-" ? "" : size;
+  return size === "-" ? t("updateSizeUnknown") : size;
 }
 
 function formatUpdateProgressSize() {
   const transferred = formatSize(state.update.transferredBytes || 0);
   const total = formatSize(state.update.sizeBytes || 0);
   if (transferred === "-" && total === "-") {
-    return "";
+    return t("updateSizeUnknown");
   }
   if (total === "-") {
     return transferred;
@@ -2623,7 +2506,6 @@ function openVersionRepo() {
 
 function renderText() {
   elements.outputSizeLabel.textContent = t("outputSize");
-  if (elements.bitrateLabel) elements.bitrateLabel.textContent = t("bitrateLabel");
   elements.howToUseLabel.textContent = tGuide("howToUse");
   elements.selectPill.textContent = state.video ? t("changeVideo") : t("selectVideo");
   elements.patchButtonLabel.textContent = state.working ? t("cancel") : t("patch");
@@ -2635,8 +2517,6 @@ function renderText() {
   elements.logsTitle.textContent = t("logs");
   elements.copyLogsButton.textContent = t("copyLogs");
   elements.exportLogsButton.textContent = t("exportLogs");
-  elements.openLogsFolderButton.title = t("openLogsFolder");
-  elements.openLogsFolderButton.setAttribute("aria-label", t("openLogsFolder"));
   elements.authTitle.textContent = t("authTitle");
   elements.authText.textContent = t("authText");
   elements.authButton.textContent = t("authorize");
@@ -2671,7 +2551,7 @@ function renderText() {
   if (elements.renderSettingsTitle) elements.renderSettingsTitle.textContent = t("renderSettings");
   if (elements.renderAudioBitrateLabel) elements.renderAudioBitrateLabel.textContent = t("renderAudioBitrate");
   if (elements.renderSettingsResetButton) elements.renderSettingsResetButton.textContent = t("resetToSource");
-  if (elements.renderSettingsDoneButton) elements.renderSettingsDoneButton.textContent = t("renderSettingsDone");
+  if (elements.renderSettingsDoneButton) elements.renderSettingsDoneButton.textContent = t("continueAnyway");
   if (elements.appVersionLabel) {
     elements.appVersionLabel.textContent = runtimeAppVersion ? `v${runtimeAppVersion}` : "v-";
   }
@@ -2727,15 +2607,6 @@ function renderText() {
     elements.renderSettingsButton.classList.toggle("is-custom", hasCustom);
     elements.renderSettingsButton.title = hasCustom ? t("renderSettingsCustomHint") : t("renderSettings");
   }
-
-  const renderCodecChanged = normalizeRenderCodec(state.settings.renderCodec) !== RENDER_DEFAULTS.codec;
-  const renderContainerChanged = normalizeRenderContainer(state.settings.renderContainer) !== RENDER_DEFAULTS.container;
-  const renderAudioChanged =
-    normalizeRenderAudioMode(state.settings.renderAudioMode) !== RENDER_DEFAULTS.audioMode ||
-    getRenderAudioBitrateKbps() !== RENDER_DEFAULTS.audioBitrateKbps;
-  elements.renderCodecLabel?.closest("label")?.classList.toggle("is-custom-field", renderCodecChanged);
-  elements.renderContainerLabel?.closest("label")?.classList.toggle("is-custom-field", renderContainerChanged);
-  elements.renderAudioBitrateLabel?.closest("label")?.classList.toggle("is-custom-field", renderAudioChanged);
 }
 
 function renderCloseConfirm() {
@@ -2772,7 +2643,6 @@ function renderVideo() {
     elements.fileTitle.textContent = "";
     elements.fileMeta.textContent = "";
     elements.fileStream.textContent = "";
-    elements.fileCodec.textContent = "";
     elements.videoPreview.pause();
     elements.videoPreview.hidden = true;
     elements.videoPreview.removeAttribute("src");
@@ -2790,10 +2660,6 @@ function renderVideo() {
     video.fps ? `${formatNumber(video.fps, 2)} ${t("fps")}` : "",
     video.videoBitrateKbps ? `${video.videoBitrateKbps} ${t("kbps")}` : "",
   ]
-    .filter(Boolean)
-    .join(" | ");
-
-  elements.fileCodec.textContent = [String(video.codec || "").toLowerCase(), String(video.container || video.format || "").toLowerCase()]
     .filter(Boolean)
     .join(" | ");
 
@@ -2982,8 +2848,7 @@ function renderUpdateDialog() {
   elements.updateDetailsTitle.textContent = update.mandatory ? t("updateMandatoryTitle") : t("updateAvailable");
   elements.updateDetailsVersion.textContent = update.version ? `${t("updateVersion")}: ${update.version}` : "";
   elements.updateDetailsNotes.textContent = getUpdateDescription();
-  const sizeText = downloading ? formatUpdateProgressSize() : formatUpdateSize();
-  elements.updateDetailsSize.textContent = sizeText ? `${t("updateSize")}: ${sizeText}` : "";
+  elements.updateDetailsSize.textContent = `${t("updateSize")}: ${downloading ? formatUpdateProgressSize() : formatUpdateSize()}`;
   elements.updateDetailsProgressBlock.hidden = !downloading;
   elements.updateDetailsProgressText.textContent = t("updateDownloading");
   elements.updateDetailsProgressValue.textContent = `${progress}%`;
@@ -3449,91 +3314,6 @@ function compactError(text, maxLength = 180) {
   return `${firstLine.slice(0, maxLength - 1)}...`;
 }
 
-async function openLogsFolder() {
-  try {
-    await window.alterE.logs.openFolder();
-  } catch (error) {
-    log("warning", "Open logs folder failed", readableError(error));
-  }
-}
-
-async function persistCriticalLog(reason, error = null) {
-  try {
-    const errorText = error ? `\n\n[criticalError]\n${String(error?.stack || error?.message || error)}` : "";
-    const text = `${createSupportLogText()}${errorText}\n`;
-    const result = await window.alterE.logs.saveCritical({
-      reason: String(reason || "critical-error"),
-      text,
-    });
-    if (result?.filePath) {
-      log("error", t("criticalLogSaved"), result.filePath);
-    }
-  } catch {
-    // Ignore save failures to avoid recursive crashes.
-  }
-}
-
-function formatDiagnosticsBlock(title, data = {}) {
-  const lines = Object.entries(data)
-    .map(([key, value]) => `${key}=${value === undefined || value === null ? "-" : String(value)}`)
-    .join(" | ");
-  return `${title}: ${lines}`;
-}
-
-function getVideoDiagnostics() {
-  const v = state.video || {};
-  return {
-    name: v.name || "-",
-    path: v.path || "-",
-    container: v.container || v.format || "-",
-    codec: v.codec || v.videoCodec || "-",
-    durationSec: v.durationSeconds || 0,
-    width: v.width || 0,
-    height: v.height || 0,
-    fps: v.fps || 0,
-    videoKbps: v.videoBitrateKbps || v.bitrateKbps || 0,
-    hasAudio: Boolean(v.hasAudio),
-    audioCodec: v.audioCodec || "-",
-    audioKbps: v.audioBitrateKbps || 0,
-  };
-}
-
-function getRenderDiagnostics() {
-  return {
-    mode: state.mode || "-",
-    outputKbps: state.outputBitrateKbps || 0,
-    renderCodec: normalizeRenderCodec(state.settings?.renderCodec),
-    renderContainer: normalizeRenderContainer(state.settings?.renderContainer),
-    renderAudioMode: normalizeRenderAudioMode(state.settings?.renderAudioMode),
-    renderAudioKbps: getRenderAudioBitrateKbps(),
-    customRender: isCustomRenderSettingsEnabled(),
-  };
-}
-
-function getAuthDiagnostics() {
-  return {
-    authApiBase,
-    authFallbacks: buildAuthServerCandidates().join(","),
-    authorized: Boolean(state.settings?.authorized),
-    telegramId: state.settings?.telegramId || "-",
-    authPending: Boolean(state.auth?.pending),
-    authChecking: Boolean(state.auth?.checking),
-    sessionId: state.auth?.sessionId || "-",
-    offlineGuest: Boolean(state.auth?.offlineGuest),
-    language: state.settings?.language || "-",
-  };
-}
-
-function getErrorDiagnostics(error) {
-  return {
-    error: readableError(error),
-    status: error?.status || error?.data?.status || "-",
-    baseUrl: error?.baseUrl || "-",
-    code: error?.code || "-",
-    stack: compactError(String(error?.stack || ""), 500),
-  };
-}
-
 function pathToFileUrl(filePath) {
   let normalized = String(filePath || "").replace(/\\/g, "/");
   if (!normalized.startsWith("/")) {
@@ -3932,17 +3712,5 @@ function getCssVariable(name) {
 
 init().catch((error) => {
   console.error("Renderer init failed:", error);
-  void persistCriticalLog("renderer-init-failed", error);
   finishBootSequence();
-});
-
-window.addEventListener("error", (event) => {
-  const err = event?.error || new Error(String(event?.message || "Window error"));
-  void persistCriticalLog("window-error", err);
-});
-
-window.addEventListener("unhandledrejection", (event) => {
-  const reason = event?.reason;
-  const err = reason instanceof Error ? reason : new Error(typeof reason === "string" ? reason : JSON.stringify(reason));
-  void persistCriticalLog("unhandled-rejection", err);
 });
