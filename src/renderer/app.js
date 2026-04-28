@@ -333,14 +333,10 @@ const guideTranslations = {
 const languageOrder = ["ru", "en", "tr"];
 const DEFAULT_AUTH_API_BASE = "http://132.243.30.159:3000";
 const DEFAULT_TELEGRAM_CHANNEL_URL = "https://t.me/alterediting";
-const DEFAULT_RELEASE_CHANNEL = "stable";
 let authApiBase = DEFAULT_AUTH_API_BASE;
 let authApiFallbacks = [];
 let telegramChannelUrl = DEFAULT_TELEGRAM_CHANNEL_URL;
 let currentBotUrl = "";
-let debugBotUrl = "";
-let releaseChannel = DEFAULT_RELEASE_CHANNEL;
-let debugToolsEnabled = false;
 let runtimeAppVersion = "";
 const AUTH_POLL_INTERVAL_MS = 2000;
 const AUTH_POLL_TIMEOUT_MS = 10 * 60 * 1000;
@@ -417,12 +413,6 @@ const state = {
     installAfterDownload: false,
   },
   versionMenuVisible: false,
-  debug: {
-    forceServerUnavailable: false,
-    overrideAuthBase: "",
-    overrideFallbacks: [],
-    updateMockActive: false,
-  },
   tutorialVisible: false,
   riskConfirmVisible: false,
 };
@@ -460,7 +450,6 @@ const elements = {
   logsButton: document.getElementById("logsButton"),
   notificationsButton: document.getElementById("notificationsButton"),
   updateButton: document.getElementById("updateButton"),
-  debugButton: document.getElementById("debugButton"),
   settingsButton: document.getElementById("settingsButton"),
   notificationBadge: document.getElementById("notificationBadge"),
   minimizeButton: document.getElementById("minimizeButton"),
@@ -468,7 +457,6 @@ const elements = {
   settingsPanel: document.getElementById("settingsPanel"),
   notificationsPanel: document.getElementById("notificationsPanel"),
   logsPanel: document.getElementById("logsPanel"),
-  debugPanel: document.getElementById("debugPanel"),
   settingsTitle: document.getElementById("settingsTitle"),
   settingsUpdateWrap: document.getElementById("settingsUpdateWrap"),
   settingsVersionArea: document.getElementById("settingsVersionArea"),
@@ -476,9 +464,6 @@ const elements = {
   updateBetaToggle: document.getElementById("updateBetaToggle"),
   updateBetaToggleLabel: document.getElementById("updateBetaToggleLabel"),
   openRepoButton: document.getElementById("openRepoButton"),
-  debugTitle: document.getElementById("debugTitle"),
-  debugAuthBaseLabel: document.getElementById("debugAuthBaseLabel"),
-  debugFallbacksLabel: document.getElementById("debugFallbacksLabel"),
   logoutButton: document.getElementById("logoutButton"),
   notificationsTitle: document.getElementById("notificationsTitle"),
   logsTitle: document.getElementById("logsTitle"),
@@ -488,21 +473,6 @@ const elements = {
   logsList: document.getElementById("logsList"),
   copyLogsButton: document.getElementById("copyLogsButton"),
   exportLogsButton: document.getElementById("exportLogsButton"),
-  debugAuthBaseInput: document.getElementById("debugAuthBaseInput"),
-  debugFallbacksInput: document.getElementById("debugFallbacksInput"),
-  debugApplyServerButton: document.getElementById("debugApplyServerButton"),
-  debugResetServerButton: document.getElementById("debugResetServerButton"),
-  debugForceServerDownInput: document.getElementById("debugForceServerDownInput"),
-  debugForceServerDownLabel: document.getElementById("debugForceServerDownLabel"),
-  debugForceAuthButton: document.getElementById("debugForceAuthButton"),
-  debugRefreshConfigButton: document.getElementById("debugRefreshConfigButton"),
-  debugUpdateAvailableButton: document.getElementById("debugUpdateAvailableButton"),
-  debugUpdateDownloadingButton: document.getElementById("debugUpdateDownloadingButton"),
-  debugUpdateDownloadedButton: document.getElementById("debugUpdateDownloadedButton"),
-  debugUpdateClearButton: document.getElementById("debugUpdateClearButton"),
-  debugDownloadLatestButton: document.getElementById("debugDownloadLatestButton"),
-  debugCopySnapshotButton: document.getElementById("debugCopySnapshotButton"),
-  debugOpenDebugBotButton: document.getElementById("debugOpenDebugBotButton"),
   telegramLink: document.getElementById("telegramLink"),
   authOverlay: document.getElementById("authOverlay"),
   authLogo: document.getElementById("authLogo"),
@@ -579,6 +549,9 @@ function tGuide(key) {
 }
 
 function setIcon(element, iconName) {
+  if (!element) {
+    return;
+  }
   element.innerHTML = icons[iconName] || "";
 }
 
@@ -598,7 +571,6 @@ function initIcons() {
   setIcon(elements.logsButton, "terminal");
   setIcon(elements.notificationsButton, "bell");
   elements.notificationsButton.appendChild(elements.notificationBadge);
-  setIcon(elements.debugButton, "debug");
   setIcon(elements.settingsButton, "settings");
   setIcon(elements.logoutButton, "logout");
   setIcon(elements.minimizeButton, "minus");
@@ -634,18 +606,6 @@ function applyRuntimeConfig(runtimeConfig = {}) {
   });
   if (runtimeChannel) {
     telegramChannelUrl = runtimeChannel;
-  }
-  const nextReleaseChannel = String(runtimeConfig?.releaseChannel || "").trim().toLowerCase();
-  if (nextReleaseChannel) {
-    releaseChannel = nextReleaseChannel;
-  }
-  debugToolsEnabled = Boolean(runtimeConfig?.debugToolsEnabled);
-  const runtimeDebugBotUrl = normalizeHttpUrl(runtimeConfig?.debugBotUrl, {
-    allowHttp: false,
-    allowHttps: true,
-  });
-  if (runtimeDebugBotUrl) {
-    debugBotUrl = runtimeDebugBotUrl;
   }
   runtimeAppVersion = String(runtimeConfig?.appVersion || "").trim();
   renderTelegramLink();
@@ -949,18 +909,9 @@ function bindEvents() {
   elements.settingsButton.addEventListener("click", () => togglePanel("settings"));
   elements.notificationsButton.addEventListener("click", () => togglePanel("notifications"));
   elements.logsButton.addEventListener("click", () => togglePanel("logs"));
-  elements.debugButton?.addEventListener("click", () => {
-    if (!debugToolsEnabled) return;
-    togglePanel("debug");
-  });
   elements.updateButton.addEventListener("click", handleUpdateAction);
   document.addEventListener("pointerdown", closePanelOnOutsidePointer);
   document.addEventListener("keydown", (event) => {
-    if (debugToolsEnabled && event.ctrlKey && event.shiftKey && (event.key === "D" || event.key === "d")) {
-      event.preventDefault();
-      togglePanel("debug");
-      return;
-    }
     if (event.key === "Escape") {
       if (state.versionMenuVisible) {
         event.preventDefault();
@@ -1024,27 +975,6 @@ function bindEvents() {
   elements.telegramLink.addEventListener("click", () => window.alterE.shell.openExternal(telegramChannelUrl));
   elements.copyLogsButton.addEventListener("click", copyLogs);
   elements.exportLogsButton.addEventListener("click", exportLogs);
-  elements.debugApplyServerButton?.addEventListener("click", applyDebugServerOverrides);
-  elements.debugResetServerButton?.addEventListener("click", resetDebugServerOverrides);
-  elements.debugForceServerDownInput?.addEventListener("change", () => {
-    state.debug.forceServerUnavailable = Boolean(elements.debugForceServerDownInput.checked);
-    log("warning", "Debug", `Force auth server unavailable: ${state.debug.forceServerUnavailable ? "ON" : "OFF"}`);
-  });
-  elements.debugForceAuthButton?.addEventListener("click", async () => {
-    await clearAuthorization(false);
-    render();
-  });
-  elements.debugRefreshConfigButton?.addEventListener("click", async () => {
-    await refreshAuthServerConfig();
-    render();
-  });
-  elements.debugUpdateAvailableButton?.addEventListener("click", () => applyDebugUpdateMock("available"));
-  elements.debugUpdateDownloadingButton?.addEventListener("click", () => applyDebugUpdateMock("downloading"));
-  elements.debugUpdateDownloadedButton?.addEventListener("click", () => applyDebugUpdateMock("downloaded"));
-  elements.debugUpdateClearButton?.addEventListener("click", () => applyDebugUpdateMock("clear"));
-  elements.debugDownloadLatestButton?.addEventListener("click", debugDownloadLatestFromGithub);
-  elements.debugCopySnapshotButton?.addEventListener("click", copyDebugSnapshot);
-  elements.debugOpenDebugBotButton?.addEventListener("click", openDebugBot);
   elements.mandatoryUpdateDownloadButton.addEventListener("click", handleUpdateAction);
   elements.mandatoryUpdateLaterButton.addEventListener("click", () => dismissMandatoryUpdateNotice());
   elements.mandatoryUpdateCloseButton.addEventListener("click", () => dismissMandatoryUpdateNotice());
@@ -1824,8 +1754,8 @@ function isAuthorizationRejection(error) {
 }
 
 function buildAuthServerCandidates() {
-  const sourceBase = state.debug.overrideAuthBase || authApiBase;
-  const sourceFallbacks = state.debug.overrideFallbacks.length ? state.debug.overrideFallbacks : authApiFallbacks;
+  const sourceBase = authApiBase;
+  const sourceFallbacks = authApiFallbacks;
   const normalized = [sourceBase, ...sourceFallbacks]
     .map((item) => normalizeHttpUrl(item, { allowHttp: true, allowHttps: true }))
     .filter(Boolean);
@@ -1874,12 +1804,6 @@ function isAuthServerUnavailableError(error) {
 }
 
 async function authFetch(endpoint, options = {}, runtimeOptions = {}) {
-  if (debugToolsEnabled && state.debug.forceServerUnavailable) {
-    const forced = new Error("Auth server unavailable (debug override)");
-    forced.status = 0;
-    throw forced;
-  }
-
   const candidates = buildAuthServerCandidates();
   const fallbackOnHttpErrors = runtimeOptions.fallbackOnHttpErrors === true;
   let lastError = null;
@@ -1987,9 +1911,6 @@ function normalizeTelegramId(value) {
 }
 
 function togglePanel(panelName) {
-  if (panelName === "debug" && !debugToolsEnabled) {
-    return;
-  }
   state.openPanel = state.openPanel === panelName ? "" : panelName;
   if (state.openPanel !== "settings") {
     state.versionMenuVisible = false;
@@ -2006,7 +1927,7 @@ function closePanelOnOutsidePointer(event) {
   }
 
   const activePanel = getPanelElement(state.openPanel);
-  const panelButtons = [elements.settingsButton, elements.notificationsButton, elements.logsButton, elements.debugButton].filter(
+  const panelButtons = [elements.settingsButton, elements.notificationsButton, elements.logsButton].filter(
     Boolean
   );
   if (activePanel?.contains(event.target) || panelButtons.some((button) => button.contains(event.target))) {
@@ -2023,203 +1944,6 @@ function closePanelOnOutsidePointer(event) {
 
   state.openPanel = "";
   renderPanels();
-}
-
-function normalizeFallbacksInput(inputValue) {
-  return String(inputValue || "")
-    .split(",")
-    .map((item) => normalizeHttpUrl(item, { allowHttp: true, allowHttps: true }))
-    .filter(Boolean);
-}
-
-function applyDebugServerOverrides() {
-  if (!debugToolsEnabled) {
-    return;
-  }
-
-  const nextBase = normalizeHttpUrl(elements.debugAuthBaseInput?.value, { allowHttp: true, allowHttps: true });
-  const nextFallbacks = normalizeFallbacksInput(elements.debugFallbacksInput?.value);
-  state.debug.overrideAuthBase = nextBase || "";
-  state.debug.overrideFallbacks = Array.from(new Set(nextFallbacks));
-  if (state.debug.overrideAuthBase) {
-    authApiBase = state.debug.overrideAuthBase;
-  }
-  if (state.debug.overrideFallbacks.length) {
-    authApiFallbacks = state.debug.overrideFallbacks.slice();
-  }
-  schedulePersistAuthConfigCache();
-  log("system", "Debug", `Server override applied | base=${authApiBase} | fallbacks=${authApiFallbacks.join(", ") || "-"}`);
-  toast("success", t("debug"), t("debugApplied"));
-  render();
-}
-
-function resetDebugServerOverrides() {
-  if (!debugToolsEnabled) {
-    return;
-  }
-
-  state.debug.overrideAuthBase = "";
-  state.debug.overrideFallbacks = [];
-  state.debug.forceServerUnavailable = false;
-  if (elements.debugForceServerDownInput) {
-    elements.debugForceServerDownInput.checked = false;
-  }
-  log("system", "Debug", "Server override reset");
-  toast("info", t("debug"), t("debugResetDone"));
-  render();
-}
-
-function applyDebugUpdateMock(mode = "clear") {
-  if (!debugToolsEnabled) {
-    return;
-  }
-
-  const version = runtimeAppVersion ? `${runtimeAppVersion}-debug` : "0.0.0-debug";
-  state.debug.updateMockActive = mode !== "clear";
-
-  if (mode === "available") {
-    Object.assign(state.update, {
-      supported: true,
-      checking: false,
-      available: true,
-      downloaded: false,
-      downloading: false,
-      downloadProgress: 0,
-      transferredBytes: 0,
-      sizeBytes: 145 * 1024 * 1024,
-      version,
-      mandatory: false,
-      mandatoryDismissed: false,
-      releaseNotes: "Debug update available",
-      error: "",
-    });
-  } else if (mode === "downloading") {
-    Object.assign(state.update, {
-      supported: true,
-      checking: false,
-      available: true,
-      downloaded: false,
-      downloading: true,
-      downloadProgress: 67,
-      transferredBytes: 97 * 1024 * 1024,
-      sizeBytes: 145 * 1024 * 1024,
-      version,
-      mandatory: false,
-      mandatoryDismissed: false,
-      releaseNotes: "Debug update downloading",
-      error: "",
-    });
-  } else if (mode === "downloaded") {
-    Object.assign(state.update, {
-      supported: true,
-      checking: false,
-      available: true,
-      downloaded: true,
-      downloading: false,
-      downloadProgress: 100,
-      transferredBytes: 145 * 1024 * 1024,
-      sizeBytes: 145 * 1024 * 1024,
-      version,
-      mandatory: false,
-      mandatoryDismissed: false,
-      releaseNotes: "Debug update downloaded",
-      error: "",
-    });
-  } else {
-    state.debug.updateMockActive = false;
-    void window.alterE.update
-      ?.getState?.()
-      .then((next) => syncUpdateState(next))
-      .catch(() => {});
-    render();
-    return;
-  }
-
-  render();
-}
-
-async function debugDownloadLatestFromGithub() {
-  if (!debugToolsEnabled || !window.alterE?.update) {
-    return;
-  }
-
-  try {
-    state.debug.updateMockActive = false;
-    const current = await window.alterE.update.getState();
-    syncUpdateState(current || {});
-
-    log("system", "Debug", "Checking latest update from GitHub...");
-    const checked = await window.alterE.update.check();
-    syncUpdateState(checked || {});
-
-    if (!checked?.available) {
-      toast("info", t("updates"), t("debugNoUpdates"));
-      return;
-    }
-
-    log("system", "Debug", `Downloading latest update ${checked.version || ""}`.trim());
-    const downloadedState = await window.alterE.update.download();
-    syncUpdateState(downloadedState || {});
-  } catch (error) {
-    const message = readableError(error) || "Failed to download update";
-    toast("error", t("updates"), message);
-    log("error", "Debug update download", message);
-  }
-}
-
-function buildDebugSnapshot() {
-  const now = new Date().toISOString();
-  const activeCandidates = buildAuthServerCandidates();
-  return JSON.stringify(
-    {
-      at: now,
-      appVersion: runtimeAppVersion || "",
-      releaseChannel,
-      debugToolsEnabled,
-      authApiBase,
-      authApiFallbacks,
-      activeCandidates,
-      debug: {
-        forceServerUnavailable: state.debug.forceServerUnavailable,
-        overrideAuthBase: state.debug.overrideAuthBase,
-        overrideFallbacks: state.debug.overrideFallbacks,
-      },
-      auth: {
-        authorized: Boolean(state.settings?.authorized),
-        telegramId: state.settings?.telegramId || "",
-        authTokenPresent: Boolean(state.settings?.authToken),
-        pending: state.auth.pending,
-        checking: state.auth.checking,
-        error: state.auth.error || "",
-      },
-      runtime: {
-        channelUrl: telegramChannelUrl,
-        botUrl: currentBotUrl,
-      },
-      lastLogs: state.logs.slice(-40).map((entry) => ({
-        level: entry.level,
-        title: entry.title,
-        message: entry.message,
-        at: entry.timestamp,
-      })),
-    },
-    null,
-    2
-  );
-}
-
-async function copyDebugSnapshot() {
-  const snapshot = buildDebugSnapshot();
-  await window.alterE.clipboard.writeText(snapshot);
-  toast("success", t("debug"), t("debugSnapshotCopied"));
-}
-
-function openDebugBot() {
-  if (!debugBotUrl) {
-    toast("error", t("debug"), t("debugBotUnavailable"));
-    return;
-  }
-  window.alterE.shell.openExternal(debugBotUrl);
 }
 
 function handleDragEnter(event) {
@@ -2273,10 +1997,6 @@ function resetDropTilt() {
 }
 
 function syncUpdateState(next = {}) {
-  if (state.debug.updateMockActive) {
-    return;
-  }
-
   const previousUpdate = { ...state.update };
   state.update = {
     ...state.update,
@@ -2560,27 +2280,10 @@ function renderText() {
   document.querySelector('[data-mode="balanced"]').textContent = t("balanced");
   document.querySelector('[data-mode="source"]').textContent = t("source");
   elements.settingsTitle.textContent = t("settings");
-  if (elements.debugTitle) {
-    elements.debugTitle.textContent = t("debugTitle");
-  }
-  if (elements.debugAuthBaseLabel) elements.debugAuthBaseLabel.textContent = t("debugAuthBase");
-  if (elements.debugFallbacksLabel) elements.debugFallbacksLabel.textContent = t("debugFallbacks");
   elements.notificationsTitle.textContent = t("notifications");
   elements.logsTitle.textContent = t("logs");
   elements.copyLogsButton.textContent = t("copyLogs");
   elements.exportLogsButton.textContent = t("exportLogs");
-  if (elements.debugApplyServerButton) elements.debugApplyServerButton.textContent = t("debugApply");
-  if (elements.debugResetServerButton) elements.debugResetServerButton.textContent = t("debugReset");
-  if (elements.debugForceServerDownLabel) elements.debugForceServerDownLabel.textContent = t("debugForceServerDown");
-  if (elements.debugForceAuthButton) elements.debugForceAuthButton.textContent = t("debugForceAuthOverlay");
-  if (elements.debugRefreshConfigButton) elements.debugRefreshConfigButton.textContent = t("debugRefreshConfig");
-  if (elements.debugUpdateAvailableButton) elements.debugUpdateAvailableButton.textContent = t("debugUpdateAvailable");
-  if (elements.debugUpdateDownloadingButton) elements.debugUpdateDownloadingButton.textContent = t("debugUpdateDownloading");
-  if (elements.debugUpdateDownloadedButton) elements.debugUpdateDownloadedButton.textContent = t("debugUpdateDownloaded");
-  if (elements.debugUpdateClearButton) elements.debugUpdateClearButton.textContent = t("debugUpdateClear");
-  if (elements.debugDownloadLatestButton) elements.debugDownloadLatestButton.textContent = t("debugDownloadLatest");
-  if (elements.debugCopySnapshotButton) elements.debugCopySnapshotButton.textContent = t("debugCopySnapshot");
-  if (elements.debugOpenDebugBotButton) elements.debugOpenDebugBotButton.textContent = t("debugOpenBot");
   elements.authTitle.textContent = t("authTitle");
   elements.authText.textContent = t("authText");
   elements.authButton.textContent = t("authorize");
@@ -2622,10 +2325,6 @@ function renderText() {
   elements.logsButton.title = t("logs");
   elements.notificationsButton.title = t("notifications");
   elements.updateButton.title = t("updates");
-  if (elements.debugButton) {
-    elements.debugButton.title = t("debug");
-    elements.debugButton.setAttribute("aria-label", t("debug"));
-  }
   elements.settingsButton.title = t("settings");
   elements.logsButton.setAttribute("aria-label", t("logs"));
   elements.notificationsButton.setAttribute("aria-label", t("notifications"));
@@ -2756,7 +2455,6 @@ function renderPanels() {
     settings: elements.settingsPanel,
     notifications: elements.notificationsPanel,
     logs: elements.logsPanel,
-    debug: elements.debugPanel,
   };
 
   for (const [name, panel] of Object.entries(panels)) {
@@ -2775,41 +2473,13 @@ function renderPanels() {
   elements.settingsButton.classList.toggle("is-open", state.openPanel === "settings");
   elements.notificationsButton.classList.toggle("is-open", state.openPanel === "notifications");
   elements.logsButton.classList.toggle("is-open", state.openPanel === "logs");
-  elements.debugButton?.classList.toggle("is-open", state.openPanel === "debug");
 
   elements.notificationBadge.hidden = state.unreadNotifications <= 0;
   elements.notificationBadge.textContent = String(Math.min(99, state.unreadNotifications));
 
   renderActivityList(elements.notificationsList, state.notifications, t("emptyNotifications"));
   renderLogConsole();
-  renderDebugPanel();
   renderVersionPreferencesMenu();
-}
-
-function renderDebugPanel() {
-  if (!elements.debugButton || !elements.debugPanel) {
-    return;
-  }
-
-  elements.debugButton.hidden = !debugToolsEnabled;
-  if (!debugToolsEnabled && state.openPanel === "debug") {
-    state.openPanel = "";
-  }
-
-  if (!debugToolsEnabled) {
-    return;
-  }
-
-  if (elements.debugAuthBaseInput && document.activeElement !== elements.debugAuthBaseInput) {
-    elements.debugAuthBaseInput.value = state.debug.overrideAuthBase || authApiBase || "";
-  }
-  if (elements.debugFallbacksInput && document.activeElement !== elements.debugFallbacksInput) {
-    elements.debugFallbacksInput.value =
-      state.debug.overrideFallbacks.length > 0 ? state.debug.overrideFallbacks.join(", ") : authApiFallbacks.join(", ");
-  }
-  if (elements.debugForceServerDownInput) {
-    elements.debugForceServerDownInput.checked = Boolean(state.debug.forceServerUnavailable);
-  }
 }
 
 function renderAuth() {
@@ -3093,9 +2763,6 @@ function getPanelElement(name) {
   }
   if (!hasUpdate) {
     setActionButton(elements.updateButton, "download", t("updates"));
-  }
-  if (name === "debug") {
-    return elements.debugPanel;
   }
   return null;
 }
