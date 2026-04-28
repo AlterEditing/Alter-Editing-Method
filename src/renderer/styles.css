@@ -787,8 +787,11 @@ body[data-theme="light"] .select-pill {
 }
 
 .render-settings-toggle svg {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
+  aspect-ratio: 1 / 1;
+  display: block;
+  flex-shrink: 0;
   stroke: currentColor;
   stroke-width: 2;
   fill: none;
