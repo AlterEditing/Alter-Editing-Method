@@ -1408,7 +1408,6 @@ async function openSupport() {
   const token = String(state.settings.authToken || "");
   const telegramId = normalizeTelegramId(state.settings.telegramId);
   const logsText = createSupportLogText();
-  let supportLogsSent = false;
 
   if (token && telegramId) {
     try {
@@ -1423,25 +1422,14 @@ async function openSupport() {
           logs: logsText,
         }),
       });
-      supportLogsSent = true;
       notify("success", t("support"), t("supportInvoked"));
     } catch (error) {
       log("warning", "Support invoke failed", readableError(error));
+      notify("warning", t("support"), t("supportFailed"));
     }
   }
 
-  try {
-    const opened = Boolean(await window.alterE.shell.openSupportBot());
-    if (!opened) {
-      notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
-    }
-  } catch (error) {
-    log("warning", "Support open failed", readableError(error));
-    notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
-  }
-  if (!supportLogsSent && token && telegramId) {
-    notify("warning", t("support"), t("supportFailed"));
-  }
+  await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
 }
 
 function buildRiskWarningText(issues) {
