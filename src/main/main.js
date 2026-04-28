@@ -1,4 +1,5 @@
 const { app, BrowserWindow, clipboard, dialog, ipcMain, shell } = require("electron");
+const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -364,6 +365,29 @@ function registerShellIpc() {
     }
     shell.showItemInFolder(target);
     return true;
+  });
+
+  ipcMain.handle("support:open-bot", async () => {
+    const urls = ["tg://resolve?domain=alterediting_support_bot", "https://t.me/alterediting_support_bot"];
+    for (const target of urls) {
+      try {
+        const errorMessage = await shell.openExternal(target);
+        if (!errorMessage) {
+          return true;
+        }
+      } catch {
+        // try next strategy
+      }
+      try {
+        await new Promise((resolve) => {
+          exec(`cmd /c start "" "${target}"`, () => resolve());
+        });
+        return true;
+      } catch {
+        // try next strategy
+      }
+    }
+    return false;
   });
 }
 
