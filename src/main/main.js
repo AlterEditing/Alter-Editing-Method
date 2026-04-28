@@ -26,34 +26,6 @@ let closeConfirmResolver = null;
 let closeConfirmTimer = null;
 
 const APP_PROTOCOL = "alterediting";
-loadLocalEnvFile(path.join(process.cwd(), ".env.debug.local"));
-
-function loadLocalEnvFile(filePath) {
-  try {
-    if (!fs.existsSync(filePath)) {
-      return;
-    }
-    const raw = fs.readFileSync(filePath, "utf8");
-    for (const line of raw.split(/\r?\n/)) {
-      const trimmed = String(line || "").trim();
-      if (!trimmed || trimmed.startsWith("#")) {
-        continue;
-      }
-      const separator = trimmed.indexOf("=");
-      if (separator <= 0) {
-        continue;
-      }
-      const key = trimmed.slice(0, separator).trim();
-      if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) {
-        continue;
-      }
-      const value = trimmed.slice(separator + 1).trim();
-      process.env[key] = value.replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
-    }
-  } catch {
-    // Ignore local env load errors.
-  }
-}
 
 function assetPath(...segments) {
   return path.join(app.getAppPath(), "assets", ...segments);
@@ -243,7 +215,7 @@ function flushPendingDeepLink() {
 function registerWindowIpc() {
   ipcMain.handle("app:get-runtime-config", () => {
     const primaryBase = "http://132.243.30.159:3000";
-    const defaultFallbacks = ["http://83.147.241.28"];
+    const defaultFallbacks = ["http://83.147.241.28:3000"];
     const configuredBase = String(process.env.ALTERE_AUTH_API_BASE || "").trim();
     const configuredFallbacks = String(process.env.ALTERE_AUTH_API_FALLBACKS || "")
       .split(",")
@@ -311,7 +283,8 @@ function registerDialogIpc() {
 
     const inputPath = String(payload.inputPath || "");
     const mode = String(payload.mode || "balanced");
-    const defaultPath = createDefaultOutputPath(inputPath, mode);
+    const renderContainer = String(payload.renderContainer || "source");
+    const defaultPath = createDefaultOutputPath(inputPath, mode, renderContainer);
     const isSource = mode === "source";
 
     const result = await dialog.showSaveDialog(mainWindow, {
@@ -345,6 +318,11 @@ function registerVideoIpc() {
       mode: String(payload.mode || "balanced"),
       outputBitrateKbps: Number(payload.outputBitrateKbps || 0),
       sourceVideoBitrateKbps: Number(payload.sourceVideoBitrateKbps || 0),
+      sourceVideoCodec: String(payload.sourceVideoCodec || ""),
+      renderCodec: String(payload.renderCodec || "source"),
+      renderContainer: String(payload.renderContainer || "source"),
+      renderAudioMode: String(payload.renderAudioMode || "source"),
+      renderAudioBitrateKbps: Number(payload.renderAudioBitrateKbps || 0),
       durationSeconds: Number(payload.durationSeconds || 0),
       onProgress: (progress) => sender.send("video:progress", progress),
     });
