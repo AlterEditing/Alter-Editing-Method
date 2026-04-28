@@ -66,9 +66,18 @@ class SettingsStore {
 
 function createDefaultSettings(electronApp) {
   const locale = typeof electronApp?.getLocale === "function" ? electronApp.getLocale() : "";
+  const version = typeof electronApp?.getVersion === "function" ? electronApp.getVersion() : "";
+  const releaseChannel = String(process.env.ALTERE_RELEASE_CHANNEL || "")
+    .trim()
+    .toLowerCase();
+  const defaultAllowPrerelease =
+    releaseChannel === "beta" ||
+    releaseChannel === "alpha" ||
+    /\b(beta|alpha)\b/i.test(String(version || ""));
   return {
     ...DEFAULT_SETTINGS,
     language: normalizeLanguageCode(locale) || DEFAULT_SETTINGS.language,
+    updateAllowPrerelease: defaultAllowPrerelease,
   };
 }
 
@@ -103,7 +112,10 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     : 0;
   const updateRepoOwner = normalizeRepoPart(raw.updateRepoOwner) || defaults.updateRepoOwner;
   const updateRepoName = normalizeRepoPart(raw.updateRepoName) || defaults.updateRepoName;
-  const updateAllowPrerelease = Boolean(raw.updateAllowPrerelease);
+  const updateAllowPrerelease =
+    typeof raw.updateAllowPrerelease === "boolean"
+      ? raw.updateAllowPrerelease
+      : Boolean(defaults.updateAllowPrerelease);
 
   return {
     settingsVersion: defaults.settingsVersion,

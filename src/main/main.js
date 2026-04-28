@@ -250,16 +250,10 @@ function registerWindowIpc() {
       .map((item) => item.trim())
       .filter(Boolean);
     const telegramChannelUrl = String(process.env.ALTERE_TELEGRAM_CHANNEL_URL || "https://t.me/alterediting").trim();
-    const releaseChannel = String(process.env.ALTERE_RELEASE_CHANNEL || "stable").trim().toLowerCase();
-    const debugToolsEnabled = String(process.env.ALTERE_DEBUG_TOOLS || "").trim() === "1" || !app.isPackaged;
-    const debugBotUrl = String(process.env.ALTERE_DEBUG_BOT_URL || "").trim();
     return {
       authApiBase: configuredBase || primaryBase,
       authApiFallbacks: configuredFallbacks.length ? configuredFallbacks : defaultFallbacks,
       telegramChannelUrl,
-      releaseChannel: releaseChannel || "stable",
-      debugToolsEnabled,
-      debugBotUrl,
       appVersion: app.getVersion(),
       isPackaged: app.isPackaged,
     };
