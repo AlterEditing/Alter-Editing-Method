@@ -1429,7 +1429,14 @@ async function openSupport() {
     }
   }
 
-  await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
+  try {
+    const opened = await window.alterE.shell.openSupportLink(DEFAULT_SUPPORT_BOT_URL);
+    if (!opened) {
+      notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
+    }
+  } catch {
+    notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
+  }
 }
 
 function buildRiskWarningText(issues) {

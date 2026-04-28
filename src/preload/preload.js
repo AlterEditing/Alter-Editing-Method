@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld("alterE", {
     openExternal: (url) => ipcRenderer.invoke("shell:open-external", url),
     showItem: (filePath) => ipcRenderer.invoke("shell:show-item", filePath),
     openSupportBot: () => ipcRenderer.invoke("support:open-bot"),
+    openSupportLink: (url) => ipcRenderer.invoke("support:open-link", url),
   },
   clipboard: {
     writeText: (text) => ipcRenderer.invoke("clipboard:write-text", text),

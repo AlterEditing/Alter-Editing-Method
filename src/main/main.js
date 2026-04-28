@@ -367,6 +367,27 @@ function registerShellIpc() {
     return true;
   });
 
+  ipcMain.handle("support:open-link", async (_event, url) => {
+    const target = String(url || "").trim();
+    if (!/^https?:\/\//i.test(target)) {
+      return false;
+    }
+    try {
+      const errorMessage = await shell.openExternal(target);
+      if (!errorMessage) return true;
+    } catch {
+      // fallback below
+    }
+    try {
+      await new Promise((resolve) => {
+        exec(`cmd /c start "" "${target}"`, () => resolve());
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
   ipcMain.handle("support:open-bot", async () => {
     const urls = ["tg://resolve?domain=alterediting_support_bot", "https://t.me/alterediting_support_bot"];
     for (const target of urls) {
