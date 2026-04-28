@@ -1514,6 +1514,17 @@ async function startOrCancelPatch() {
     const message = readableError(error);
     const cancelled = /cancelled|canceled|patch_cancelled|sigterm|signal/i.test(message);
     log(cancelled ? "warning" : "error", cancelled ? tEn("cancelled") : tEn("failed"), compactError(message));
+    if (!cancelled) {
+      log(
+        "error",
+        "Render diagnostics",
+        [
+          formatDiagnosticsBlock("video", getVideoDiagnostics()),
+          formatDiagnosticsBlock("render", getRenderDiagnostics()),
+          formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
+        ].join(" || ")
+      );
+    }
     notify(cancelled ? "warning" : "error", cancelled ? t("cancelled") : t("failed"));
   } finally {
     state.working = false;
@@ -1860,6 +1871,14 @@ async function startTelegramAuthorization() {
     } else {
       toast("error", t("authFailed"), state.auth.error);
     }
+    log(
+      "error",
+      "Auth request diagnostics",
+      [
+        formatDiagnosticsBlock("auth", getAuthDiagnostics()),
+        formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
+      ].join(" || ")
+    );
     render();
   }
 }
@@ -1945,6 +1964,14 @@ function startAuthPolling(sessionId) {
       state.auth.error = serverUnavailable ? "" : readableError(error) || t("authFailed");
       if (serverUnavailable) {
         log("warning", "Authorization polling", `Auth server unavailable | ${readableError(error)}`);
+        log(
+          "warning",
+          "Auth polling diagnostics",
+          [
+            formatDiagnosticsBlock("auth", getAuthDiagnostics()),
+            formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
+          ].join(" || ")
+        );
       }
       render();
     }
@@ -2008,6 +2035,14 @@ async function exchangeAuthorization(sessionId) {
     } else {
       toast("error", t("authFailed"), state.auth.error);
     }
+    log(
+      "error",
+      "Auth exchange diagnostics",
+      [
+        formatDiagnosticsBlock("auth", getAuthDiagnostics()),
+        formatDiagnosticsBlock("error", getErrorDiagnostics(error)),
+      ].join(" || ")
+    );
   } finally {
     render();
   }
@@ -3379,6 +3414,67 @@ function compactError(text, maxLength = 180) {
     return firstLine;
   }
   return `${firstLine.slice(0, maxLength - 1)}...`;
+}
+
+function formatDiagnosticsBlock(title, data = {}) {
+  const lines = Object.entries(data)
+    .map(([key, value]) => `${key}=${value === undefined || value === null ? "-" : String(value)}`)
+    .join(" | ");
+  return `${title}: ${lines}`;
+}
+
+function getVideoDiagnostics() {
+  const v = state.video || {};
+  return {
+    name: v.name || "-",
+    path: v.path || "-",
+    container: v.container || v.format || "-",
+    codec: v.codec || v.videoCodec || "-",
+    durationSec: v.durationSeconds || 0,
+    width: v.width || 0,
+    height: v.height || 0,
+    fps: v.fps || 0,
+    videoKbps: v.videoBitrateKbps || v.bitrateKbps || 0,
+    hasAudio: Boolean(v.hasAudio),
+    audioCodec: v.audioCodec || "-",
+    audioKbps: v.audioBitrateKbps || 0,
+  };
+}
+
+function getRenderDiagnostics() {
+  return {
+    mode: state.mode || "-",
+    outputKbps: state.outputBitrateKbps || 0,
+    renderCodec: normalizeRenderCodec(state.settings?.renderCodec),
+    renderContainer: normalizeRenderContainer(state.settings?.renderContainer),
+    renderAudioMode: normalizeRenderAudioMode(state.settings?.renderAudioMode),
+    renderAudioKbps: getRenderAudioBitrateKbps(),
+    customRender: isCustomRenderSettingsEnabled(),
+  };
+}
+
+function getAuthDiagnostics() {
+  return {
+    authApiBase,
+    authFallbacks: buildAuthServerCandidates().join(","),
+    authorized: Boolean(state.settings?.authorized),
+    telegramId: state.settings?.telegramId || "-",
+    authPending: Boolean(state.auth?.pending),
+    authChecking: Boolean(state.auth?.checking),
+    sessionId: state.auth?.sessionId || "-",
+    offlineGuest: Boolean(state.auth?.offlineGuest),
+    language: state.settings?.language || "-",
+  };
+}
+
+function getErrorDiagnostics(error) {
+  return {
+    error: readableError(error),
+    status: error?.status || error?.data?.status || "-",
+    baseUrl: error?.baseUrl || "-",
+    code: error?.code || "-",
+    stack: compactError(String(error?.stack || ""), 500),
+  };
 }
 
 function pathToFileUrl(filePath) {
