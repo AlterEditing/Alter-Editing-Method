@@ -1430,12 +1430,24 @@ async function openSupport() {
   }
 
   try {
-    const opened = await window.alterE.shell.openSupportLink(DEFAULT_SUPPORT_BOT_URL);
+    const openByBridge =
+      (window.alterE &&
+        window.alterE.shell &&
+        (window.alterE.shell.openSupportLink || window.alterE.shell.openExternal)) ||
+      null;
+    const opened = openByBridge
+      ? await openByBridge(DEFAULT_SUPPORT_BOT_URL)
+      : window.open(DEFAULT_SUPPORT_BOT_URL, "_blank", "noopener,noreferrer");
     if (!opened) {
       notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
     }
-  } catch {
-    notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
+  } catch (error) {
+    log("warning", "Support link open failed", readableError(error));
+    try {
+      window.open(DEFAULT_SUPPORT_BOT_URL, "_blank", "noopener,noreferrer");
+    } catch {
+      notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
+    }
   }
 }
 
