@@ -40,6 +40,8 @@ contextBridge.exposeInMainWorld("alterE", {
   },
   logs: {
     export: (text) => ipcRenderer.invoke("logs:export", text),
+    saveCritical: (payload) => ipcRenderer.invoke("logs:save-critical", payload),
+    openFolder: () => ipcRenderer.invoke("logs:open-folder"),
   },
   app: {
     getRuntimeConfig: () => ipcRenderer.invoke("app:get-runtime-config"),

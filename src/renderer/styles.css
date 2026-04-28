@@ -534,7 +534,8 @@ body[data-theme="light"] .video-preview {
 
 .file-title,
 .file-meta,
-.file-stream {
+.file-stream,
+.file-codec {
   position: absolute;
   left: 24px;
   right: 24px;
@@ -566,12 +567,19 @@ body[data-theme="light"] .video-preview {
   color: rgba(219, 229, 236, 0.52);
 }
 
+.file-codec {
+  top: 142px;
+  font-size: 10px;
+  color: rgba(219, 229, 236, 0.52);
+}
+
 body[data-theme="light"] .file-title {
   color: rgba(16, 21, 26, 0.94);
 }
 
 body[data-theme="light"] .file-meta,
-body[data-theme="light"] .file-stream {
+body[data-theme="light"] .file-stream,
+body[data-theme="light"] .file-codec {
   color: rgba(28, 35, 40, 0.7);
 }
 
@@ -587,6 +595,10 @@ body[data-theme="light"] .file-stream {
   color: rgba(235, 244, 250, 0.84);
 }
 
+.drop-zone.has-video .file-codec {
+  color: rgba(235, 244, 250, 0.84);
+}
+
 body[data-theme="light"] .drop-zone.has-video .file-title {
   color: rgba(255, 255, 255, 0.99);
 }
@@ -596,6 +608,10 @@ body[data-theme="light"] .drop-zone.has-video .file-meta {
 }
 
 body[data-theme="light"] .drop-zone.has-video .file-stream {
+  color: rgba(235, 244, 250, 0.84);
+}
+
+body[data-theme="light"] .drop-zone.has-video .file-codec {
   color: rgba(235, 244, 250, 0.84);
 }
 
@@ -770,6 +786,13 @@ body[data-theme="light"] .select-pill {
   margin-top: clamp(12px, 3vh, 18px);
 }
 
+.bitrate-label-row {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+
 .bitrate-slider {
   width: 100%;
   height: 28px;
@@ -884,6 +907,12 @@ body[data-theme="light"] .bitrate-slider::-webkit-slider-thumb {
   gap: 4px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.render-settings-grid label.is-custom-field > span::after {
+  content: " !";
+  color: var(--warning);
+  font-weight: 800;
 }
 
 .render-settings-grid select,
@@ -1105,7 +1134,7 @@ body[data-theme="light"] .patch-button {
   position: absolute;
   inset: auto 8px 7px;
   z-index: 2;
-  display: block;
+  display: none;
   height: 3px;
   overflow: hidden;
   border-radius: 999px;
@@ -1362,6 +1391,39 @@ body[data-theme="light"] .floating-panel {
 .panel-tool-button:disabled {
   cursor: not-allowed;
   opacity: 0.42;
+}
+
+.panel-tool-icon-button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--control-bg);
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.panel-tool-icon-button:hover {
+  color: var(--text);
+  background: var(--control-hover);
+  transform: translateY(-1px);
+}
+
+.panel-tool-icon-button svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .settings-panel {
@@ -2011,7 +2073,8 @@ body[data-theme="light"] .toast {
 
   .file-title,
   .file-meta,
-  .file-stream {
+  .file-stream,
+  .file-codec {
     left: 16px;
     right: 16px;
   }
@@ -2084,6 +2147,10 @@ body[data-theme="light"] .toast {
 
   .file-stream {
     top: 106px;
+  }
+
+  .file-codec {
+    top: 122px;
   }
 
   .output-panel {

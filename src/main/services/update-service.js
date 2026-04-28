@@ -196,7 +196,8 @@ function createUpdateService({ onStateChange, onLog }) {
       return true;
     }
 
-    setImmediate(() => autoUpdater.quitAndInstall(false, true));
+    // Silent install keeps the existing installation path and does not show installer UI.
+    setImmediate(() => autoUpdater.quitAndInstall(true, true));
     return true;
   }
 

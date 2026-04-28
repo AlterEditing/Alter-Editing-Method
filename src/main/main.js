@@ -437,6 +437,25 @@ function registerUtilityIpc() {
     await fs.promises.writeFile(result.filePath, String(text || ""), "utf8");
     return result.filePath;
   });
+
+  ipcMain.handle("logs:save-critical", async (_event, payload = {}) => {
+    const reasonRaw = String(payload?.reason || "critical-error").trim().toLowerCase();
+    const reason = reasonRaw.replace(/[^a-z0-9._-]+/g, "-").replace(/-+/g, "-").slice(0, 64) || "critical-error";
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const logsDir = path.join(app.getPath("userData"), "critical-logs");
+    const filePath = path.join(logsDir, `${stamp}-${reason}.log`);
+    const content = String(payload?.text || "");
+    await fs.promises.mkdir(logsDir, { recursive: true });
+    await fs.promises.writeFile(filePath, content, "utf8");
+    return { filePath, logsDir };
+  });
+
+  ipcMain.handle("logs:open-folder", async () => {
+    const logsDir = path.join(app.getPath("userData"), "critical-logs");
+    await fs.promises.mkdir(logsDir, { recursive: true });
+    await shell.openPath(logsDir);
+    return logsDir;
+  });
 }
 
 function registerUpdateIpc() {
