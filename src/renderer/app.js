@@ -1410,36 +1410,6 @@ async function openSupport() {
   } catch (error) {
     log("warning", "Support open failed", readableError(error));
   }
-
-  const telegramId = normalizeTelegramId(state.settings.telegramId);
-  const token = String(state.settings.authToken || "");
-  const logsText = createSupportLogText();
-
-  if (!telegramId) return;
-
-  const headers = {
-    "Content-Type": "application/json",
-  };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  authFetch("/support/app-help", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      appVersion: runtimeAppVersion || "",
-      telegramId,
-      logs: logsText,
-    }),
-  })
-    .then(() => {
-      notify("success", t("support"), t("supportInvoked"));
-    })
-    .catch((error) => {
-      log("warning", "Support invoke failed", readableError(error));
-      notify("warning", t("support"), t("supportFailed"));
-    });
 }
 
 function buildRiskWarningText(issues) {
