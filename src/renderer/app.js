@@ -1408,11 +1408,22 @@ async function openSupport() {
   const token = String(state.settings.authToken || "");
   const telegramId = normalizeTelegramId(state.settings.telegramId);
   const logsText = createSupportLogText();
+  const supportUrl = DEFAULT_SUPPORT_BOT_URL;
 
   try {
-    await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
+    const opened = await window.alterE.shell.openExternal(supportUrl);
+    if (!opened) {
+      window.open(supportUrl, "_blank", "noopener,noreferrer");
+      notify("warning", t("support"), supportUrl);
+    }
   } catch (error) {
     log("warning", "Support open failed", readableError(error));
+    try {
+      window.open(supportUrl, "_blank", "noopener,noreferrer");
+      notify("warning", t("support"), supportUrl);
+    } catch {
+      // ignore fallback error
+    }
   }
 
   if (token && telegramId) {

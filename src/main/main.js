@@ -344,13 +344,17 @@ function registerVideoIpc() {
 }
 
 function registerShellIpc() {
-  ipcMain.handle("shell:open-external", (_event, url) => {
+  ipcMain.handle("shell:open-external", async (_event, url) => {
     const target = String(url || "");
-    if (!/^https?:\/\//i.test(target)) {
+    if (!/^(https?:\/\/|tg:\/\/)/i.test(target)) {
       return false;
     }
-    shell.openExternal(target);
-    return true;
+    try {
+      await shell.openExternal(target);
+      return true;
+    } catch {
+      return false;
+    }
   });
 
   ipcMain.handle("shell:show-item", (_event, filePath) => {
