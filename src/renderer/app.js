@@ -1411,18 +1411,22 @@ async function openSupport() {
     log("warning", "Support open failed", readableError(error));
   }
 
-  const token = String(state.settings.authToken || "");
   const telegramId = normalizeTelegramId(state.settings.telegramId);
+  const token = String(state.settings.authToken || "");
   const logsText = createSupportLogText();
 
-  if (!token || !telegramId) return;
+  if (!telegramId) return;
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   authFetch("/support/app-help", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify({
       appVersion: runtimeAppVersion || "",
       telegramId,
