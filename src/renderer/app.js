@@ -1405,50 +1405,36 @@ function createSupportLogText() {
 }
 
 async function openSupport() {
+  try {
+    await window.alterE.shell.openExternal(DEFAULT_SUPPORT_BOT_URL);
+  } catch (error) {
+    log("warning", "Support open failed", readableError(error));
+  }
+
   const token = String(state.settings.authToken || "");
   const telegramId = normalizeTelegramId(state.settings.telegramId);
   const logsText = createSupportLogText();
 
-  if (token && telegramId) {
-    try {
-      await authFetch("/support/app-help", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          appVersion: runtimeAppVersion || "",
-          logs: logsText,
-        }),
-      });
+  if (!token || !telegramId) return;
+
+  authFetch("/support/app-help", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      appVersion: runtimeAppVersion || "",
+      logs: logsText,
+    }),
+  })
+    .then(() => {
       notify("success", t("support"), t("supportInvoked"));
-    } catch (error) {
+    })
+    .catch((error) => {
       log("warning", "Support invoke failed", readableError(error));
       notify("warning", t("support"), t("supportFailed"));
-    }
-  }
-
-  try {
-    const openByBridge =
-      (window.alterE &&
-        window.alterE.shell &&
-        (window.alterE.shell.openSupportLink || window.alterE.shell.openExternal)) ||
-      null;
-    const opened = openByBridge
-      ? await openByBridge(DEFAULT_SUPPORT_BOT_URL)
-      : window.open(DEFAULT_SUPPORT_BOT_URL, "_blank", "noopener,noreferrer");
-    if (!opened) {
-      notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
-    }
-  } catch (error) {
-    log("warning", "Support link open failed", readableError(error));
-    try {
-      window.open(DEFAULT_SUPPORT_BOT_URL, "_blank", "noopener,noreferrer");
-    } catch {
-      notify("warning", t("support"), DEFAULT_SUPPORT_BOT_URL);
-    }
-  }
+    });
 }
 
 function buildRiskWarningText(issues) {
