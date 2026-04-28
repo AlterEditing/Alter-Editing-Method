@@ -1410,6 +1410,27 @@ async function openSupport() {
   const logsText = createSupportLogText();
   const supportUrl = DEFAULT_SUPPORT_BOT_URL;
   const supportTgDeepLink = "tg://resolve?domain=alterediting_support_bot";
+  let supportLogsSent = false;
+
+  if (token && telegramId) {
+    try {
+      await authFetch("/support/app-help", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appVersion: runtimeAppVersion || "",
+          logs: logsText,
+        }),
+      });
+      supportLogsSent = true;
+      notify("success", t("support"), t("supportInvoked"));
+    } catch (error) {
+      log("warning", "Support invoke failed", readableError(error));
+    }
+  }
 
   let opened = false;
   try {
@@ -1432,25 +1453,8 @@ async function openSupport() {
       log("warning", "Support fallback window.open failed", readableError(error));
     }
   }
-
-  if (token && telegramId) {
-    authFetch("/support/app-help", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          appVersion: runtimeAppVersion || "",
-          logs: logsText,
-        }),
-      })
-      .then(() => {
-        notify("success", t("support"), t("supportInvoked"));
-      })
-      .catch((error) => {
-        log("warning", "Support invoke failed", readableError(error));
-      });
+  if (!supportLogsSent && token && telegramId) {
+    notify("warning", t("support"), t("supportFailed"));
   }
 }
 
