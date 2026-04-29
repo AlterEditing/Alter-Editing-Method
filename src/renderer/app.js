@@ -47,8 +47,13 @@ const translations = {
     authText: "Confirm your subscription in Telegram to sign in.",
     authChecking: "Checking authorization...",
     authWaiting: "Confirm the subscription in Telegram, then return here.",
+    authDataReceived: "Authorization data received",
+    authServerCheck: "Server validation",
+    authServerCheckDesc: "Checking subscription on server...",
+    authKeyLabel: "Key",
     authFailed: "Authorization failed. Try again.",
     authServerUnavailable: "Authorization server is unavailable. Please try again later.",
+    offlineLogoutInPrefix: "If the server remains unavailable, your session will be logged out in",
     offlineAccessExpired: "Offline access time has expired. Please authorize again when the server is available.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
@@ -163,8 +168,13 @@ const translations = {
     authText: "Подтвердите подписку в Telegram чтобы войти.",
     authChecking: "Проверяем авторизацию...",
     authWaiting: "Подтвердите подписку в Telegram и вернитесь сюда.",
+    authDataReceived: "Данные авторизации получены",
+    authServerCheck: "Серверная проверка",
+    authServerCheckDesc: "Проверяем подписку на сервере...",
+    authKeyLabel: "Ключ",
     authFailed: "Ошибка авторизации. Попробуйте снова.",
     authServerUnavailable: "Сервер авторизации недоступен. Пожалуйста, попробуйте позже.",
+    offlineLogoutInPrefix: "Если сервер не восстановится, сессия будет завершена через",
     offlineAccessExpired: "Время офлайн-доступа истекло. Выполните авторизацию снова, когда сервер станет доступен.",
     authSuccess: "Авторизация выполнена",
     subscriptionRequired: "Нужна подписка",
@@ -259,8 +269,13 @@ const translations = {
     authText: "Giris yapmak icin Telegram aboneligini onaylayin.",
     authChecking: "Yetki kontrol ediliyor...",
     authWaiting: "Telegram aboneligini onaylayin ve buraya donun.",
+    authDataReceived: "Yetkilendirme verileri alindi",
+    authServerCheck: "Sunucu dogrulamasi",
+    authServerCheckDesc: "Sunucuda abonelik kontrol ediliyor...",
+    authKeyLabel: "Anahtar",
     authFailed: "Yetkilendirme basarisiz. Tekrar deneyin.",
     authServerUnavailable: "Yetkilendirme sunucusu kullanilamiyor. Lutfen daha sonra tekrar deneyin.",
+    offlineLogoutInPrefix: "Sunucu hala kullanilamazsa oturumunuz su surede kapatilacak",
     offlineAccessExpired: "Cevrimdisi erisim suresi doldu. Sunucu ulasilabilir oldugunda yeniden yetkilendirin.",
     authSuccess: "Authorization complete",
     subscriptionRequired: "Subscription required",
@@ -390,13 +405,16 @@ let authApiFallbacks = [];
 let telegramChannelUrl = DEFAULT_TELEGRAM_CHANNEL_URL;
 let currentBotUrl = "";
 let runtimeAppVersion = "";
-const AUTH_POLL_INTERVAL_MS = 2000;
+const AUTH_POLL_INTERVAL_MS = 1200;
+const AUTH_CLICK_COOLDOWN_MS = 10000;
 const AUTH_POLL_TIMEOUT_MS = 10 * 60 * 1000;
 const AUTH_SUBSCRIPTION_RETRY_MS = 30 * 1000;
 const AUTH_FETCH_TIMEOUT_MS = 7000;
 const AUTH_SERVER_CONFIG_PATH = "/client-config";
 const AUTH_OFFLINE_BOT_NONCE_TTL_MS = 20 * 60 * 1000;
 const AUTH_OFFLINE_MAX_MS = 24 * 60 * 60 * 1000;
+const AUTH_STARTUP_VERIFY_TIMEOUT_MS = 8000;
+const AUTH_OFFLINE_WARNING_COOLDOWN_MS = 5 * 60 * 1000;
 const RENDER_DEFAULTS = Object.freeze({
   codec: "source",
   container: "source",
@@ -434,6 +452,15 @@ const state = {
     sessionId: "",
     startedAt: 0,
     pollTimer: null,
+    pollInFlight: false,
+    exchangeInFlight: false,
+    exchangedSessionId: "",
+    authRequestInFlight: false,
+    activeBotUrl: "",
+    lastAuthClickAt: 0,
+    lastOfflineWarningAt: 0,
+    cooldownUntil: 0,
+    cooldownTimer: null,
     subscriptionCheckedThisSession: false,
     subscriptionCheckInFlight: false,
     subscriptionRetryTimer: null,
@@ -920,8 +947,15 @@ async function init() {
     await wait(BOOT_MIN_VISIBLE_MS - elapsed);
   }
   await waitForUiReady();
+  try {
+    await Promise.race([
+      verifyStoredAuthorization(),
+      wait(AUTH_STARTUP_VERIFY_TIMEOUT_MS),
+    ]);
+  } catch (error) {
+    log("warning", "Startup auth precheck failed", readableError(error));
+  }
   finishBootSequence();
-  verifyStoredAuthorization();
   window.addEventListener("online", () => {
     scheduleSubscriptionCheck("network", 300);
     scheduleGuestAuthorizationCheck(300);
@@ -1586,7 +1620,12 @@ async function verifyStoredAuthorization() {
   const token = String(state.settings.authToken || "");
   const storedTelegramId = normalizeTelegramId(state.settings.telegramId);
   if (!token || !storedTelegramId) {
-    await handleMissingAuthorization();
+    // No local auth data (first run / after logout): no reason to ping server.
+    state.auth.checking = false;
+    state.auth.error = "";
+    state.auth.offlineGuest = false;
+    state.auth.degradedReason = "";
+    render();
     return;
   }
 
@@ -1623,6 +1662,26 @@ async function ensureOfflineAuthStartedAt() {
   const now = Date.now();
   state.settings = await window.alterE.settings.update({ offlineAuthStartedAt: now });
   return now;
+}
+
+function formatOfflineRemaining(remainingMs) {
+  const safe = Math.max(0, Number(remainingMs) || 0);
+  const totalMinutes = Math.max(1, Math.ceil(safe / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (state.settings.language === "ru") {
+    if (hours > 0 && minutes > 0) return `${hours} ч ${minutes} мин`;
+    if (hours > 0) return `${hours} ч`;
+    return `${minutes} мин`;
+  }
+  if (state.settings.language === "tr") {
+    if (hours > 0 && minutes > 0) return `${hours} sa ${minutes} dk`;
+    if (hours > 0) return `${hours} sa`;
+    return `${minutes} dk`;
+  }
+  if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${minutes}m`;
 }
 
 async function handleMissingAuthorization() {
@@ -1765,6 +1824,16 @@ async function checkStoredSubscriptionOnce(reason = "auto") {
         retryLater = true;
         state.auth.error = readableError(error);
         log("warning", "Subscription check postponed", "Auth server unavailable; local session remains active");
+        const now = Date.now();
+        if (now - Number(state.auth.lastOfflineWarningAt || 0) >= AUTH_OFFLINE_WARNING_COOLDOWN_MS) {
+          state.auth.lastOfflineWarningAt = now;
+          const remaining = Math.max(0, AUTH_OFFLINE_MAX_MS - elapsed);
+          toast(
+            "warning",
+            t("authServerUnavailable"),
+            `${t("offlineLogoutInPrefix")} ${formatOfflineRemaining(remaining)}.`
+          );
+        }
       }
     }
   } finally {
@@ -1845,8 +1914,7 @@ async function openAuthBotFromKeyFlow() {
   const fallbackBot = "https://t.me/alterediting_bot";
   const botUrl = normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true }) || fallbackBot;
   try {
-    const opened = await window.alterE.shell.openExternal(botUrl);
-    log("system", "Open auth bot (key flow)", `url=${botUrl} | opened=${opened ? "true" : "false"}`);
+    const opened = await openTelegramSmart(botUrl, "key-flow");
     if (!opened) {
       toast("warning", "Authorization", "Не удалось открыть Telegram. Проверьте Telegram/браузер по умолчанию.");
     }
@@ -1854,6 +1922,69 @@ async function openAuthBotFromKeyFlow() {
     log("error", "Open auth bot (key flow) failed", `url=${botUrl}`);
     toast("warning", "Authorization", state.settings.language === "ru" ? "Не удалось открыть бота." : "Unable to open bot.");
   }
+}
+
+function buildTelegramOpenCandidates(rawUrl) {
+  const target = String(rawUrl || "").trim();
+  if (!target) return [];
+  const urls = [];
+  try {
+    const parsed = new URL(target);
+    const protocol = String(parsed.protocol || "").toLowerCase();
+    if (protocol === "tg:") {
+      urls.push(target);
+    }
+    const host = String(parsed.hostname || "").toLowerCase();
+    if (host === "t.me" || host === "telegram.me" || host.endsWith(".t.me")) {
+      const path = String(parsed.pathname || "").replace(/^\/+/, "");
+      const username = path.split("/")[0] || "";
+      if (username) {
+        const start = String(parsed.searchParams.get("start") || "").trim();
+        urls.push(start ? `tg://resolve?domain=${username}&start=${encodeURIComponent(start)}` : `tg://resolve?domain=${username}`);
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
+  urls.push(target);
+  return Array.from(new Set(urls));
+}
+
+function maskSecret(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "-";
+  if (raw.length <= 10) return `${raw.slice(0, 2)}***${raw.slice(-2)}`;
+  return `${raw.slice(0, 6)}...${raw.slice(-4)}`;
+}
+
+async function openTelegramSmart(rawUrl, logContext = "telegram") {
+  const candidates = buildTelegramOpenCandidates(rawUrl);
+  for (const candidate of candidates) {
+    try {
+      const opened = await window.alterE.shell.openExternal(candidate);
+      log("system", `Open Telegram (${logContext})`, `candidate=${candidate} | opened=${opened ? "true" : "false"}`);
+      if (opened) return true;
+    } catch {
+      log("warning", `Open Telegram (${logContext}) failed`, `candidate=${candidate}`);
+    }
+  }
+  return false;
+}
+
+function scheduleAuthCooldownRender() {
+  if (state.auth.cooldownTimer) {
+    clearTimeout(state.auth.cooldownTimer);
+    state.auth.cooldownTimer = null;
+  }
+  const remaining = Math.max(0, Number(state.auth.cooldownUntil || 0) - Date.now());
+  if (remaining <= 0) {
+    return;
+  }
+  state.auth.cooldownTimer = setTimeout(() => {
+    state.auth.cooldownTimer = null;
+    renderAuth();
+    scheduleAuthCooldownRender();
+  }, Math.min(250, remaining));
 }
 
 function parseAuthorizationKey(rawKey) {
@@ -1869,6 +2000,8 @@ async function applyAuthorizationKeyFromInput() {
   }
 
   try {
+    notify("info", t("authDataReceived"), `${t("authKeyLabel")}: ${maskSecret(preparedKey)}`);
+    notify("info", t("authServerCheck"), t("authServerCheckDesc"));
     state.auth.checking = true;
     render();
     const data = await authFetch("/auth/key-exchange", {
@@ -1902,7 +2035,7 @@ async function applyAuthorizationKeyFromInput() {
       elements.authKeyInput.value = "";
     }
     log("success", "Authorization by key", `telegram_id=${telegramId}`);
-    notify("success", t("authSuccess"), `ID: ${telegramId}`);
+    notify("success", t("authSuccess"));
   } catch {
     state.auth.checking = false;
     toast("warning", "Authorization", state.settings.language === "ru" ? "Неверный или просроченный ключ." : "Invalid or expired authorization key.");
@@ -1911,15 +2044,41 @@ async function applyAuthorizationKeyFromInput() {
 }
 
 async function startTelegramAuthorization() {
-  if (state.auth.pending || state.auth.checking) {
+  if (state.auth.checking) {
     return;
   }
+  const now = Date.now();
+  if (now - Number(state.auth.lastAuthClickAt || 0) < AUTH_CLICK_COOLDOWN_MS) {
+    renderAuth();
+    return;
+  }
+  state.auth.lastAuthClickAt = now;
+  state.auth.cooldownUntil = now + AUTH_CLICK_COOLDOWN_MS;
+  scheduleAuthCooldownRender();
+
+  // If auth session is already pending, just reopen bot link without creating a new server session.
+  if (state.auth.pending && state.auth.sessionId) {
+    const reopenUrl = state.auth.activeBotUrl || normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true });
+    if (reopenUrl) {
+      const opened = await openTelegramSmart(reopenUrl, `auth-reopen session=${state.auth.sessionId}`);
+      if (!opened) {
+        toast("warning", "Authorization", "Не удалось открыть Telegram. Проверьте Telegram/браузер по умолчанию.");
+      }
+    }
+    return;
+  }
+
+  if (state.auth.authRequestInFlight) {
+    return;
+  }
+  state.auth.authRequestInFlight = true;
 
   stopAuthPolling();
   state.auth.pending = true;
   state.auth.error = "";
   state.auth.sessionId = "";
   state.auth.startedAt = Date.now();
+  state.auth.exchangedSessionId = "";
   render();
 
   try {
@@ -1941,12 +2100,8 @@ async function startTelegramAuthorization() {
     }
 
     log("system", "Telegram authorization started", state.auth.sessionId);
-    const opened = await window.alterE.shell.openExternal(botUrl);
-    log(
-      "system",
-      "Open Telegram auth URL",
-      `url=${botUrl} | session=${state.auth.sessionId || "-"} | opened=${opened ? "true" : "false"}`
-    );
+    state.auth.activeBotUrl = botUrl;
+    const opened = await openTelegramSmart(botUrl, `auth-start session=${state.auth.sessionId || "-"}`);
     if (!opened) {
       throw new Error("Failed to open Telegram");
     }
@@ -1970,12 +2125,8 @@ async function startTelegramAuthorization() {
           state.auth.offlineBotNonce = offlineNonce;
           state.auth.offlineBotExpiresAt = Date.now() + AUTH_OFFLINE_BOT_NONCE_TTL_MS;
           const targetUrl = offlineBotUrl || fallbackBotUrl;
-          const opened = await window.alterE.shell.openExternal(targetUrl);
-          log(
-            "warning",
-            "Open Telegram offline auth URL",
-            `url=${targetUrl} | nonce=${offlineNonce} | opened=${opened ? "true" : "false"}`
-          );
+          state.auth.activeBotUrl = targetUrl;
+          const opened = await openTelegramSmart(targetUrl, `offline nonce=${offlineNonce}`);
           if (!opened) {
             throw new Error("Failed to open Telegram fallback");
           }
@@ -1996,6 +2147,8 @@ async function startTelegramAuthorization() {
       ].join(" || ")
     );
     render();
+  } finally {
+    state.auth.authRequestInFlight = false;
   }
 }
 
@@ -2049,28 +2202,39 @@ function handleAuthDeepLink(rawUrl) {
   state.auth.error = "";
   state.auth.sessionId = sessionId;
   state.auth.startedAt = Date.now();
+  state.auth.exchangedSessionId = "";
+  notify("info", t("authDataReceived"), `Session: ${maskSecret(sessionId)}`);
   startAuthPolling(sessionId);
   render();
 }
 
 function startAuthPolling(sessionId) {
   stopAuthPolling();
+  state.auth.pollInFlight = false;
   const poll = async () => {
+    if (state.auth.pollInFlight) {
+      return;
+    }
     if (!state.auth.pending || state.auth.sessionId !== sessionId) {
       stopAuthPolling();
       return;
     }
-
-    if (Date.now() - state.auth.startedAt > AUTH_POLL_TIMEOUT_MS) {
+    if (state.auth.exchangedSessionId === sessionId) {
       stopAuthPolling();
-      state.auth.pending = false;
-      state.auth.error = "Login session expired";
-      toast("warning", t("authFailed"), state.auth.error);
-      render();
       return;
     }
+    state.auth.pollInFlight = true;
 
     try {
+      if (Date.now() - state.auth.startedAt > AUTH_POLL_TIMEOUT_MS) {
+        stopAuthPolling();
+        state.auth.pending = false;
+        state.auth.error = "Login session expired";
+        toast("warning", t("authFailed"), state.auth.error);
+        render();
+        return;
+      }
+
       const data = await authFetch(`/auth/session/${encodeURIComponent(sessionId)}`);
       if (data.status === "approved") {
         await exchangeAuthorization(sessionId);
@@ -2090,6 +2254,8 @@ function startAuthPolling(sessionId) {
         );
       }
       render();
+    } finally {
+      state.auth.pollInFlight = false;
     }
   };
 
@@ -2102,6 +2268,7 @@ function stopAuthPolling() {
     clearInterval(state.auth.pollTimer);
     state.auth.pollTimer = null;
   }
+  state.auth.pollInFlight = false;
 }
 
 function stopSubscriptionRetry() {
@@ -2112,13 +2279,28 @@ function stopSubscriptionRetry() {
 }
 
 async function exchangeAuthorization(sessionId) {
+  if (state.auth.exchangeInFlight) {
+    return;
+  }
+  if (state.auth.exchangedSessionId === sessionId) {
+    return;
+  }
+  state.auth.exchangeInFlight = true;
   stopAuthPolling();
   try {
+    notify("info", t("authServerCheck"), t("authServerCheckDesc"));
     const data = await authFetch("/auth/exchange", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId }),
     });
+
+    // If user logged out or switched auth session while request was in flight,
+    // ignore stale exchange response.
+    if (!state.auth.pending || state.auth.sessionId !== sessionId) {
+      log("warning", "Stale auth exchange ignored", `session=${sessionId}`);
+      return;
+    }
 
     const telegramId = normalizeTelegramId(data.telegramId);
     if (!data.ok || !data.token || !telegramId) {
@@ -2137,11 +2319,16 @@ async function exchangeAuthorization(sessionId) {
     state.auth.offlineGuest = false;
     state.auth.offlineBotNonce = "";
     state.auth.offlineBotExpiresAt = 0;
+    state.auth.activeBotUrl = "";
     state.auth.error = "";
     state.auth.sessionId = "";
+    state.auth.exchangedSessionId = sessionId;
     log("success", "Session authorized", `telegram_id=${telegramId}`);
-    notify("success", t("authSuccess"), `ID: ${telegramId}`);
+    notify("success", t("authSuccess"));
   } catch (error) {
+    if (state.auth.exchangedSessionId === sessionId) {
+      state.auth.exchangedSessionId = "";
+    }
     await clearAuthorization(true);
     state.auth.pending = false;
     const serverUnavailable = isAuthServerUnavailableError(error);
@@ -2160,6 +2347,7 @@ async function exchangeAuthorization(sessionId) {
       ].join(" || ")
     );
   } finally {
+    state.auth.exchangeInFlight = false;
     render();
   }
 }
@@ -2173,6 +2361,8 @@ async function clearAuthorization(showLog) {
   }
   state.auth.pending = false;
   state.auth.sessionId = "";
+  state.auth.exchangedSessionId = "";
+  state.auth.exchangeInFlight = false;
   state.auth.subscriptionCheckedThisSession = false;
   state.auth.subscriptionCheckInFlight = false;
   state.auth.guestCheckInFlight = false;
@@ -2180,12 +2370,28 @@ async function clearAuthorization(showLog) {
   state.auth.degradedReason = "";
   state.auth.offlineBotNonce = "";
   state.auth.offlineBotExpiresAt = 0;
-  state.settings = await window.alterE.settings.update({
+  state.auth.activeBotUrl = "";
+  if (state.auth.cooldownTimer) {
+    clearTimeout(state.auth.cooldownTimer);
+    state.auth.cooldownTimer = null;
+  }
+  state.settings = {
+    ...state.settings,
     authorized: false,
     telegramId: null,
     authToken: "",
     offlineAuthStartedAt: 0,
-  });
+  };
+  try {
+    state.settings = await window.alterE.settings.update({
+      authorized: false,
+      telegramId: null,
+      authToken: "",
+      offlineAuthStartedAt: 0,
+    });
+  } catch (error) {
+    log("error", "Persist logout state failed", readableError(error));
+  }
   if (showLog) {
     log("warning", "Session revoked", "Subscription is missing or token is invalid");
   }
@@ -2980,7 +3186,10 @@ function renderAuth() {
   const locked = !hasAppAccess();
   elements.body.classList.toggle("is-locked", locked);
   elements.authOverlay.hidden = !locked;
-  elements.authButton.disabled = state.auth.checking || state.auth.pending;
+  const cooldownRemainingMs = Math.max(0, Number(state.auth.cooldownUntil || 0) - Date.now());
+  const onCooldown = cooldownRemainingMs > 0;
+  elements.authButton.disabled = state.auth.checking || onCooldown;
+  elements.authButton.classList.toggle("is-cooldown", onCooldown);
   if (elements.authKeyToggleButton) {
     elements.authKeyToggleButton.hidden = !locked;
   }
@@ -2998,6 +3207,9 @@ function renderAuth() {
 
   const isRu = state.settings.language === "ru";
   const isTr = state.settings.language === "tr";
+  const cooldownSeconds = Math.ceil(cooldownRemainingMs / 1000);
+  const authorizeLabelBase = t("authorize");
+  const authorizeLabel = cooldownSeconds > 0 ? `${authorizeLabelBase} (${cooldownSeconds}s)` : authorizeLabelBase;
   if (elements.authKeyToggleButton) {
     elements.authKeyToggleButton.textContent = state.auth.keyEntryVisible
       ? isRu
@@ -3026,16 +3238,16 @@ function renderAuth() {
   elements.authTitle.textContent = t("authTitle");
   if (state.auth.checking) {
     elements.authText.textContent = t("authChecking");
-    elements.authButton.textContent = t("authorize");
+    elements.authButton.textContent = authorizeLabel;
     return;
   }
   if (state.auth.pending) {
     elements.authText.textContent = t("authWaiting");
-    elements.authButton.textContent = t("authorize");
+    elements.authButton.textContent = authorizeLabel;
     return;
   }
   elements.authText.textContent = state.auth.error || t("authText");
-  elements.authButton.textContent = t("authorize");
+  elements.authButton.textContent = authorizeLabel;
 }
 
 function renderUpdate() {

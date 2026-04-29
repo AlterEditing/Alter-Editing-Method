@@ -354,16 +354,9 @@ function registerShellIpc() {
       const errorMessage = await shell.openExternal(target);
       if (!errorMessage) return true;
     } catch {
-      // fallback below
-    }
-    try {
-      await new Promise((resolve) => {
-        exec(`cmd /c start "" "${target}"`, () => resolve());
-      });
-      return true;
-    } catch {
       return false;
     }
+    return false;
   });
 
   ipcMain.handle("shell:show-item", (_event, filePath) => {
