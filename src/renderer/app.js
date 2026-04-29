@@ -1845,8 +1845,13 @@ async function openAuthBotFromKeyFlow() {
   const fallbackBot = "https://t.me/alterediting_bot";
   const botUrl = normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true }) || fallbackBot;
   try {
-    await window.alterE.shell.openExternal(botUrl);
+    const opened = await window.alterE.shell.openExternal(botUrl);
+    log("system", "Open auth bot (key flow)", `url=${botUrl} | opened=${opened ? "true" : "false"}`);
+    if (!opened) {
+      toast("warning", "Authorization", "Не удалось открыть Telegram. Проверьте Telegram/браузер по умолчанию.");
+    }
   } catch {
+    log("error", "Open auth bot (key flow) failed", `url=${botUrl}`);
     toast("warning", "Authorization", state.settings.language === "ru" ? "Не удалось открыть бота." : "Unable to open bot.");
   }
 }
@@ -1937,6 +1942,11 @@ async function startTelegramAuthorization() {
 
     log("system", "Telegram authorization started", state.auth.sessionId);
     const opened = await window.alterE.shell.openExternal(botUrl);
+    log(
+      "system",
+      "Open Telegram auth URL",
+      `url=${botUrl} | session=${state.auth.sessionId || "-"} | opened=${opened ? "true" : "false"}`
+    );
     if (!opened) {
       throw new Error("Failed to open Telegram");
     }
@@ -1959,12 +1969,19 @@ async function startTelegramAuthorization() {
           const offlineBotUrl = buildBotStartUrl(fallbackBotUrl, startPayload);
           state.auth.offlineBotNonce = offlineNonce;
           state.auth.offlineBotExpiresAt = Date.now() + AUTH_OFFLINE_BOT_NONCE_TTL_MS;
-          const opened = await window.alterE.shell.openExternal(offlineBotUrl || fallbackBotUrl);
+          const targetUrl = offlineBotUrl || fallbackBotUrl;
+          const opened = await window.alterE.shell.openExternal(targetUrl);
+          log(
+            "warning",
+            "Open Telegram offline auth URL",
+            `url=${targetUrl} | nonce=${offlineNonce} | opened=${opened ? "true" : "false"}`
+          );
           if (!opened) {
             throw new Error("Failed to open Telegram fallback");
           }
         } catch {
-          // Keep auth overlay error text only when fallback bot link cannot be opened.
+          log("error", "Telegram offline auth URL open failed", `fallback=${fallbackBotUrl}`);
+          toast("warning", "Authorization", "Не удалось открыть Telegram. Проверьте Telegram/браузер по умолчанию.");
         }
       }
     } else {
