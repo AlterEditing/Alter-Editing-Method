@@ -30,6 +30,7 @@ nsis:
   oneClick: false
   allowElevation: true
   allowToChangeInstallationDirectory: false
+  allowDowngrade: true
   perMachine: false
   deleteAppDataOnUninstall: false
   artifactName: ${productName}-Setup-${version}.${ext}

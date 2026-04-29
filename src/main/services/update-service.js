@@ -64,7 +64,8 @@ function createUpdateService({ settingsStore, onStateChange, onLog }) {
 
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
-    autoUpdater.allowDowngrade = false;
+    // Required for switching from prerelease (e.g. 1.2.4-beta.1) to stable (1.2.4).
+    autoUpdater.allowDowngrade = true;
     autoUpdater.allowPrerelease = allowPrerelease;
 
     autoUpdater.on("checking-for-update", () => {

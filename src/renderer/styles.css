@@ -1911,6 +1911,31 @@ body[data-theme="light"] .activity-item {
   opacity: 0.62;
 }
 
+.auth-key-toggle,
+.auth-key-apply {
+  width: 160px;
+  height: 30px;
+}
+
+.auth-key-entry {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.auth-key-input {
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--control-bg);
+  color: var(--text);
+  padding: 0 10px;
+  font-size: 11px;
+  text-align: center;
+}
+
 .update-overlay {
   position: absolute;
   inset: 44px 0 0;

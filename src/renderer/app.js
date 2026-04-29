@@ -443,6 +443,8 @@ const state = {
     guestRetryTimer: null,
     offlineBotNonce: "",
     offlineBotExpiresAt: 0,
+    keyOptionVisible: false,
+    keyEntryVisible: false,
   },
   video: null,
   mode: "balanced",
@@ -559,6 +561,10 @@ const elements = {
   authTitle: document.getElementById("authTitle"),
   authText: document.getElementById("authText"),
   authButton: document.getElementById("authButton"),
+  authKeyToggleButton: document.getElementById("authKeyToggleButton"),
+  authKeyEntry: document.getElementById("authKeyEntry"),
+  authKeyInput: document.getElementById("authKeyInput"),
+  authKeyApplyButton: document.getElementById("authKeyApplyButton"),
   mandatoryUpdateOverlay: document.getElementById("mandatoryUpdateOverlay"),
   mandatoryUpdateTitle: document.getElementById("mandatoryUpdateTitle"),
   mandatoryUpdateText: document.getElementById("mandatoryUpdateText"),
@@ -1085,6 +1091,16 @@ function bindEvents() {
   });
   elements.logoutButton.addEventListener("click", logoutFromAccount);
   elements.authButton.addEventListener("click", startTelegramAuthorization);
+  elements.authKeyToggleButton?.addEventListener("click", toggleAuthKeyEntry);
+  elements.authKeyApplyButton?.addEventListener("click", () => {
+    void applyAuthorizationKeyFromInput();
+  });
+  elements.authKeyInput?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void applyAuthorizationKeyFromInput();
+    }
+  });
   window.alterE.auth?.onDeepLink?.(handleAuthDeepLink);
   elements.telegramLink.addEventListener("click", () => window.alterE.shell.openExternal(telegramChannelUrl));
   elements.copyLogsButton.addEventListener("click", copyLogs);
@@ -1810,6 +1826,82 @@ function activateTemporaryBotAuthorization() {
   state.auth.offlineBotNonce = "";
   state.auth.offlineBotExpiresAt = 0;
   notify("success", t("authSuccess"));
+  render();
+}
+
+function toggleAuthKeyEntry() {
+  if (state.auth.keyEntryVisible) {
+    void openAuthBotFromKeyFlow();
+    return;
+  }
+  state.auth.keyEntryVisible = true;
+  renderAuth();
+  if (state.auth.keyEntryVisible) {
+    setTimeout(() => elements.authKeyInput?.focus(), 0);
+  }
+}
+
+async function openAuthBotFromKeyFlow() {
+  const fallbackBot = "https://t.me/alterediting_bot";
+  const botUrl = normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true }) || fallbackBot;
+  try {
+    await window.alterE.shell.openExternal(botUrl);
+  } catch {
+    toast("warning", "Authorization", state.settings.language === "ru" ? "Не удалось открыть бота." : "Unable to open bot.");
+  }
+}
+
+function parseAuthorizationKey(rawKey) {
+  return String(rawKey || "").trim();
+}
+
+async function applyAuthorizationKeyFromInput() {
+  const key = String(elements.authKeyInput?.value || "");
+  const preparedKey = parseAuthorizationKey(key);
+  if (!preparedKey) {
+    toast("warning", "Authorization", state.settings.language === "ru" ? "Неверный ключ авторизации." : "Invalid authorization key.");
+    return;
+  }
+
+  try {
+    state.auth.checking = true;
+    render();
+    const data = await authFetch("/auth/key-exchange", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: preparedKey }),
+    });
+    const telegramId = normalizeTelegramId(data.telegramId);
+    if (!data.ok || !data.token || !telegramId) {
+      throw new Error("Invalid key exchange response");
+    }
+
+    state.settings = await window.alterE.settings.update({
+      authorized: true,
+      telegramId,
+      authToken: String(data.token),
+      offlineAuthStartedAt: 0,
+    });
+    state.auth.pending = false;
+    state.auth.checking = false;
+    state.auth.error = "";
+    state.auth.sessionId = "";
+    state.auth.startedAt = 0;
+    state.auth.offlineGuest = false;
+    state.auth.degradedReason = "";
+    state.auth.keyEntryVisible = false;
+    state.auth.offlineBotNonce = "";
+    state.auth.offlineBotExpiresAt = 0;
+    state.auth.subscriptionCheckedThisSession = true;
+    if (elements.authKeyInput) {
+      elements.authKeyInput.value = "";
+    }
+    log("success", "Authorization by key", `telegram_id=${telegramId}`);
+    notify("success", t("authSuccess"), `ID: ${telegramId}`);
+  } catch {
+    state.auth.checking = false;
+    toast("warning", "Authorization", state.settings.language === "ru" ? "Неверный или просроченный ключ." : "Invalid or expired authorization key.");
+  }
   render();
 }
 
@@ -2866,9 +2958,45 @@ function renderAuth() {
   elements.body.classList.toggle("is-locked", locked);
   elements.authOverlay.hidden = !locked;
   elements.authButton.disabled = state.auth.checking || state.auth.pending;
+  if (elements.authKeyToggleButton) {
+    elements.authKeyToggleButton.hidden = !locked;
+  }
+  if (elements.authKeyEntry) {
+    elements.authKeyEntry.hidden = !locked || !state.auth.keyEntryVisible;
+  }
+  if (elements.authKeyApplyButton) {
+    elements.authKeyApplyButton.disabled = state.auth.checking || state.auth.pending;
+  }
 
   if (!locked) {
+    state.auth.keyEntryVisible = false;
     return;
+  }
+
+  const isRu = state.settings.language === "ru";
+  const isTr = state.settings.language === "tr";
+  if (elements.authKeyToggleButton) {
+    elements.authKeyToggleButton.textContent = state.auth.keyEntryVisible
+      ? isRu
+        ? "Перейти в бота"
+        : isTr
+          ? "Bota git"
+          : "Open bot"
+      : isRu
+        ? "Авторизация по ключу"
+      : isTr
+        ? "Anahtar ile giris"
+        : "Authorization by key";
+  }
+  if (elements.authKeyApplyButton) {
+    elements.authKeyApplyButton.textContent = isRu ? "Войти по ключу" : isTr ? "Anahtar ile giris yap" : "Sign in by key";
+  }
+  if (elements.authKeyInput) {
+    elements.authKeyInput.placeholder = isRu
+      ? "Ввеедите /key в @alterediting_bot"
+      : isTr
+        ? "/key komutunu @alterediting_bot'ta girin"
+        : "Enter /key in @alterediting_bot";
   }
 
   elements.authLogo.hidden = false;
