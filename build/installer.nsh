@@ -15,9 +15,6 @@
     ${If} $1 == 0
       MessageBox MB_OK|MB_ICONINFORMATION "AlterEditingMethod $0 is already installed."
       Abort
-    ${ElseIf} $1 == 1
-      MessageBox MB_OK|MB_ICONSTOP "Installed version ($0) is newer than installer version (${VERSION})."
-      Abort
     ${EndIf}
   ${EndIf}
 !macroend
