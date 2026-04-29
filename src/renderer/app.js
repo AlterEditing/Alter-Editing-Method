@@ -1936,7 +1936,10 @@ async function startTelegramAuthorization() {
     }
 
     log("system", "Telegram authorization started", state.auth.sessionId);
-    await window.alterE.shell.openExternal(botUrl);
+    const opened = await window.alterE.shell.openExternal(botUrl);
+    if (!opened) {
+      throw new Error("Failed to open Telegram");
+    }
     startAuthPolling(state.auth.sessionId);
   } catch (error) {
     state.auth.pending = false;
@@ -1956,7 +1959,10 @@ async function startTelegramAuthorization() {
           const offlineBotUrl = buildBotStartUrl(fallbackBotUrl, startPayload);
           state.auth.offlineBotNonce = offlineNonce;
           state.auth.offlineBotExpiresAt = Date.now() + AUTH_OFFLINE_BOT_NONCE_TTL_MS;
-          await window.alterE.shell.openExternal(offlineBotUrl || fallbackBotUrl);
+          const opened = await window.alterE.shell.openExternal(offlineBotUrl || fallbackBotUrl);
+          if (!opened) {
+            throw new Error("Failed to open Telegram fallback");
+          }
         } catch {
           // Keep auth overlay error text only when fallback bot link cannot be opened.
         }
