@@ -2,8 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const { copyAndPatchElst, isAlreadyPatchedVideo } = require("./elst-patcher");
-const { runPythonBinaryPatcher } = require("./python-patcher");
+const { isAlreadyPatchedVideo } = require("./elst-patcher");
 const { runFfprobe, spawnFfmpegWithProgress } = require("./ffmpeg");
 
 const SUPPORTED_EXTENSIONS = new Set([".mp4", ".mov"]);
@@ -256,9 +255,32 @@ async function renderHevc({
 
 async function runPatcher(inputPath, outputPath) {
   try {
-    await runPythonBinaryPatcher({
+    const args = [
+      "-y",
+      "-v",
+      "error",
+      "-i",
       inputPath,
+      "-map",
+      "0:v:0",
+      "-map",
+      "0:a?",
+      "-c",
+      "copy",
+      "-video_track_timescale",
+      "90000",
+      "-map_metadata",
+      "-1",
+      "-brand",
+      "isom",
+      "-movflags",
+      "+faststart",
+      "-bsf:v",
+      "filter_units=remove_types=6|9",
       outputPath,
+    ];
+    await spawnFfmpegWithProgress(args, {
+      durationSeconds: 0,
       isCancelled: () => Boolean(activePatch?.cancelling),
       onProcess: (child) => {
         if (activePatch) {
@@ -270,23 +292,10 @@ async function runPatcher(inputPath, outputPath) {
       },
     });
   } catch (error) {
-    const message = String(error?.message || "");
-    if (/supports only H\.264|no-reencode mode|No video stream/i.test(message)) {
-      try {
-        await copyAndPatchElst(inputPath, outputPath);
-        return;
-      } catch (fallbackError) {
-        throw new Error(
-          `Python patcher failed: ${message}\nFallback elst patcher failed: ${String(
-            fallbackError?.message || fallbackError || "unknown"
-          )}`
-        );
-      }
-    }
-    throw error;
+    const message = String(error?.message || "unknown");
+    throw new Error(`FFmpeg patcher failed: ${message}`);
   }
 }
-
 function resolveOutputExtension(inputExt, mode = "balanced", renderContainer = "source") {
   const ext = String(inputExt || "").toLowerCase();
   const normalizedContainer = normalizeRenderContainer(renderContainer);
@@ -468,4 +477,5 @@ module.exports = {
   patchVideo,
   probeVideo,
 };
+
 

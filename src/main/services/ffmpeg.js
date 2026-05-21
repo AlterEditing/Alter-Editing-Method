@@ -21,6 +21,10 @@ function runFfprobe(args) {
   return runProcess(resolveBundledBinary("ffprobe.exe"), args);
 }
 
+function runFfmpeg(args) {
+  return runProcess(resolveBundledBinary("ffmpeg.exe"), args);
+}
+
 function runProcess(command, args) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -147,6 +151,7 @@ function trimProcessError(stderr) {
 }
 
 module.exports = {
+  runFfmpeg,
   runFfprobe,
   spawnFfmpegWithProgress,
 };
