@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const DEFAULT_SETTINGS = {
-  settingsVersion: 5,
+  settingsVersion: 6,
   language: "en",
   theme: "dark",
   authRequired: true,
@@ -22,6 +22,8 @@ const DEFAULT_SETTINGS = {
   updateRepoOwner: "AlterEditing",
   updateRepoName: "Alter-Editing-Method",
   updateAllowPrerelease: false,
+  hideCodecConvertWarning: false,
+  hideCodecConvertWarningVersion: "",
   dismissedMandatoryVersion: "",
 };
 
@@ -137,6 +139,14 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     typeof raw.updateAllowPrerelease === "boolean"
       ? raw.updateAllowPrerelease
       : Boolean(defaults.updateAllowPrerelease);
+  const hideCodecConvertWarning =
+    typeof raw.hideCodecConvertWarning === "boolean"
+      ? raw.hideCodecConvertWarning
+      : Boolean(defaults.hideCodecConvertWarning);
+  const hideCodecConvertWarningVersion =
+    typeof raw.hideCodecConvertWarningVersion === "string"
+      ? raw.hideCodecConvertWarningVersion.trim()
+      : String(defaults.hideCodecConvertWarningVersion || "");
 
   return {
     settingsVersion: defaults.settingsVersion,
@@ -159,6 +169,8 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     updateRepoOwner,
     updateRepoName,
     updateAllowPrerelease,
+    hideCodecConvertWarning,
+    hideCodecConvertWarningVersion,
     dismissedMandatoryVersion,
   };
 }

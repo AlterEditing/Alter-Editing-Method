@@ -2132,6 +2132,11 @@ body[data-theme="light"] .activity-item {
   padding: 20px;
   background: rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(10px);
+  animation: overlayIn 220ms ease both;
+}
+
+.confirm-overlay.is-hiding {
+  animation: overlayOut 220ms ease both;
 }
 
 .confirm-dialog {
@@ -2159,11 +2164,39 @@ body[data-theme="light"] .activity-item {
   line-height: 1.45;
 }
 
+.confirm-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  user-select: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  max-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease, max-height 220ms ease;
+}
+
+.confirm-checkbox-row.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 32px;
+  pointer-events: auto;
+}
+
+.confirm-checkbox-row input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+}
+
 .confirm-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 2px;
 }
 
@@ -2315,6 +2348,24 @@ body[data-theme="light"] .toast {
 
 .toast[data-level="error"] strong {
   color: #111827;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 .toast[data-level="error"] {

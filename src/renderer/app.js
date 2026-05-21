@@ -72,7 +72,7 @@ const translations = {
     started: "Patch started",
     completed: "Patch completed",
     saved: "File saved:",
-    failed: "Patch failed",
+    failed: "Ошибка патча",
     cancelled: "Patch cancelled",
     busy: "Processing is already running.",
     noVideo: "Select a video first.",
@@ -146,6 +146,8 @@ const translations = {
     updatePrefsOpenRepo: "Open repo",
     updatePrefsSave: "Save",
     updatePrefsClose: "Close",
+    autoConvertWarningTitle: "Notice",
+    autoConvertWarningText: "Your video codec is not h264. The app will automatically convert it to the required one, but quality loss is possible.",
   },
   ru: {
     outputSize: "Р’С‹С…РѕРґРЅРѕР№ СЂР°Р·РјРµСЂ",
@@ -350,12 +352,14 @@ const translations = {
     riskIssueBitrate: "bitrate 70 Mbps ustunde",
     riskIssueResolution: "cozunurluk 1920x1080 ustunde",
     riskIssueBoth: "bitrate 70 Mbps ve cozunurluk 1920x1080 ustunde",
+    autoConvertWarningTitle: "Bilgi",
+    autoConvertWarningText: "Video codec'i H.264 degil. Uygulama patch oncesi otomatik donusturecek; ufak kalite kaybi olabilir.",
   },
 };
 
 function decodeMojibakeText(value) {
   const text = String(value ?? "");
-  if (!/[РСЃÑÐ]/.test(text)) {
+  if (!/[РСЃN?]/.test(text)) {
     return text;
   }
   try {
@@ -463,7 +467,7 @@ const ruClean = {
   started: "Патч запущен",
   completed: "Патч завершен",
   saved: "Файл сохранен:",
-  failed: "Patch failed",
+  failed: "Ошибка патча",
   cancelled: "Патч отменен",
   busy: "Обработка уже идет.",
   noVideo: "Сначала выберите видео.",
@@ -509,6 +513,8 @@ const ruClean = {
   updateBetaToggle: "Beta",
   updatePrefsOpenRepo: "Открыть репозиторий",
   updatePrefsSaved: "Настройки обновления сохранены",
+  autoConvertWarningTitle: "Предупреждение",
+  autoConvertWarningText: "Кодек вашего видео не h264.  Приложение автоматически конвертирует его в нужный, но возможны потери качества",
 };
 
 translations.ru = { ...translations.en, ...ruClean };
@@ -588,7 +594,7 @@ const RENDER_DEFAULTS = Object.freeze({
 
 const state = {
   settings: {
-    settingsVersion: 5,
+    settingsVersion: 6,
     language: "en",
     theme: "dark",
     authRequired: true,
@@ -608,6 +614,8 @@ const state = {
     updateRepoOwner: "AlterEditing",
     updateRepoName: "Alter-Editing-Method",
     updateAllowPrerelease: false,
+    hideCodecConvertWarning: false,
+    hideCodecConvertWarningVersion: "",
   },
   auth: {
     checking: false,
@@ -672,6 +680,8 @@ const state = {
   versionMenuVisible: false,
   tutorialVisible: false,
   riskConfirmVisible: false,
+  riskConfirmMode: "risk",
+  riskConfirmCustomText: "",
   renderSettingsVisible: false,
 };
 
@@ -783,6 +793,9 @@ const elements = {
   riskConfirmOverlay: document.getElementById("riskConfirmOverlay"),
   riskConfirmTitle: document.getElementById("riskConfirmTitle"),
   riskConfirmText: document.getElementById("riskConfirmText"),
+  riskConfirmDontShowRow: document.getElementById("riskConfirmDontShowRow"),
+  riskConfirmDontShowCheckbox: document.getElementById("riskConfirmDontShowCheckbox"),
+  riskConfirmDontShowLabel: document.getElementById("riskConfirmDontShowLabel"),
   riskConfirmCancelButton: document.getElementById("riskConfirmCancelButton"),
   riskConfirmContinueButton: document.getElementById("riskConfirmContinueButton"),
   tutorialOverlay: document.getElementById("tutorialOverlay"),
@@ -1047,7 +1060,7 @@ async function init() {
     state.settings = await window.alterE.settings.get();
   } catch {
     state.settings = {
-      settingsVersion: 5,
+      settingsVersion: 6,
       language: "en",
       theme: "dark",
       authRequired: true,
@@ -1067,6 +1080,8 @@ async function init() {
       updateRepoOwner: "AlterEditing",
       updateRepoName: "Alter-Editing-Method",
       updateAllowPrerelease: false,
+      hideCodecConvertWarning: false,
+      hideCodecConvertWarningVersion: "",
     };
   }
   applyCachedAuthConfigFromSettings(state.settings);
@@ -1076,6 +1091,20 @@ async function init() {
     applyRuntimeConfig(runtimeConfig);
   } catch {
     authApiBase = DEFAULT_AUTH_API_BASE;
+  }
+  if (
+    runtimeAppVersion &&
+    state.settings.hideCodecConvertWarning &&
+    String(state.settings.hideCodecConvertWarningVersion || "") !== runtimeAppVersion
+  ) {
+    try {
+      state.settings = await window.alterE.settings.update({
+        hideCodecConvertWarning: false,
+        hideCodecConvertWarningVersion: runtimeAppVersion,
+      });
+    } catch {
+      // non-blocking
+    }
   }
   await refreshAuthServerConfig();
 
@@ -1418,6 +1447,20 @@ async function loadVideo(filePath) {
     }
     state.video = video;
     setMode(video.videoBitrateKbps > 0 ? "source" : "balanced", false);
+    const codec = String(video.codec || "").toLowerCase();
+    const hideForCurrentVersion =
+      Boolean(state.settings.hideCodecConvertWarning) &&
+      Boolean(runtimeAppVersion) &&
+      String(state.settings.hideCodecConvertWarningVersion || "") === runtimeAppVersion;
+    if (!hideForCurrentVersion && codec && codec !== "h264" && codec !== "avc1") {
+      const accepted = await requestMessageConfirm(t("autoConvertWarningText"));
+      if (!accepted) {
+        restorePreviousVideo();
+        state.probing = false;
+        render();
+        return;
+      }
+    }
     log("info", tEn("loaded"), `${video.name} | ${video.width}x${video.height} | ${video.videoBitrateKbps} ${tEn("kbps")}`);
   } catch (error) {
     if (!isCurrentLoad()) {
@@ -1662,7 +1705,32 @@ function requestRiskConfirm(issues = []) {
   if (state.riskConfirmVisible) {
     return Promise.resolve(false);
   }
+  state.riskConfirmMode = "risk";
+  state.riskConfirmCustomText = "";
+  elements.riskConfirmDontShowRow?.classList.remove("is-visible");
   elements.riskConfirmText.textContent = buildRiskWarningText(issues);
+  state.riskConfirmVisible = true;
+  renderRiskConfirm();
+  return new Promise((resolve) => {
+    riskConfirmResolver = resolve;
+  });
+}
+
+function requestMessageConfirm(message) {
+  if (state.riskConfirmVisible) {
+    return Promise.resolve(false);
+  }
+  state.riskConfirmMode = "codec";
+  state.riskConfirmCustomText = String(message || "");
+  elements.riskConfirmTitle.textContent = t("autoConvertWarningTitle");
+  if (elements.riskConfirmDontShowLabel) {
+    elements.riskConfirmDontShowLabel.textContent = t("updateDontShow");
+  }
+  if (elements.riskConfirmDontShowCheckbox) {
+    elements.riskConfirmDontShowCheckbox.checked = Boolean(state.settings.hideCodecConvertWarning);
+  }
+  elements.riskConfirmDontShowRow?.classList.add("is-visible");
+  elements.riskConfirmText.textContent = String(message || "");
   state.riskConfirmVisible = true;
   renderRiskConfirm();
   return new Promise((resolve) => {
@@ -1674,10 +1742,27 @@ function resolveRiskConfirm(accepted) {
   if (!state.riskConfirmVisible) {
     return;
   }
+  const dontShowChecked = Boolean(elements.riskConfirmDontShowCheckbox?.checked);
+  const mode = state.riskConfirmMode;
   state.riskConfirmVisible = false;
+  state.riskConfirmMode = "risk";
+  state.riskConfirmCustomText = "";
+  elements.riskConfirmDontShowRow?.classList.remove("is-visible");
   renderRiskConfirm();
   const resolve = riskConfirmResolver;
   riskConfirmResolver = null;
+  if (mode === "codec" && dontShowChecked !== Boolean(state.settings.hideCodecConvertWarning)) {
+    void window.alterE.settings
+      .update({
+        hideCodecConvertWarning: dontShowChecked,
+        hideCodecConvertWarningVersion: dontShowChecked ? String(runtimeAppVersion || "") : "",
+      })
+      .then((settings) => {
+        state.settings = settings;
+        render();
+      })
+      .catch(() => {});
+  }
   if (resolve) {
     resolve(Boolean(accepted));
   }
@@ -3126,9 +3211,14 @@ function renderText() {
   elements.closeConfirmText.textContent = t("closeConfirmText");
   elements.closeConfirmLeaveButton.textContent = t("closeConfirmClose");
   elements.closeConfirmStayButton.textContent = t("closeConfirmStay");
-  elements.riskConfirmTitle.textContent = t("riskWarningTitle");
-  if (!state.riskConfirmVisible) {
+  elements.riskConfirmTitle.textContent = state.riskConfirmMode === "codec" ? t("autoConvertWarningTitle") : t("riskWarningTitle");
+  if (state.riskConfirmMode === "codec") {
+    elements.riskConfirmText.textContent = state.riskConfirmCustomText || t("autoConvertWarningText");
+  } else if (!state.riskConfirmVisible) {
     elements.riskConfirmText.textContent = buildRiskWarningText(["bitrate", "resolution"]);
+  }
+  if (elements.riskConfirmDontShowLabel) {
+    elements.riskConfirmDontShowLabel.textContent = t("updateDontShow");
   }
   elements.riskConfirmCancelButton.textContent = t("cancelAction");
   elements.riskConfirmContinueButton.textContent = t("continueAnyway");
@@ -3230,7 +3320,31 @@ function renderCloseConfirm() {
 }
 
 function renderRiskConfirm() {
-  elements.riskConfirmOverlay.hidden = !state.riskConfirmVisible;
+  const overlay = elements.riskConfirmOverlay;
+  if (!overlay) {
+    return;
+  }
+
+  if (state.riskConfirmVisible) {
+    overlay.hidden = false;
+    overlay.classList.remove("is-hiding");
+  } else if (!overlay.hidden) {
+    overlay.classList.add("is-hiding");
+    setTimeout(() => {
+      if (!state.riskConfirmVisible) {
+        overlay.hidden = true;
+        overlay.classList.remove("is-hiding");
+      }
+    }, 220);
+  }
+
+  if (elements.riskConfirmDontShowRow) {
+    elements.riskConfirmDontShowRow.hidden = false;
+    elements.riskConfirmDontShowRow.classList.toggle(
+      "is-visible",
+      state.riskConfirmVisible && state.riskConfirmMode === "codec"
+    );
+  }
 }
 
 function renderTutorial() {
@@ -3265,7 +3379,7 @@ function renderVideo() {
   elements.fileStream.textContent = [
     video.width && video.height ? `${video.width}x${video.height}` : "",
     video.fps ? `${formatNumber(video.fps, 2)} ${t("fps")}` : "",
-    video.videoBitrateKbps ? `${video.videoBitrateKbps} ${t("kbps")}` : "",
+    video.videoBitrateKbps ? `${formatNumber(video.videoBitrateKbps / 1000, 2)} mb/s` : "",
   ]
     .filter(Boolean)
     .join(" | ");
@@ -3273,7 +3387,7 @@ function renderVideo() {
     .filter(Boolean)
     .join(" | ");
 
-  const previewSrc = pathToFileUrl(video.path);
+  const previewSrc = pathToFileUrl(video.previewPath || video.path);
   if (elements.videoPreview.getAttribute("src") !== previewSrc) {
     elements.videoPreview.src = previewSrc;
     elements.videoPreview.load();
@@ -4492,4 +4606,8 @@ init().catch((error) => {
   console.error("Renderer init failed:", error);
   finishBootSequence();
 });
+
+
+
+
 
