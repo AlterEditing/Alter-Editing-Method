@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 const { isAlreadyPatchedVideo } = require("./elst-patcher");
-const { runFfprobe, spawnFfmpegWithProgress } = require("./ffmpeg");
+const { runFfmpeg, runFfprobe, spawnFfmpegWithProgress } = require("./ffmpeg");
+const { runV5JsPatcher } = require("./v5-js-patcher");
 
 const SUPPORTED_EXTENSIONS = new Set([".mp4", ".mov"]);
 const MAX_BITRATE_KBPS = 1_000_000;
@@ -255,41 +256,11 @@ async function renderHevc({
 
 async function runPatcher(inputPath, outputPath) {
   try {
-    const args = [
-      "-y",
-      "-v",
-      "error",
-      "-i",
+    await runV5JsPatcher({
       inputPath,
-      "-map",
-      "0:v:0",
-      "-map",
-      "0:a?",
-      "-c",
-      "copy",
-      "-video_track_timescale",
-      "90000",
-      "-map_metadata",
-      "-1",
-      "-brand",
-      "isom",
-      "-movflags",
-      "+faststart",
-      "-bsf:v",
-      "filter_units=remove_types=6|9",
       outputPath,
-    ];
-    await spawnFfmpegWithProgress(args, {
-      durationSeconds: 0,
-      isCancelled: () => Boolean(activePatch?.cancelling),
-      onProcess: (child) => {
-        if (activePatch) {
-          activePatch.child = child;
-          if (child && activePatch.cancelling) {
-            child.kill("SIGTERM");
-          }
-        }
-      },
+      runFfmpeg: (args) => runFfmpeg(args),
+      runFfprobe: (args) => runFfprobe(args),
     });
   } catch (error) {
     const message = String(error?.message || "unknown");
@@ -477,5 +448,7 @@ module.exports = {
   patchVideo,
   probeVideo,
 };
+
+
 
 
