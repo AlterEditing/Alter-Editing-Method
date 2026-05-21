@@ -1,5 +1,6 @@
-﻿const crypto = require("crypto");
+const crypto = require("crypto");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const { isAlreadyPatchedVideo } = require("./elst-patcher");
@@ -56,6 +57,7 @@ async function probeVideo(filePath) {
 
   return {
     path: source,
+    previewPath: await resolvePreviewPath(source, String(videoStream.codec_name || "")),
     name: path.basename(source),
     extension: path.extname(source).toLowerCase(),
     sizeBytes: fileSizeBytes,
@@ -68,7 +70,54 @@ async function probeVideo(filePath) {
     hasAudio: Boolean(audioStream.codec_type),
     videoBitrateKbps,
     audioBitrateKbps,
-  };
+  };}
+
+async function resolvePreviewPath(sourcePath, sourceCodec) {
+  const codec = String(sourceCodec || "").toLowerCase();
+  if (codec === "h264" || codec === "avc1") {
+    return sourcePath;
+  }
+
+  try {
+    const stat = await fs.promises.stat(sourcePath);
+    const hash = crypto
+      .createHash("sha1")
+      .update(`${sourcePath}|${stat.mtimeMs}|${stat.size}`)
+      .digest("hex")
+      .slice(0, 12);
+    const previewDir = path.join(os.tmpdir(), "altere-preview");
+    const previewPath = path.join(previewDir, `${hash}.mp4`);
+    await fs.promises.mkdir(previewDir, { recursive: true });
+
+    if (fs.existsSync(previewPath)) {
+      return previewPath;
+    }
+
+    await runFfmpeg([
+      "-y",
+      "-i",
+      sourcePath,
+      "-map",
+      "0:v:0",
+      "-an",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      "24",
+      "-pix_fmt",
+      "yuv420p",
+      "-movflags",
+      "+faststart",
+      "-t",
+      "20",
+      previewPath,
+    ]);
+    return previewPath;
+  } catch {
+    return sourcePath;
+  }
 }
 
 async function patchVideo({
@@ -255,9 +304,19 @@ async function renderHevc({
 }
 
 async function runPatcher(inputPath, outputPath) {
+  let preparedInputPath = inputPath;
+  let tempH264Path = null;
+
   try {
+    const streamInfo = await detectVideoStreamInfo(inputPath);
+    if (streamInfo.codec && streamInfo.codec !== "h264") {
+      tempH264Path = createTempPatcherInputPath(outputPath);
+      await transcodeToH264ForPatcher(inputPath, tempH264Path, streamInfo.bitrateKbps);
+      preparedInputPath = tempH264Path;
+    }
+
     await runV5JsPatcher({
-      inputPath,
+      inputPath: preparedInputPath,
       outputPath,
       runFfmpeg: (args) => runFfmpeg(args),
       runFfprobe: (args) => runFfprobe(args),
@@ -265,7 +324,71 @@ async function runPatcher(inputPath, outputPath) {
   } catch (error) {
     const message = String(error?.message || "unknown");
     throw new Error(`FFmpeg patcher failed: ${message}`);
+  } finally {
+    if (tempH264Path) {
+      await safeRemove(tempH264Path);
+    }
   }
+}
+
+async function detectVideoStreamInfo(filePath) {
+  const probe = await runFfprobe([
+    "-v",
+    "error",
+    "-show_streams",
+    "-show_format",
+    "-of",
+    "json",
+    filePath,
+  ]);
+  const payload = JSON.parse(probe.stdout || "{}");
+  const streams = Array.isArray(payload.streams) ? payload.streams : [];
+  const videoStream = streams.find((stream) => stream.codec_type === "video") || {};
+  const streamBitrateKbps = bitsPerSecondToKbps(videoStream.bit_rate);
+  const formatBitrateKbps = bitsPerSecondToKbps(payload?.format?.bit_rate);
+  return {
+    codec: String(videoStream.codec_name || "").toLowerCase(),
+    bitrateKbps: streamBitrateKbps || formatBitrateKbps,
+  };
+}
+
+async function transcodeToH264ForPatcher(inputPath, outputPath, sourceBitrateKbps = 0) {
+  const bitrate = clampInteger(
+    Number(sourceBitrateKbps || 0) > 0 ? sourceBitrateKbps : 12000,
+    MIN_BITRATE_KBPS,
+    MAX_BITRATE_KBPS,
+  );
+  const args = [
+    "-y",
+    "-i",
+    inputPath,
+    "-map",
+    "0:v:0",
+    "-map",
+    "0:a?",
+    "-map_metadata",
+    "0",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "medium",
+    "-b:v",
+    `${bitrate}k`,
+    "-maxrate",
+    `${bitrate}k`,
+    "-bufsize",
+    `${Math.max(400, bitrate * 2)}k`,
+    "-pix_fmt",
+    "yuv420p",
+    "-tag:v",
+    "avc1",
+    "-c:a",
+    "copy",
+    "-movflags",
+    "+faststart",
+    outputPath,
+  ];
+  await runFfmpeg(args);
 }
 function resolveOutputExtension(inputExt, mode = "balanced", renderContainer = "source") {
   const ext = String(inputExt || "").toLowerCase();
@@ -375,6 +498,13 @@ function createTempOutputPath(outputPath) {
   const id = crypto.randomBytes(5).toString("hex");
   const extension = parsed.ext || ".mp4";
   return path.join(parsed.dir, `${parsed.name}.patched-${id}.tmp${extension}`);
+}
+
+function createTempPatcherInputPath(outputPath) {
+  const parsed = path.parse(outputPath);
+  const id = crypto.randomBytes(5).toString("hex");
+  const extension = parsed.ext || ".mp4";
+  return path.join(parsed.dir, `${parsed.name}.patcher-input-${id}.tmp${extension}`);
 }
 
 async function commitOutput(tempPath, outputPath) {
