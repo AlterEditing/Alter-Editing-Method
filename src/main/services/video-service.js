@@ -1,8 +1,9 @@
-const crypto = require("crypto");
+﻿const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 
 const { copyAndPatchElst, isAlreadyPatchedVideo } = require("./elst-patcher");
+const { runPythonBinaryPatcher } = require("./python-patcher");
 const { runFfprobe, spawnFfmpegWithProgress } = require("./ffmpeg");
 
 const SUPPORTED_EXTENSIONS = new Set([".mp4", ".mov"]);
@@ -125,7 +126,7 @@ async function patchVideo({
 
     if (useSourceFastPath) {
       onProgress?.(60);
-      await copyAndPatchElst(source, patchedTempPath);
+      await runPatcher(source, patchedTempPath);
       await commitOutput(patchedTempPath, target);
       patchedTempPath = null;
       onProgress?.(100);
@@ -150,7 +151,7 @@ async function patchVideo({
     });
 
     onProgress?.(96);
-    await copyAndPatchElst(tempPath, patchedTempPath);
+    await runPatcher(tempPath, patchedTempPath);
     await commitOutput(patchedTempPath, target);
     patchedTempPath = null;
     await safeRemove(tempPath);
@@ -251,6 +252,39 @@ async function renderHevc({
       }
     },
   });
+}
+
+async function runPatcher(inputPath, outputPath) {
+  try {
+    await runPythonBinaryPatcher({
+      inputPath,
+      outputPath,
+      isCancelled: () => Boolean(activePatch?.cancelling),
+      onProcess: (child) => {
+        if (activePatch) {
+          activePatch.child = child;
+          if (child && activePatch.cancelling) {
+            child.kill("SIGTERM");
+          }
+        }
+      },
+    });
+  } catch (error) {
+    const message = String(error?.message || "");
+    if (/supports only H\.264|no-reencode mode|No video stream/i.test(message)) {
+      try {
+        await copyAndPatchElst(inputPath, outputPath);
+        return;
+      } catch (fallbackError) {
+        throw new Error(
+          `Python patcher failed: ${message}\nFallback elst patcher failed: ${String(
+            fallbackError?.message || fallbackError || "unknown"
+          )}`
+        );
+      }
+    }
+    throw error;
+  }
 }
 
 function resolveOutputExtension(inputExt, mode = "balanced", renderContainer = "source") {
@@ -434,3 +468,4 @@ module.exports = {
   patchVideo,
   probeVideo,
 };
+

@@ -1911,6 +1911,12 @@ body[data-theme="light"] .activity-item {
   opacity: 0.62;
 }
 
+.auth-button.is-cooldown:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.35);
+  transform: none;
+}
+
 .auth-key-toggle,
 .auth-key-apply {
   width: 160px;
@@ -1922,6 +1928,20 @@ body[data-theme="light"] .activity-item {
   display: grid;
   gap: 8px;
   justify-items: center;
+}
+
+.auth-key-copy-link {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.auth-key-copy-link:hover {
+  color: var(--text);
 }
 
 .auth-key-input {

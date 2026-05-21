@@ -1,4 +1,4 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const path = require("path");
 
 const ELST_SIGNATURE = Buffer.from([0x65, 0x6c, 0x73, 0x74, 0x00, 0x00, 0x00, 0x00]);
@@ -232,3 +232,4 @@ module.exports = {
   isAlreadyPatchedVideo,
   patchFirstElstInPlace,
 };
+

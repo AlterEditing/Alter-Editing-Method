@@ -1,4 +1,4 @@
-const icons = {
+﻿const icons = {
   upload:
     '<svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M5 20h14"/></svg>',
   terminal:
@@ -51,6 +51,7 @@ const translations = {
     authServerCheck: "Server validation",
     authServerCheckDesc: "Checking subscription on server...",
     authKeyLabel: "Key",
+    copyBotLink: "Copy bot link",
     authFailed: "Authorization failed. Try again.",
     authServerUnavailable: "Authorization server is unavailable. Please try again later.",
     offlineLogoutInPrefix: "If the server remains unavailable, your session will be logged out in",
@@ -147,80 +148,81 @@ const translations = {
     updatePrefsClose: "Close",
   },
   ru: {
-    outputSize: "Выходной размер",
-    selectVideo: "Выбрать видео",
-    changeVideo: "Выбрать другое видео",
+    outputSize: "Р’С‹С…РѕРґРЅРѕР№ СЂР°Р·РјРµСЂ",
+    selectVideo: "Р’С‹Р±СЂР°С‚СЊ РІРёРґРµРѕ",
+    changeVideo: "Р’С‹Р±СЂР°С‚СЊ РґСЂСѓРіРѕРµ РІРёРґРµРѕ",
     patch: "PATCH",
-    cancel: "ОТМЕНА",
-    low: "Низкий",
-    balanced: "Баланс",
-    source: "Исходник",
-    settings: "Настройки",
-    notifications: "Уведомления",
-    logs: "Логи",
-    emptyNotifications: "Пока нет уведомлений.",
-    emptyLogs: "Логи появятся после действий в приложении.",
-    themeDark: "Темная тема",
-    themeLight: "Светлая тема",
-    language: "Язык",
-    authorize: "Авторизация",
+    cancel: "РћРўРњР•РќРђ",
+    low: "РќРёР·РєРёР№",
+    balanced: "Р‘Р°Р»Р°РЅСЃ",
+    source: "РСЃС…РѕРґРЅРёРє",
+    settings: "РќР°СЃС‚СЂРѕР№РєРё",
+    notifications: "РЈРІРµРґРѕРјР»РµРЅРёСЏ",
+    logs: "Р›РѕРіРё",
+    emptyNotifications: "РџРѕРєР° РЅРµС‚ СѓРІРµРґРѕРјР»РµРЅРёР№.",
+    emptyLogs: "Р›РѕРіРё РїРѕСЏРІСЏС‚СЃСЏ РїРѕСЃР»Рµ РґРµР№СЃС‚РІРёР№ РІ РїСЂРёР»РѕР¶РµРЅРёРё.",
+    themeDark: "РўРµРјРЅР°СЏ С‚РµРјР°",
+    themeLight: "РЎРІРµС‚Р»Р°СЏ С‚РµРјР°",
+    language: "РЇР·С‹Рє",
+    authorize: "РђРІС‚РѕСЂРёР·Р°С†РёСЏ",
     authTitle: "ALTER EDITING METHOD",
-    authText: "Подтвердите подписку в Telegram чтобы войти.",
-    authChecking: "Проверяем авторизацию...",
-    authWaiting: "Подтвердите подписку в Telegram и вернитесь сюда.",
-    authDataReceived: "Данные авторизации получены",
-    authServerCheck: "Серверная проверка",
-    authServerCheckDesc: "Проверяем подписку на сервере...",
-    authKeyLabel: "Ключ",
-    authFailed: "Ошибка авторизации. Попробуйте снова.",
-    authServerUnavailable: "Сервер авторизации недоступен. Пожалуйста, попробуйте позже.",
-    offlineLogoutInPrefix: "Если сервер не восстановится, сессия будет завершена через",
-    offlineAccessExpired: "Время офлайн-доступа истекло. Выполните авторизацию снова, когда сервер станет доступен.",
-    authSuccess: "Авторизация выполнена",
-    subscriptionRequired: "Нужна подписка",
-    retry: "ПОВТОРИТЬ",
-    copied: "Скопировано",
-    exported: "Логи экспортированы",
-    copyLogs: "Копировать",
-    exportLogs: "Экспорт",
-    selectError: "Выберите MP4 или MOV видео.",
-    alreadyPatched: "Это видео уже запатчено.",
-    unsupported: "Поддерживаются только MP4 и MOV видео.",
-    sourceMissing: "Исходное видео не найдено.",
-    probing: "Читаем метаданные видео...",
-    loaded: "Видео загружено",
-    started: "Патч запущен",
-    completed: "Патч завершен",
-    saved: "Файл сохранен:",
-    failed: "Ошибка патча",
-    cancelled: "Патч отменен",
-    busy: "Обработка уже идет.",
-    noVideo: "Сначала выберите видео.",
-    saveCancelled: "Сохранение отменено.",
-    updates: "Обновление",
-    updateAvailable: "Доступно обновление",
-    updateMandatoryTitle: "Доступно обязательное обновление",
-    updateMandatoryText: "Для продолжения работы нужна более новая версия.",
-    updateDownload: "Скачать обновление",
-    updateDownloadAndInstall: "Скачать и установить",
-    updateInstall: "Установить",
-    updateLater: "Позже",
-    updateDontShow: "Больше не показывать",
-    updateSize: "Размер",
-    updateSizeUnknown: "неизвестно",
-    updateVersion: "Версия",
-    updateDescriptionFallback: "Краткое описание обновления недоступно.",
-    updateReadyTitle: "Обновление готово",
-    updateReadyText: "Обновление скачано и готово к установке.",
-    updateDownloading: "Скачивание обновления",
-    closeConfirmTitle: "Внимание",
-    closeConfirmText: "Вы действительно хотите прервать обработку видео?",
-    closeConfirmUpdateText: "Если выйти сейчас, загрузка обновления прекратится.",
-    closeConfirmPatchAndUpdateText: "Если выйти сейчас, обработка видео остановится, а загрузка обновления прекратится.",
-    closeConfirmClose: "Закрыть",
-    closeConfirmStay: "Остаться",
-    mb: "МБ",
-    kbps: "кбит/с",
+    authText: "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїРѕРґРїРёСЃРєСѓ РІ Telegram С‡С‚РѕР±С‹ РІРѕР№С‚Рё.",
+    authChecking: "РџСЂРѕРІРµСЂСЏРµРј Р°РІС‚РѕСЂРёР·Р°С†РёСЋ...",
+    authWaiting: "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїРѕРґРїРёСЃРєСѓ РІ Telegram Рё РІРµСЂРЅРёС‚РµСЃСЊ СЃСЋРґР°.",
+    authDataReceived: "Р”Р°РЅРЅС‹Рµ Р°РІС‚РѕСЂРёР·Р°С†РёРё РїРѕР»СѓС‡РµРЅС‹",
+    authServerCheck: "РЎРµСЂРІРµСЂРЅР°СЏ РїСЂРѕРІРµСЂРєР°",
+    authServerCheckDesc: "РџСЂРѕРІРµСЂСЏРµРј РїРѕРґРїРёСЃРєСѓ РЅР° СЃРµСЂРІРµСЂРµ...",
+    authKeyLabel: "РљР»СЋС‡",
+    copyBotLink: "РЎРєРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ РЅР° Р±РѕС‚Р°",
+    authFailed: "РћС€РёР±РєР° Р°РІС‚РѕСЂРёР·Р°С†РёРё. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.",
+    authServerUnavailable: "РЎРµСЂРІРµСЂ Р°РІС‚РѕСЂРёР·Р°С†РёРё РЅРµРґРѕСЃС‚СѓРїРµРЅ. РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРїСЂРѕР±СѓР№С‚Рµ РїРѕР·Р¶Рµ.",
+    offlineLogoutInPrefix: "Р•СЃР»Рё СЃРµСЂРІРµСЂ РЅРµ РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЃСЏ, СЃРµСЃСЃРёСЏ Р±СѓРґРµС‚ Р·Р°РІРµСЂС€РµРЅР° С‡РµСЂРµР·",
+    offlineAccessExpired: "Р’СЂРµРјСЏ РѕС„Р»Р°Р№РЅ-РґРѕСЃС‚СѓРїР° РёСЃС‚РµРєР»Рѕ. Р’С‹РїРѕР»РЅРёС‚Рµ Р°РІС‚РѕСЂРёР·Р°С†РёСЋ СЃРЅРѕРІР°, РєРѕРіРґР° СЃРµСЂРІРµСЂ СЃС‚Р°РЅРµС‚ РґРѕСЃС‚СѓРїРµРЅ.",
+    authSuccess: "РђРІС‚РѕСЂРёР·Р°С†РёСЏ РІС‹РїРѕР»РЅРµРЅР°",
+    subscriptionRequired: "РќСѓР¶РЅР° РїРѕРґРїРёСЃРєР°",
+    retry: "РџРћР’РўРћР РРўР¬",
+    copied: "РЎРєРѕРїРёСЂРѕРІР°РЅРѕ",
+    exported: "Р›РѕРіРё СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°РЅС‹",
+    copyLogs: "РљРѕРїРёСЂРѕРІР°С‚СЊ",
+    exportLogs: "Р­РєСЃРїРѕСЂС‚",
+    selectError: "Р’С‹Р±РµСЂРёС‚Рµ MP4, MOV, M4V, 3GP РёР»Рё 3G2 РІРёРґРµРѕ.",
+    alreadyPatched: "Р­С‚Рѕ РІРёРґРµРѕ СѓР¶Рµ Р·Р°РїР°С‚С‡РµРЅРѕ.",
+    unsupported: "РџРѕРґРґРµСЂР¶РёРІР°СЋС‚СЃСЏ С‚РѕР»СЊРєРѕ MP4, MOV, M4V, 3GP Рё 3G2 РІРёРґРµРѕ.",
+    sourceMissing: "РСЃС…РѕРґРЅРѕРµ РІРёРґРµРѕ РЅРµ РЅР°Р№РґРµРЅРѕ.",
+    probing: "Р§РёС‚Р°РµРј РјРµС‚Р°РґР°РЅРЅС‹Рµ РІРёРґРµРѕ...",
+    loaded: "Р’РёРґРµРѕ Р·Р°РіСЂСѓР¶РµРЅРѕ",
+    started: "РџР°С‚С‡ Р·Р°РїСѓС‰РµРЅ",
+    completed: "РџР°С‚С‡ Р·Р°РІРµСЂС€РµРЅ",
+    saved: "Р¤Р°Р№Р» СЃРѕС…СЂР°РЅРµРЅ:",
+    failed: "РћС€РёР±РєР° РїР°С‚С‡Р°",
+    cancelled: "РџР°С‚С‡ РѕС‚РјРµРЅРµРЅ",
+    busy: "РћР±СЂР°Р±РѕС‚РєР° СѓР¶Рµ РёРґРµС‚.",
+    noVideo: "РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ РІРёРґРµРѕ.",
+    saveCancelled: "РЎРѕС…СЂР°РЅРµРЅРёРµ РѕС‚РјРµРЅРµРЅРѕ.",
+    updates: "РћР±РЅРѕРІР»РµРЅРёРµ",
+    updateAvailable: "Р”РѕСЃС‚СѓРїРЅРѕ РѕР±РЅРѕРІР»РµРЅРёРµ",
+    updateMandatoryTitle: "Р”РѕСЃС‚СѓРїРЅРѕ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ",
+    updateMandatoryText: "Р”Р»СЏ РїСЂРѕРґРѕР»Р¶РµРЅРёСЏ СЂР°Р±РѕС‚С‹ РЅСѓР¶РЅР° Р±РѕР»РµРµ РЅРѕРІР°СЏ РІРµСЂСЃРёСЏ.",
+    updateDownload: "РЎРєР°С‡Р°С‚СЊ РѕР±РЅРѕРІР»РµРЅРёРµ",
+    updateDownloadAndInstall: "РЎРєР°С‡Р°С‚СЊ Рё СѓСЃС‚Р°РЅРѕРІРёС‚СЊ",
+    updateInstall: "РЈСЃС‚Р°РЅРѕРІРёС‚СЊ",
+    updateLater: "РџРѕР·Р¶Рµ",
+    updateDontShow: "Р‘РѕР»СЊС€Рµ РЅРµ РїРѕРєР°Р·С‹РІР°С‚СЊ",
+    updateSize: "Р Р°Р·РјРµСЂ",
+    updateSizeUnknown: "РЅРµРёР·РІРµСЃС‚РЅРѕ",
+    updateVersion: "Р’РµСЂСЃРёСЏ",
+    updateDescriptionFallback: "РљСЂР°С‚РєРѕРµ РѕРїРёСЃР°РЅРёРµ РѕР±РЅРѕРІР»РµРЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅРѕ.",
+    updateReadyTitle: "РћР±РЅРѕРІР»РµРЅРёРµ РіРѕС‚РѕРІРѕ",
+    updateReadyText: "РћР±РЅРѕРІР»РµРЅРёРµ СЃРєР°С‡Р°РЅРѕ Рё РіРѕС‚РѕРІРѕ Рє СѓСЃС‚Р°РЅРѕРІРєРµ.",
+    updateDownloading: "РЎРєР°С‡РёРІР°РЅРёРµ РѕР±РЅРѕРІР»РµРЅРёСЏ",
+    closeConfirmTitle: "Р’РЅРёРјР°РЅРёРµ",
+    closeConfirmText: "Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїСЂРµСЂРІР°С‚СЊ РѕР±СЂР°Р±РѕС‚РєСѓ РІРёРґРµРѕ?",
+    closeConfirmUpdateText: "Р•СЃР»Рё РІС‹Р№С‚Рё СЃРµР№С‡Р°СЃ, Р·Р°РіСЂСѓР·РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРµРєСЂР°С‚РёС‚СЃСЏ.",
+    closeConfirmPatchAndUpdateText: "Р•СЃР»Рё РІС‹Р№С‚Рё СЃРµР№С‡Р°СЃ, РѕР±СЂР°Р±РѕС‚РєР° РІРёРґРµРѕ РѕСЃС‚Р°РЅРѕРІРёС‚СЃСЏ, Р° Р·Р°РіСЂСѓР·РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРµРєСЂР°С‚РёС‚СЃСЏ.",
+    closeConfirmClose: "Р—Р°РєСЂС‹С‚СЊ",
+    closeConfirmStay: "РћСЃС‚Р°С‚СЊСЃСЏ",
+    mb: "РњР‘",
+    kbps: "РєР±РёС‚/СЃ",
     fps: "fps",
     renderSettings: "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0440\u0435\u043d\u0434\u0435\u0440\u0430",
     renderCodec: "\u041a\u043e\u0434\u0435\u043a",
@@ -273,6 +275,7 @@ const translations = {
     authServerCheck: "Sunucu dogrulamasi",
     authServerCheckDesc: "Sunucuda abonelik kontrol ediliyor...",
     authKeyLabel: "Anahtar",
+    copyBotLink: "Bot baglantisini kopyala",
     authFailed: "Yetkilendirme basarisiz. Tekrar deneyin.",
     authServerUnavailable: "Yetkilendirme sunucusu kullanilamiyor. Lutfen daha sonra tekrar deneyin.",
     offlineLogoutInPrefix: "Sunucu hala kullanilamazsa oturumunuz su surede kapatilacak",
@@ -350,6 +353,166 @@ const translations = {
   },
 };
 
+function decodeMojibakeText(value) {
+  const text = String(value ?? "");
+  if (!/[РСЃÑÐ]/.test(text)) {
+    return text;
+  }
+  try {
+    const bytes = new Uint8Array([...text].map((ch) => ch.charCodeAt(0) & 0xff));
+    const decoded = new TextDecoder("utf-8").decode(bytes);
+    if (/[А-Яа-яЁё]/.test(decoded)) {
+      return decoded;
+    }
+  } catch {}
+  try {
+    return decodeURIComponent(escape(text));
+  } catch {
+    return text;
+  }
+}
+
+function decodeMojibakeInMap(map) {
+  if (!map || typeof map !== "object") {
+    return map;
+  }
+  for (const [key, value] of Object.entries(map)) {
+    if (typeof value === "string") {
+      map[key] = decodeMojibakeText(value);
+    }
+  }
+  return map;
+}
+
+function decodeMojibakeInDom(root = document.body) {
+  if (!root) {
+    return;
+  }
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) {
+    textNodes.push(walker.currentNode);
+  }
+  for (const node of textNodes) {
+    const fixed = decodeMojibakeText(node.nodeValue || "");
+    if (fixed !== node.nodeValue) {
+      node.nodeValue = fixed;
+    }
+  }
+  const attrs = ["title", "aria-label", "placeholder"];
+  for (const el of root.querySelectorAll("*")) {
+    for (const attr of attrs) {
+      const value = el.getAttribute(attr);
+      if (!value) {
+        continue;
+      }
+      const fixed = decodeMojibakeText(value);
+      if (fixed !== value) {
+        el.setAttribute(attr, fixed);
+      }
+    }
+  }
+}
+
+decodeMojibakeInMap(translations.ru);
+
+const ruClean = {
+  outputSize: "Размер выхода",
+  selectVideo: "Выбрать видео",
+  changeVideo: "Выбрать другое видео",
+  patch: "PATCH",
+  cancel: "ОТМЕНА",
+  low: "Низкий",
+  balanced: "Баланс",
+  source: "Исходник",
+  settings: "Настройки",
+  notifications: "Уведомления",
+  logs: "Логи",
+  emptyNotifications: "Пока нет уведомлений.",
+  emptyLogs: "Логи появятся после действий в приложении.",
+  themeDark: "Темная тема",
+  themeLight: "Светлая тема",
+  language: "Язык",
+  authorize: "Авторизация",
+  authTitle: "ALTER EDITING METHOD",
+  authText: "Подтвердите подписку в Telegram, чтобы войти.",
+  authChecking: "Проверяем авторизацию...",
+  authWaiting: "Подтвердите подписку в Telegram и вернитесь сюда.",
+  authDataReceived: "Данные авторизации получены",
+  authServerCheck: "Серверная проверка",
+  authServerCheckDesc: "Проверяем подписку на сервере...",
+  authKeyLabel: "Ключ",
+  copyBotLink: "Скопировать ссылку на бота",
+  authFailed: "Ошибка авторизации. Попробуйте снова.",
+  authServerUnavailable: "Сервер авторизации недоступен. Попробуйте позже.",
+  offlineLogoutInPrefix: "Если сервер не восстановится, сессия завершится через",
+  offlineAccessExpired: "Время офлайн-доступа истекло. Авторизуйтесь снова.",
+  authSuccess: "Авторизация выполнена",
+  subscriptionRequired: "Нужна подписка",
+  retry: "ПОВТОРИТЬ",
+  copied: "Скопировано",
+  exported: "Логи экспортированы",
+  copyLogs: "Копировать",
+  exportLogs: "Экспорт",
+  selectError: "Выберите MP4 или MOV видео.",
+  alreadyPatched: "Это видео уже обработано.",
+  unsupported: "Поддерживаются только MP4 и MOV видео.",
+  sourceMissing: "Исходное видео не найдено.",
+  probing: "Читаем метаданные видео...",
+  loaded: "Видео загружено",
+  started: "Патч запущен",
+  completed: "Патч завершен",
+  saved: "Файл сохранен:",
+  failed: "Patch failed",
+  cancelled: "Патч отменен",
+  busy: "Обработка уже идет.",
+  noVideo: "Сначала выберите видео.",
+  saveCancelled: "Сохранение отменено.",
+  updates: "Обновление",
+  updateAvailable: "Доступно обновление",
+  updateMandatoryTitle: "Доступно обязательное обновление",
+  updateMandatoryText: "Для продолжения нужна более новая версия.",
+  updateDownload: "Скачать обновление",
+  updateDownloadAndInstall: "Скачать и установить",
+  updateInstall: "Установить",
+  updateLater: "Позже",
+  updateDontShow: "Больше не показывать",
+  updateSize: "Размер",
+  updateSizeUnknown: "неизвестно",
+  updateVersion: "Версия",
+  updateDescriptionFallback: "Краткое описание недоступно.",
+  updateReadyTitle: "Обновление готово",
+  updateReadyText: "Обновление скачано и готово к установке.",
+  updateDownloading: "Скачивание обновления",
+  closeConfirmTitle: "Внимание",
+  closeConfirmText: "Действительно прервать обработку видео?",
+  closeConfirmUpdateText: "Если выйти сейчас, загрузка обновления остановится.",
+  closeConfirmPatchAndUpdateText: "Если выйти сейчас, обработка и загрузка обновления остановятся.",
+  closeConfirmClose: "Закрыть",
+  closeConfirmStay: "Остаться",
+  kbps: "кбит/с",
+  fps: "fps",
+  support: "Поддержка",
+  supportInvoked: "Запрос поддержки отправлен",
+  supportOpen: "Открыть бота поддержки",
+  supportFailed: "Не удалось открыть поддержку",
+  riskWarningTitle: "Предупреждение",
+  continueAnyway: "Продолжить",
+  cancelAction: "Отмена",
+  renderSettings: "Настройки рендера",
+  renderCodec: "Кодек",
+  renderContainer: "Контейнер",
+  renderAudioBitrate: "Битрейт аудио",
+  resetToSource: "Сброс к исходнику",
+  renderSettingsDone: "Готово",
+  renderSettingsCustomHint: "Параметры рендера изменены",
+  updateBetaToggle: "Beta",
+  updatePrefsOpenRepo: "Открыть репозиторий",
+  updatePrefsSaved: "Настройки обновления сохранены",
+};
+
+translations.ru = { ...translations.en, ...ruClean };
+
 const guideTranslations = {
   en: {
     howToUse: "How to use",
@@ -395,6 +558,7 @@ const guideTranslations = {
     tutorialDone: "Tamam",
   },
 };
+decodeMojibakeInMap(guideTranslations.ru);
 
 const languageOrder = ["ru", "en", "tr"];
 const DEFAULT_AUTH_API_BASE = "http://132.243.30.159:3000";
@@ -592,6 +756,7 @@ const elements = {
   authKeyEntry: document.getElementById("authKeyEntry"),
   authKeyInput: document.getElementById("authKeyInput"),
   authKeyApplyButton: document.getElementById("authKeyApplyButton"),
+  authKeyCopyLink: document.getElementById("authKeyCopyLink"),
   mandatoryUpdateOverlay: document.getElementById("mandatoryUpdateOverlay"),
   mandatoryUpdateTitle: document.getElementById("mandatoryUpdateTitle"),
   mandatoryUpdateText: document.getElementById("mandatoryUpdateText"),
@@ -1108,6 +1273,13 @@ function bindEvents() {
   elements.renderSettingsDoneButton?.addEventListener("click", () => toggleRenderSettingsPanel(false));
 
   elements.bitrateSlider.addEventListener("input", () => setOutputBitrate(Number(elements.bitrateSlider.value)));
+  elements.bitrateInput.addEventListener("input", () => {
+    const maxMbps = getBitrateMax() / 1000;
+    const raw = Number(String(elements.bitrateInput.value || "").replace(",", "."));
+    if (Number.isFinite(raw) && raw > maxMbps) {
+      elements.bitrateInput.value = String(maxMbps);
+    }
+  });
   elements.bitrateInput.addEventListener("change", () => {
     const mbps = Number(String(elements.bitrateInput.value || "").replace(",", "."));
     setOutputBitrate(mbps * 1000);
@@ -1128,6 +1300,11 @@ function bindEvents() {
   elements.authKeyToggleButton?.addEventListener("click", toggleAuthKeyEntry);
   elements.authKeyApplyButton?.addEventListener("click", () => {
     void applyAuthorizationKeyFromInput();
+  });
+  elements.authKeyCopyLink?.addEventListener("click", async () => {
+    const botLink = getAuthBotLink();
+    await window.alterE.clipboard.writeText(botLink);
+    toast("success", t("copied"), botLink);
   });
   elements.authKeyInput?.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
@@ -1249,7 +1426,11 @@ async function loadVideo(filePath) {
     restorePreviousVideo();
     const message = readableError(error);
     const alreadyPatched = /already patched/i.test(message);
-    notify("error", alreadyPatched ? t("alreadyPatched") : t("failed"), alreadyPatched ? filePath : message);
+    notify(
+      "error",
+      alreadyPatched ? t("alreadyPatched") : t("failed"),
+      alreadyPatched ? filePath : message
+    );
     log("error", "Probe failed", readableError(error));
   } finally {
     if (requestId === state.loadRequestId) {
@@ -1576,7 +1757,11 @@ async function startOrCancelPatch() {
         ].join(" || ")
       );
     }
-    notify(cancelled ? "warning" : "error", cancelled ? t("cancelled") : t("failed"));
+    notify(
+      cancelled ? "warning" : "error",
+      cancelled ? t("cancelled") : t("failed"),
+      cancelled ? "" : compactError(message || "Unknown error")
+    );
   } finally {
     state.working = false;
     state.progress = 0;
@@ -1899,28 +2084,10 @@ function activateTemporaryBotAuthorization() {
 }
 
 function toggleAuthKeyEntry() {
-  if (state.auth.keyEntryVisible) {
-    void openAuthBotFromKeyFlow();
-    return;
-  }
-  state.auth.keyEntryVisible = true;
+  state.auth.keyEntryVisible = !state.auth.keyEntryVisible;
   renderAuth();
   if (state.auth.keyEntryVisible) {
     setTimeout(() => elements.authKeyInput?.focus(), 0);
-  }
-}
-
-async function openAuthBotFromKeyFlow() {
-  const fallbackBot = "https://t.me/alterediting_bot";
-  const botUrl = normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true }) || fallbackBot;
-  try {
-    const opened = await openTelegramSmart(botUrl, "key-flow");
-    if (!opened) {
-      toast("warning", "Authorization", "Не удалось открыть Telegram. Проверьте Telegram/браузер по умолчанию.");
-    }
-  } catch {
-    log("error", "Open auth bot (key flow) failed", `url=${botUrl}`);
-    toast("warning", "Authorization", state.settings.language === "ru" ? "Не удалось открыть бота." : "Unable to open bot.");
   }
 }
 
@@ -1948,6 +2115,11 @@ function buildTelegramOpenCandidates(rawUrl) {
   }
   urls.push(target);
   return Array.from(new Set(urls));
+}
+
+function getAuthBotLink() {
+  const fallbackBot = "https://t.me/alterediting_bot";
+  return normalizeHttpUrl(currentBotUrl, { allowHttp: false, allowHttps: true }) || fallbackBot;
 }
 
 function maskSecret(value) {
@@ -1995,7 +2167,7 @@ async function applyAuthorizationKeyFromInput() {
   const key = String(elements.authKeyInput?.value || "");
   const preparedKey = parseAuthorizationKey(key);
   if (!preparedKey) {
-    toast("warning", "Authorization", state.settings.language === "ru" ? "Неверный ключ авторизации." : "Invalid authorization key.");
+    toast("warning", "Authorization", state.settings.language === "ru" ? decodeMojibakeText("РќРµРІРµСЂРЅС‹Р№ РєР»СЋС‡ Р°РІС‚РѕСЂРёР·Р°С†РёРё.") : "Invalid authorization key.");
     return;
   }
 
@@ -2038,7 +2210,7 @@ async function applyAuthorizationKeyFromInput() {
     notify("success", t("authSuccess"));
   } catch {
     state.auth.checking = false;
-    toast("warning", "Authorization", state.settings.language === "ru" ? "Неверный или просроченный ключ." : "Invalid or expired authorization key.");
+    toast("warning", "Authorization", state.settings.language === "ru" ? decodeMojibakeText("РќРµРІРµСЂРЅС‹Р№ РёР»Рё РїСЂРѕСЃСЂРѕС‡РµРЅРЅС‹Р№ РєР»СЋС‡.") : "Invalid or expired authorization key.");
   }
   render();
 }
@@ -2062,7 +2234,7 @@ async function startTelegramAuthorization() {
     if (reopenUrl) {
       const opened = await openTelegramSmart(reopenUrl, `auth-reopen session=${state.auth.sessionId}`);
       if (!opened) {
-        toast("warning", "Authorization", "Не удалось открыть Telegram. Проверьте Telegram/браузер по умолчанию.");
+        toast("warning", "Authorization", decodeMojibakeText("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ Telegram. РџСЂРѕРІРµСЂСЊС‚Рµ Telegram/Р±СЂР°СѓР·РµСЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ."));
       }
     }
     return;
@@ -2132,7 +2304,7 @@ async function startTelegramAuthorization() {
           }
         } catch {
           log("error", "Telegram offline auth URL open failed", `fallback=${fallbackBotUrl}`);
-          toast("warning", "Authorization", "Не удалось открыть Telegram. Проверьте Telegram/браузер по умолчанию.");
+          toast("warning", "Authorization", decodeMojibakeText("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ Telegram. РџСЂРѕРІРµСЂСЊС‚Рµ Telegram/Р±СЂР°СѓР·РµСЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ."));
         }
       }
     } else {
@@ -2858,6 +3030,7 @@ function render() {
   renderCloseConfirm();
   renderRiskConfirm();
   renderTutorial();
+  decodeMojibakeInDom();
 }
 
 async function openVersionPreferencesMenu(event) {
@@ -3211,14 +3384,8 @@ function renderAuth() {
   const authorizeLabelBase = t("authorize");
   const authorizeLabel = cooldownSeconds > 0 ? `${authorizeLabelBase} (${cooldownSeconds}s)` : authorizeLabelBase;
   if (elements.authKeyToggleButton) {
-    elements.authKeyToggleButton.textContent = state.auth.keyEntryVisible
-      ? isRu
-        ? "Перейти в бота"
-        : isTr
-          ? "Bota git"
-          : "Open bot"
-      : isRu
-        ? "Авторизация по ключу"
+    elements.authKeyToggleButton.textContent = isRu
+      ? "Авторизация по ключу"
       : isTr
         ? "Anahtar ile giris"
         : "Authorization by key";
@@ -3228,7 +3395,7 @@ function renderAuth() {
   }
   if (elements.authKeyInput) {
     elements.authKeyInput.placeholder = isRu
-      ? "Ввеедите /key в @alterediting_bot"
+      ? "Введите /key в @alterediting_bot"
       : isTr
         ? "/key komutunu @alterediting_bot'ta girin"
         : "Enter /key in @alterediting_bot";
@@ -3240,6 +3407,9 @@ function renderAuth() {
     elements.authText.textContent = t("authChecking");
     elements.authButton.textContent = authorizeLabel;
     return;
+  }
+  if (elements.authKeyCopyLink) {
+    elements.authKeyCopyLink.textContent = t("copyBotLink");
   }
   if (state.auth.pending) {
     elements.authText.textContent = t("authWaiting");
@@ -4257,3 +4427,4 @@ init().catch((error) => {
   console.error("Renderer init failed:", error);
   finishBootSequence();
 });
+

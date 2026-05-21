@@ -1,4 +1,4 @@
-const { app, BrowserWindow, clipboard, dialog, ipcMain, shell } = require("electron");
+﻿const { app, BrowserWindow, clipboard, dialog, ipcMain, shell } = require("electron");
 const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -522,3 +522,4 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
+
