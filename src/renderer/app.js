@@ -1344,7 +1344,7 @@ function bindEvents() {
   elements.appVersionLabel?.addEventListener("click", openVersionPreferencesMenu);
   elements.openRepoButton?.addEventListener("click", openVersionRepo);
   elements.updateBetaToggle?.addEventListener("change", () => {
-    void persistVersionPreferences({ showErrorToast: false, checkUpdates: true });
+    handleBetaToggleAttempt();
   });
   elements.tutorialOverlay.addEventListener("pointerdown", (event) => {
     if (event.target === elements.tutorialOverlay) {
@@ -3693,7 +3693,7 @@ function calculatePresetBitrate(mode) {
 
 function normalizeRenderCodec(value) {
   const codec = String(value || "").toLowerCase();
-  if (codec === "h264" || codec === "h265" || codec === "source") {
+  if (codec === "h264" || codec === "source") {
     return codec;
   }
   return RENDER_DEFAULTS.codec;
@@ -3952,7 +3952,72 @@ async function exportLogs() {
 }
 
 function readableError(error) {
-  return String(error?.message || error || "").replace(/^Error:\s*/i, "").trim();
+  const raw = String(error?.message || error || "")
+    .replace(/^Error:\s*/i, "")
+    .trim();
+
+  // Hide noisy Electron IPC wrapper and keep meaningful cause.
+  const unwrapped = raw
+    .replace(/^Error invoking remote method '[^']+':\s*/i, "")
+    .replace(/^Error:\s*/i, "")
+    .trim();
+
+  const isRu = state?.settings?.language === "ru";
+
+  if (/supports only H\.?264\/AVC/i.test(unwrapped) || /Codec:\s*hevc/i.test(unwrapped)) {
+    return isRu
+      ? "Патчер поддерживает только H264 кодек, пожалуйста, перерендерите видео в правильном формате."
+      : "This mode supports only H.264 (AVC). The selected file uses HEVC.";
+  }
+
+  if (/no video stream/i.test(unwrapped)) {
+    return isRu ? "В файле не найден видеопоток." : "No video stream was found in the file.";
+  }
+
+  if (/bundled ffmpeg\.exe was not found|bundled ffprobe\.exe was not found/i.test(unwrapped)) {
+    return isRu
+      ? "В сборке не найден ffmpeg/ffprobe. Обратитесь к разработчику сборки."
+      : "Bundled ffmpeg/ffprobe was not found in this build.";
+  }
+
+  if (/patch cancelled/i.test(unwrapped)) {
+    return isRu ? "Патч отменён." : "Patch cancelled.";
+  }
+
+  return unwrapped;
+}
+
+function handleBetaToggleAttempt() {
+  if (!elements.updateBetaToggle) {
+    return;
+  }
+  const requestedOn = Boolean(elements.updateBetaToggle.checked);
+  if (!requestedOn) {
+    // Keep disabled access model: always off.
+    elements.updateBetaToggle.checked = false;
+    return;
+  }
+
+  // Reset native checked state immediately so default "enabled" color never flashes.
+  elements.updateBetaToggle.checked = false;
+
+  const switchEl = elements.updateBetaToggle.parentElement?.querySelector(".settings-version-switch");
+  if (switchEl) {
+    switchEl.classList.remove("is-denied");
+    // Force reflow so animation can retrigger on repeated attempts.
+    void switchEl.offsetWidth;
+    switchEl.classList.add("is-denied");
+    setTimeout(() => switchEl.classList.remove("is-denied"), 520);
+  }
+
+  const isRu = state.settings.language === "ru";
+  const isTr = state.settings.language === "tr";
+  const msg = isRu
+    ? "Данная функция отключена, попробуйте позже"
+    : isTr
+      ? "Bu ozellik devre disi, lutfen daha sonra tekrar deneyin"
+      : "This feature is disabled, please try again later";
+  toast("warning", t("updates"), msg);
 }
 
 function compactError(text, maxLength = 180) {

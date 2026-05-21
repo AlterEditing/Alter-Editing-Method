@@ -284,7 +284,7 @@ function resolveOutputExtension(inputExt, mode = "balanced", renderContainer = "
 
 function normalizeRenderCodec(value) {
   const codec = String(value || "").toLowerCase();
-  if (codec === "h264" || codec === "h265" || codec === "source") {
+  if (codec === "h264" || codec === "source") {
     return codec;
   }
   return "source";
@@ -309,9 +309,6 @@ function normalizeRenderAudioMode(value) {
 function resolveVideoCodec(renderCodec, sourceVideoCodec) {
   if (renderCodec === "h264") {
     return "libx264";
-  }
-  if (renderCodec === "h265") {
-    return "libx265";
   }
   const source = String(sourceVideoCodec || "").toLowerCase();
   if (source === "h264" || source === "avc1") {
