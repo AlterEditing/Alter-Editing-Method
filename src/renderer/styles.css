@@ -708,19 +708,23 @@ body[data-theme="light"] .file-codec {
 }
 
 body[data-theme="light"] .drop-zone.has-video .file-title {
-  color: rgba(255, 255, 255, 0.99);
+  color: rgba(17, 24, 39, 0.95);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.35);
 }
 
 body[data-theme="light"] .drop-zone.has-video .file-meta {
-  color: rgba(246, 250, 253, 0.92);
+  color: rgba(31, 41, 55, 0.9);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.3);
 }
 
 body[data-theme="light"] .drop-zone.has-video .file-stream {
-  color: rgba(235, 244, 250, 0.84);
+  color: rgba(31, 41, 55, 0.86);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.28);
 }
 
 body[data-theme="light"] .drop-zone.has-video .file-codec {
-  color: rgba(235, 244, 250, 0.84);
+  color: rgba(31, 41, 55, 0.86);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.28);
 }
 
 .select-pill {
@@ -2335,6 +2339,11 @@ body[data-theme="light"] .tutorial-step {
 
 body[data-theme="light"] .toast {
   background: rgba(248, 250, 251, 0.96);
+}
+
+body[data-theme="light"] .toast strong,
+body[data-theme="light"] .activity-item strong {
+  color: #111827;
 }
 
 .toast strong {

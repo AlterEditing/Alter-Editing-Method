@@ -1452,7 +1452,8 @@ async function loadVideo(filePath) {
       Boolean(state.settings.hideCodecConvertWarning) &&
       Boolean(runtimeAppVersion) &&
       String(state.settings.hideCodecConvertWarningVersion || "") === runtimeAppVersion;
-    if (!hideForCurrentVersion && codec && codec !== "h264" && codec !== "avc1") {
+    const isNativeCodec = codec === "h264" || codec === "avc1";
+    if (!hideForCurrentVersion && codec && !isNativeCodec) {
       const accepted = await requestMessageConfirm(t("autoConvertWarningText"));
       if (!accepted) {
         restorePreviousVideo();
@@ -3039,12 +3040,13 @@ function formatUpdateNoticeMessage() {
 }
 
 function getUpdateDescription() {
-  const notes = compactUpdateNotes(state.update.releaseNotes);
+  const notes = compactUpdateNotes(state.update.releaseNotes, 320, state.settings.language);
   return notes || t("updateDescriptionFallback");
 }
 
-function compactUpdateNotes(value, maxLength = 320) {
-  const lines = String(value || "")
+function compactUpdateNotes(value, maxLength = 320, language = "en") {
+  const localized = extractLocalizedReleaseNotes(String(value || ""), language);
+  const lines = String(localized || "")
     .replace(/\[(mandatory|force)\]/gi, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/\r\n/g, "\n")
@@ -3057,6 +3059,36 @@ function compactUpdateNotes(value, maxLength = 320) {
     return text;
   }
   return `${text.slice(0, maxLength - 1).trim()}...`;
+}
+
+function extractLocalizedReleaseNotes(raw, language = "en") {
+  const text = String(raw || "").replace(/\r\n/g, "\n").trim();
+  if (!text) {
+    return "";
+  }
+
+  const matches = Array.from(text.matchAll(/\[(ru|en|tr)\]\s*([\s\S]*?)(?=\n\s*\[(?:ru|en|tr)\]\s*|$)/gi));
+  if (!matches.length) {
+    return text;
+  }
+
+  const blocks = {};
+  for (const match of matches) {
+    const key = String(match[1] || "").toLowerCase();
+    const value = String(match[2] || "").trim();
+    if (key && value) {
+      blocks[key] = value;
+    }
+  }
+
+  const lang = String(language || "en").toLowerCase();
+  if (blocks[lang]) {
+    return blocks[lang];
+  }
+  if (blocks.en) {
+    return blocks.en;
+  }
+  return blocks.ru || blocks.tr || text;
 }
 
 function formatUpdateSize() {
@@ -4092,6 +4124,16 @@ function readableError(error) {
     return isRu
       ? "В сборке не найден ffmpeg/ffprobe. Обратитесь к разработчику сборки."
       : "Bundled ffmpeg/ffprobe was not found in this build.";
+  }
+
+  if (/(EPERM|EACCES)/i.test(unwrapped) && /\bmkdir\b/i.test(unwrapped)) {
+    if (isRu) {
+      return "Нет доступа к папке сохранения. Выберите другую папку или запустите приложение от имени администратора.";
+    }
+    if (state?.settings?.language === "tr") {
+      return "Kayit klasorune erisim yok. Lutfen baska bir klasor secin veya uygulamayi yonetici olarak calistirin.";
+    }
+    return "No access to the output folder. Choose another folder or run the app as administrator.";
   }
 
   if (/patch cancelled/i.test(unwrapped)) {

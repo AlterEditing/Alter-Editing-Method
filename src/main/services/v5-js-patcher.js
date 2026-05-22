@@ -207,6 +207,8 @@ async function runV5JsPatcher({ inputPath, outputPath, runFfmpeg, runFfprobe }) 
   const mdat = boxes.find((b) => b.type === "mdat");
   if (!moov || !mdat) throw new Error("moov/mdat was not found");
 
+  // HEVC path: the render above already keeps HEVC, sets hvc1/90k/isom/clean metadata.
+  // Do not run H.264 AVCC NAL repacker on HEVC samples.
   const traks = moov.children.filter((x) => x.type === "trak");
   let videoTrak = null;
   for (const t of traks) {
