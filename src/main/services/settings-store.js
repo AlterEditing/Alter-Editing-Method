@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
   authorized: false,
   telegramId: null,
   authToken: "",
+  authDeviceId: "",
   authApiBase: "http://132.243.30.159:3000",
   authApiFallbacks: [],
   telegramChannelUrl: "https://t.me/alterediting",
@@ -22,6 +23,7 @@ const DEFAULT_SETTINGS = {
   updateRepoOwner: "AlterEditing",
   updateRepoName: "Alter-Editing-Method",
   updateAllowPrerelease: false,
+  betaAccessGranted: false,
   hideCodecConvertWarning: false,
   hideCodecConvertWarningVersion: "",
   dismissedMandatoryVersion: "",
@@ -108,6 +110,7 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     : defaults.theme;
   const authRequired = true;
   const authToken = typeof raw.authToken === "string" ? raw.authToken : "";
+  const authDeviceId = normalizeAuthDeviceId(raw.authDeviceId);
   const telegramId = normalizeTelegramId(raw.telegramId);
   const authorized = Boolean(authToken && telegramId);
   const dismissedMandatoryVersion =
@@ -139,6 +142,10 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     typeof raw.updateAllowPrerelease === "boolean"
       ? raw.updateAllowPrerelease
       : Boolean(defaults.updateAllowPrerelease);
+  const betaAccessGranted =
+    typeof raw.betaAccessGranted === "boolean"
+      ? raw.betaAccessGranted
+      : Boolean(defaults.betaAccessGranted);
   const hideCodecConvertWarning =
     typeof raw.hideCodecConvertWarning === "boolean"
       ? raw.hideCodecConvertWarning
@@ -156,6 +163,7 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     authorized,
     telegramId,
     authToken,
+    authDeviceId,
     authApiBase,
     authApiFallbacks,
     telegramChannelUrl,
@@ -168,7 +176,8 @@ function normalizeSettings(raw = {}, defaults = DEFAULT_SETTINGS) {
     renderAudioBitrateKbps,
     updateRepoOwner,
     updateRepoName,
-    updateAllowPrerelease,
+    updateAllowPrerelease: betaAccessGranted ? updateAllowPrerelease : false,
+    betaAccessGranted,
     hideCodecConvertWarning,
     hideCodecConvertWarningVersion,
     dismissedMandatoryVersion,
@@ -224,6 +233,14 @@ function normalizeTelegramId(value) {
     return null;
   }
   return String(Math.trunc(asNumber));
+}
+
+function normalizeAuthDeviceId(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) {
+    return "";
+  }
+  return /^[a-z0-9_-]{16,128}$/.test(raw) ? raw : "";
 }
 
 function clampInteger(value, min, max, fallback) {

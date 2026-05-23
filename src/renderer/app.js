@@ -1028,6 +1028,19 @@ function schedulePersistAuthConfigCache() {
   void persistAuthConfigCache();
 }
 
+async function updateSettingsSafe(patch = {}, { preserveLanguage = true } = {}) {
+  const nextPatch = { ...(patch || {}) };
+  const hasLanguage = Object.prototype.hasOwnProperty.call(nextPatch, "language");
+  if (preserveLanguage && !hasLanguage) {
+    const currentLanguage = normalizeLanguageCode(state.settings?.language || "");
+    if (currentLanguage) {
+      nextPatch.language = currentLanguage;
+    }
+  }
+  state.settings = await window.alterE.settings.update(nextPatch);
+  return state.settings;
+}
+
 async function persistAuthConfigCache() {
   if (!window.alterE?.settings?.update || !state.settings) {
     return;
@@ -1040,7 +1053,7 @@ async function persistAuthConfigCache() {
 
   authConfigPersistInFlight = true;
   try {
-    state.settings = await window.alterE.settings.update(patch);
+    await updateSettingsSafe(patch);
   } catch {
     // Cache persistence is best-effort and should not block auth flow.
   } finally {
@@ -1080,6 +1093,7 @@ async function init() {
       updateRepoOwner: "AlterEditing",
       updateRepoName: "Alter-Editing-Method",
       updateAllowPrerelease: false,
+      betaAccessGranted: false,
       hideCodecConvertWarning: false,
       hideCodecConvertWarningVersion: "",
     };
@@ -1098,7 +1112,7 @@ async function init() {
     String(state.settings.hideCodecConvertWarningVersion || "") !== runtimeAppVersion
   ) {
     try {
-      state.settings = await window.alterE.settings.update({
+      await updateSettingsSafe({
         hideCodecConvertWarning: false,
         hideCodecConvertWarningVersion: runtimeAppVersion,
       });
@@ -1430,7 +1444,7 @@ async function loadVideo(filePath) {
   }
 
   const requestId = ++state.loadRequestId;
-  const isCurrentLoad = () => requestId === state.loadRequestId && state.video?.path === filePath;
+  const isCurrentLoad = () => requestId === state.loadRequestId;
 
   state.probing = true;
   state.video = {
@@ -1570,7 +1584,7 @@ function toggleRenderSettingsPanel(forceVisible = null) {
 }
 
 async function updateRenderSettings(patch = {}) {
-  state.settings = await window.alterE.settings.update({
+  await updateSettingsSafe({
     renderCodec: normalizeRenderCodec(patch.renderCodec ?? state.settings.renderCodec),
     renderContainer: normalizeRenderContainer(patch.renderContainer ?? state.settings.renderContainer),
     renderAudioMode: normalizeRenderAudioMode(patch.renderAudioMode ?? state.settings.renderAudioMode),
@@ -1858,14 +1872,14 @@ async function startOrCancelPatch() {
 async function cycleLanguage() {
   const index = languageOrder.indexOf(state.settings.language);
   const language = languageOrder[(index + 1) % languageOrder.length];
-  state.settings = await window.alterE.settings.update({ language });
+  await updateSettingsSafe({ language }, { preserveLanguage: false });
   log("system", "Language changed", language.toUpperCase());
   render();
 }
 
 async function toggleTheme() {
   const theme = state.settings.theme === "dark" ? "light" : "dark";
-  state.settings = await window.alterE.settings.update({ theme });
+  await updateSettingsSafe({ theme });
   log("system", "Theme changed", theme);
   render();
 }
@@ -1902,7 +1916,7 @@ async function verifyStoredAuthorization() {
 
   // Offline-first behavior: a previously authorized user can use the app immediately.
   // The subscription is checked in the background once per app session when the server is reachable.
-  state.settings = await window.alterE.settings.update({
+  await updateSettingsSafe({
     authorized: true,
     telegramId: storedTelegramId,
     authToken: token,
@@ -1922,7 +1936,7 @@ async function clearOfflineAuthStartedAt() {
   if (!getOfflineAuthStartedAt()) {
     return;
   }
-  state.settings = await window.alterE.settings.update({ offlineAuthStartedAt: 0 });
+  await updateSettingsSafe({ offlineAuthStartedAt: 0 });
 }
 
 async function ensureOfflineAuthStartedAt() {
@@ -1931,7 +1945,7 @@ async function ensureOfflineAuthStartedAt() {
     return startedAt;
   }
   const now = Date.now();
-  state.settings = await window.alterE.settings.update({ offlineAuthStartedAt: now });
+  await updateSettingsSafe({ offlineAuthStartedAt: now });
   return now;
 }
 
@@ -2071,10 +2085,12 @@ async function checkStoredSubscriptionOnce(reason = "auto") {
     state.auth.subscriptionCheckedThisSession = true;
     state.auth.error = "";
     await clearOfflineAuthStartedAt();
-    state.settings = await window.alterE.settings.update({
+    await updateSettingsSafe({
       authorized: true,
       telegramId: serverTelegramId,
       authToken: token,
+      betaAccessGranted: Boolean(data.betaAccess || data.isAdmin),
+      updateAllowPrerelease: Boolean(data.betaAccess || data.isAdmin) ? Boolean(state.settings.updateAllowPrerelease) : false,
     });
     log("system", "Subscription checked", `telegram_id=${serverTelegramId} | ${reason}`);
   } catch (error) {
@@ -2169,10 +2185,12 @@ function activateTemporaryBotAuthorization() {
   render();
 }
 
-function toggleAuthKeyEntry() {
+async function toggleAuthKeyEntry() {
   state.auth.keyEntryVisible = !state.auth.keyEntryVisible;
   renderAuth();
   if (state.auth.keyEntryVisible) {
+    const keyBotUrl = buildBotStartUrl(getAuthBotLink(), "key");
+    await openTelegramSmart(keyBotUrl || getAuthBotLink(), "auth-key-start");
     setTimeout(() => elements.authKeyInput?.focus(), 0);
   }
 }
@@ -2249,15 +2267,55 @@ function parseAuthorizationKey(rawKey) {
   return String(rawKey || "").trim();
 }
 
+function createAuthDeviceId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return String(window.crypto.randomUUID()).replace(/[^a-z0-9_-]/gi, "").toLowerCase();
+  }
+  const bytes = new Uint8Array(16);
+  if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i += 1) {
+      bytes[i] = Math.floor(Math.random() * 256);
+    }
+  }
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+async function ensureAuthDeviceId() {
+  const existing = String(state.settings?.authDeviceId || "").trim().toLowerCase();
+  if (/^[a-z0-9_-]{16,128}$/.test(existing)) {
+    return existing;
+  }
+  const created = createAuthDeviceId();
+  await updateSettingsSafe({ authDeviceId: created });
+  return created;
+}
+
 async function applyAuthorizationKeyFromInput() {
   const key = String(elements.authKeyInput?.value || "");
   const preparedKey = parseAuthorizationKey(key);
   if (!preparedKey) {
-    toast("warning", "Authorization", state.settings.language === "ru" ? decodeMojibakeText("РќРµРІРµСЂРЅС‹Р№ РєР»СЋС‡ Р°РІС‚РѕСЂРёР·Р°С†РёРё.") : "Invalid authorization key.");
+    const isRu = state.settings.language === "ru";
+    const isTr = state.settings.language === "tr";
+    const botUrl = getAuthBotLink();
+    const opened = await openTelegramSmart(botUrl, "auth-key-empty");
+    if (!opened) {
+      toast(
+        "warning",
+        isRu ? "Авторизация" : isTr ? "Yetkilendirme" : "Authorization",
+        isRu
+          ? "Откройте бота и отправьте /key, затем вставьте ключ в поле."
+          : isTr
+            ? "Bota gidip /key gonderin, sonra anahtari bu alana yapistirin."
+            : "Open the bot and send /key, then paste the key into this field."
+      );
+    }
     return;
   }
 
   try {
+    const authDeviceId = await ensureAuthDeviceId();
     notify("info", t("authDataReceived"), `${t("authKeyLabel")}: ${maskSecret(preparedKey)}`);
     notify("info", t("authServerCheck"), t("authServerCheckDesc"));
     state.auth.checking = true;
@@ -2265,18 +2323,20 @@ async function applyAuthorizationKeyFromInput() {
     const data = await authFetch("/auth/key-exchange", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: preparedKey }),
+      body: JSON.stringify({ key: preparedKey, authDeviceId }),
     });
     const telegramId = normalizeTelegramId(data.telegramId);
     if (!data.ok || !data.token || !telegramId) {
       throw new Error("Invalid key exchange response");
     }
 
-    state.settings = await window.alterE.settings.update({
+    await updateSettingsSafe({
       authorized: true,
       telegramId,
       authToken: String(data.token),
       offlineAuthStartedAt: 0,
+      betaAccessGranted: Boolean(data.betaAccess || data.isAdmin),
+      updateAllowPrerelease: Boolean(data.betaAccess || data.isAdmin) ? Boolean(state.settings.updateAllowPrerelease) : false,
     });
     state.auth.pending = false;
     state.auth.checking = false;
@@ -2294,9 +2354,70 @@ async function applyAuthorizationKeyFromInput() {
     }
     log("success", "Authorization by key", `telegram_id=${telegramId}`);
     notify("success", t("authSuccess"));
-  } catch {
+  } catch (error) {
     state.auth.checking = false;
-    toast("warning", "Authorization", state.settings.language === "ru" ? decodeMojibakeText("РќРµРІРµСЂРЅС‹Р№ РёР»Рё РїСЂРѕСЃСЂРѕС‡РµРЅРЅС‹Р№ РєР»СЋС‡.") : "Invalid or expired authorization key.");
+    const isRu = state.settings.language === "ru";
+    const isTr = state.settings.language === "tr";
+    const authTitle = isRu ? "Авторизация" : isTr ? "Yetkilendirme" : "Authorization";
+    if (isAuthServerUnavailableError(error)) {
+      const message = isRu
+        ? "Сервер временно недоступен. Если ключ правильный, попробуйте включить VPN и повторить."
+        : isTr
+          ? "Sunucu gecici olarak kullanilamiyor. Anahtar dogruysa VPN acip tekrar deneyin."
+          : "Server is temporarily unavailable. If your key is correct, try enabling VPN and retry.";
+      toast("warning", authTitle, message);
+      log("warning", "Auth key exchange unavailable", compactError(readableError(error)));
+    } else {
+      const serverMessage = String(error?.message || "").toLowerCase();
+      if (serverMessage.includes("another device")) {
+        toast(
+          "warning",
+          authTitle,
+          isRu
+            ? "Этот ключ привязан к другому устройству."
+            : isTr
+              ? "Bu anahtar baska bir cihaza bagli."
+              : "This key is bound to another device."
+        );
+        render();
+        return;
+      }
+      if (serverMessage.includes("revoked")) {
+        toast(
+          "warning",
+          authTitle,
+          isRu
+            ? "Ключ устарел. Был выпущен новый ключ."
+            : isTr
+              ? "Anahtar gecersiz. Daha yeni bir anahtar olusturuldu."
+              : "This key is no longer valid. A newer key was issued."
+        );
+        render();
+        return;
+      }
+      if (serverMessage.includes("expired")) {
+        toast(
+          "warning",
+          authTitle,
+          isRu
+            ? "Срок действия ключа истек. Создайте новый ключ в боте."
+            : isTr
+              ? "Anahtarin suresi doldu. Bottan yeni anahtar olusturun."
+              : "The key has expired. Generate a new key in the bot."
+        );
+        render();
+        return;
+      }
+      toast(
+        "warning",
+        authTitle,
+        isRu
+          ? "Неверный или просроченный ключ."
+          : isTr
+            ? "Gecersiz veya suresi dolmus anahtar."
+            : "Invalid or expired authorization key."
+      );
+    }
   }
   render();
 }
@@ -2565,11 +2686,13 @@ async function exchangeAuthorization(sessionId) {
       throw new Error("Invalid token response");
     }
 
-    state.settings = await window.alterE.settings.update({
+    await updateSettingsSafe({
       authorized: true,
       telegramId,
       authToken: String(data.token),
       offlineAuthStartedAt: 0,
+      betaAccessGranted: Boolean(data.betaAccess || data.isAdmin),
+      updateAllowPrerelease: Boolean(data.betaAccess || data.isAdmin) ? Boolean(state.settings.updateAllowPrerelease) : false,
     });
     state.auth.pending = false;
     state.auth.checking = false;
@@ -2638,14 +2761,20 @@ async function clearAuthorization(showLog) {
     authorized: false,
     telegramId: null,
     authToken: "",
+    authDeviceId: "",
     offlineAuthStartedAt: 0,
+    betaAccessGranted: false,
+    updateAllowPrerelease: false,
   };
   try {
-    state.settings = await window.alterE.settings.update({
+    await updateSettingsSafe({
       authorized: false,
       telegramId: null,
       authToken: "",
+      authDeviceId: "",
       offlineAuthStartedAt: 0,
+      betaAccessGranted: false,
+      updateAllowPrerelease: false,
     });
   } catch (error) {
     log("error", "Persist logout state failed", readableError(error));
@@ -3051,7 +3180,17 @@ function compactUpdateNotes(value, maxLength = 320, language = "en") {
     .replace(/<[^>]+>/g, " ")
     .replace(/\r\n/g, "\n")
     .split("\n")
-    .map((line) => line.replace(/^\s{0,3}(#{1,6}|[-*+])\s*/g, "").replace(/\s+/g, " ").trim())
+    .map((line) =>
+      line
+        .replace(/^\s{0,3}(#{1,6}|[-*+])\s*/g, "")
+        .replace(/^\s*\[(ru|en|tr)\]\s*/i, "")
+        .replace(
+          /^\s*(?:en|english|ru|russian|tr|turkish|🇬🇧|🇷🇺|🇹🇷)\s*[:|\-]\s*/i,
+          ""
+        )
+        .replace(/\s+/g, " ")
+        .trim()
+    )
     .filter(Boolean);
 
   const text = lines.slice(0, 4).join("\n");
@@ -3067,18 +3206,68 @@ function extractLocalizedReleaseNotes(raw, language = "en") {
     return "";
   }
 
-  const matches = Array.from(text.matchAll(/\[(ru|en|tr)\]\s*([\s\S]*?)(?=\n\s*\[(?:ru|en|tr)\]\s*|$)/gi));
-  if (!matches.length) {
-    return text;
-  }
-
   const blocks = {};
-  for (const match of matches) {
+
+  // Format 1: [en] ... [ru] ... [tr] ...
+  const bracketMatches = Array.from(text.matchAll(/\[(ru|en|tr)\]\s*([\s\S]*?)(?=\n\s*\[(?:ru|en|tr)\]\s*|$)/gi));
+  for (const match of bracketMatches) {
     const key = String(match[1] || "").toLowerCase();
     const value = String(match[2] || "").trim();
-    if (key && value) {
+    if (key && value && !blocks[key]) {
       blocks[key] = value;
     }
+  }
+
+  // Format 2: line prefixes like:
+  // EN: ..., RU - ..., TR | ...
+  // 🇬🇧 ..., 🇷🇺 ..., 🇹🇷 ...
+  // # EN / ## RU, etc.
+  if (!Object.keys(blocks).length) {
+    const markerByToken = {
+      en: "en",
+      english: "en",
+      "\ud83c\uddec\ud83c\udde7": "en",
+      gb: "en",
+      uk: "en",
+      ru: "ru",
+      russian: "ru",
+      "\ud83c\uddf7\ud83c\uddfa": "ru",
+      tr: "tr",
+      turkish: "tr",
+      "\ud83c\uddf9\ud83c\uddf7": "tr",
+    };
+
+    const lines = text.split("\n");
+    let currentLang = "";
+    for (const rawLine of lines) {
+      const line = String(rawLine || "").trim();
+      if (!line) {
+        if (currentLang && blocks[currentLang]) {
+          blocks[currentLang] += "\n";
+        }
+        continue;
+      }
+
+      const markerMatch = line.match(/^(?:#{1,6}\s*)?(en|english|gb|uk|ru|russian|tr|turkish|\ud83c\uddec\ud83c\udde7|\ud83c\uddf7\ud83c\uddfa|\ud83c\uddf9\ud83c\uddf7)\s*[:|\-]\s*(.*)$/i);
+      if (markerMatch) {
+        const token = String(markerMatch[1] || "").toLowerCase();
+        const mapped = markerByToken[token] || "";
+        if (mapped) {
+          currentLang = mapped;
+          const firstLine = String(markerMatch[2] || "").trim();
+          blocks[currentLang] = firstLine;
+          continue;
+        }
+      }
+
+      if (currentLang) {
+        blocks[currentLang] = [blocks[currentLang], line].filter(Boolean).join("\n").trim();
+      }
+    }
+  }
+
+  if (!Object.keys(blocks).length) {
+    return text;
   }
 
   const lang = String(language || "en").toLowerCase();
@@ -3168,7 +3357,8 @@ async function openVersionPreferencesMenu(event) {
     return;
   }
   if (elements.updateBetaToggle) {
-    elements.updateBetaToggle.checked = Boolean(state.settings.updateAllowPrerelease);
+    const canUseBeta = Boolean(state.settings.betaAccessGranted);
+    elements.updateBetaToggle.checked = canUseBeta ? Boolean(state.settings.updateAllowPrerelease) : false;
   }
   state.versionMenuVisible = true;
   renderVersionPreferencesMenu();
@@ -3191,11 +3381,18 @@ function renderVersionPreferencesMenu() {
 }
 
 async function persistVersionPreferences({ showErrorToast = false, checkUpdates = true } = {}) {
+  const canUseBeta = Boolean(state.settings.betaAccessGranted);
   const updateAllowPrerelease = Boolean(elements.updateBetaToggle?.checked);
+  if (!canUseBeta && updateAllowPrerelease) {
+    if (elements.updateBetaToggle) {
+      elements.updateBetaToggle.checked = false;
+    }
+    return false;
+  }
   if (updateAllowPrerelease === Boolean(state.settings.updateAllowPrerelease)) {
     return true;
   }
-  state.settings = await window.alterE.settings.update({
+  await updateSettingsSafe({
     updateAllowPrerelease,
   });
   if (showErrorToast) {
@@ -3510,12 +3707,14 @@ function renderAuth() {
   elements.authButton.disabled = state.auth.checking || onCooldown;
   elements.authButton.classList.toggle("is-cooldown", onCooldown);
   if (elements.authKeyToggleButton) {
-    elements.authKeyToggleButton.hidden = !locked;
+    elements.authKeyToggleButton.hidden = !locked || state.auth.keyEntryVisible;
   }
   if (elements.authKeyEntry) {
-    elements.authKeyEntry.hidden = !locked || !state.auth.keyEntryVisible;
+    elements.authKeyEntry.hidden = !locked;
+    elements.authKeyEntry.classList.toggle("is-visible", locked && state.auth.keyEntryVisible);
   }
   if (elements.authKeyApplyButton) {
+    elements.authKeyApplyButton.hidden = !locked || !state.auth.keyEntryVisible;
     elements.authKeyApplyButton.disabled = state.auth.checking || state.auth.pending;
   }
 
@@ -3541,10 +3740,10 @@ function renderAuth() {
   }
   if (elements.authKeyInput) {
     elements.authKeyInput.placeholder = isRu
-      ? "Введите /key в @alterediting_bot"
+      ? "Введите ваш ключ"
       : isTr
-        ? "/key komutunu @alterediting_bot'ta girin"
-        : "Enter /key in @alterediting_bot";
+        ? "Anahtarinizi girin"
+        : "Enter your key";
   }
 
   elements.authLogo.hidden = false;
@@ -4148,9 +4347,11 @@ function handleBetaToggleAttempt() {
     return;
   }
   const requestedOn = Boolean(elements.updateBetaToggle.checked);
+  const canUseBeta = Boolean(state.settings.betaAccessGranted);
   if (!requestedOn) {
-    // Keep disabled access model: always off.
-    elements.updateBetaToggle.checked = false;
+    return;
+  }
+  if (canUseBeta) {
     return;
   }
 
@@ -4168,12 +4369,13 @@ function handleBetaToggleAttempt() {
 
   const isRu = state.settings.language === "ru";
   const isTr = state.settings.language === "tr";
+  const title = isRu ? "Бета-тест" : isTr ? "Beta test" : "Beta test";
   const msg = isRu
-    ? "Данная функция отключена, попробуйте позже"
+    ? "Временно недоступен для пользователей"
     : isTr
-      ? "Bu ozellik devre disi, lutfen daha sonra tekrar deneyin"
-      : "This feature is disabled, please try again later";
-  toast("warning", t("updates"), msg);
+      ? "Kullanicilar icin gecici olarak kullanilamiyor"
+      : "Temporarily unavailable for users";
+  toast("warning", title, msg);
 }
 
 function compactError(text, maxLength = 180) {

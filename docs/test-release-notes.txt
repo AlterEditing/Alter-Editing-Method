@@ -1,0 +1,18 @@
+﻿[en]
+New version is available.
+Improved update note localization parsing.
+Fixed fallback behavior for mixed language release descriptions.
+
+[ru]
+Доступна новая версия.
+Улучшен парсинг локализации описания обновления.
+Исправлено поведение fallback для смешанных языковых описаний.
+
+[tr]
+Yeni surum mevcut.
+Guncelleme notlari icin dil algilama iyilestirildi.
+Karisik dilli aciklamalarda fallback davranisi duzeltildi.
+
+EN: Alternate English block for parser format test.
+RU: Альтернативный русский блок для проверки формата парсера.
+TR: Alternatif Turkce blok, parser formati testi icin.
